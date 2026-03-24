@@ -1,0 +1,43 @@
+@model IEnumerable<VKFoodArea.Web.Models.Poi>
+@{
+    ViewData["Title"] = "POI";
+}
+
+<h2 class="mb-3">Quản lý POI</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Tạo mới</a>
+</p>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Tên</th>
+            <th>Địa chỉ</th>
+            <th>SĐT</th>
+            <th>QR mặc định</th>
+            <th>Lat</th>
+            <th>Lng</th>
+            <th>Kích hoạt</th>
+            <th style="width:160px;">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var p in Model)
+    {
+        <tr>
+            <td>@p.Name</td>
+            <td>@p.Address</td>
+            <td>@p.PhoneNumber</td>
+            <td>@p.QrCode</td>
+            <td>@p.Latitude</td>
+            <td>@p.Longitude</td>
+            <td>@(p.IsActive ? "Có" : "Không")</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Sửa</a>
+                <a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-danger">Xóa</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

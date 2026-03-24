@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Settings.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Cài đặt âm thanh"
+    BackgroundColor="#F6F8FB">
+
+	<ScrollView>
+		<VerticalStackLayout Padding="20,24" Spacing="18">
+
+			<!-- Header -->
+			<VerticalStackLayout Spacing="6">
+				<Label Text="Cài đặt âm thanh"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="#111827" />
+
+				<Label Text="Tùy chỉnh ngôn ngữ và chế độ phát cho thuyết minh và radio."
+                       FontSize="14"
+                       TextColor="#6B7280" />
+			</VerticalStackLayout>
+
+			<!-- Nhóm ngôn ngữ -->
+			<Border BackgroundColor="White"
+                    Stroke="#E5E7EB"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 18">
+				<VerticalStackLayout Spacing="12">
+
+					<HorizontalStackLayout Spacing="8">
+						<Label Text="🌐"
+                               FontSize="18" />
+						<Label Text="Ngôn ngữ phát"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#111827" />
+					</HorizontalStackLayout>
+
+					<Label Text="Chọn ngôn ngữ sẽ được dùng khi phát thuyết minh hoặc radio."
+                           FontSize="13"
+                           TextColor="#6B7280" />
+
+					<Border BackgroundColor="#F9FAFB"
+                            Stroke="#D1D5DB"
+                            StrokeThickness="1"
+                            Padding="10,4"
+                            StrokeShape="RoundRectangle 12">
+						<Picker x:Name="LanguagePicker"
+                                Title="Chọn ngôn ngữ"
+                                ItemDisplayBinding="{Binding DisplayName}"
+                                TextColor="#111827"
+                                TitleColor="#9CA3AF" />
+					</Border>
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Nhóm chế độ phát -->
+			<Border BackgroundColor="White"
+                    Stroke="#E5E7EB"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 18">
+				<VerticalStackLayout Spacing="12">
+
+					<HorizontalStackLayout Spacing="8">
+						<Label Text="🔊"
+                               FontSize="18" />
+						<Label Text="Chế độ âm thanh"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#111827" />
+					</HorizontalStackLayout>
+
+					<Label Text="Thiết lập cách ứng dụng phát nội dung âm thanh."
+                           FontSize="13"
+                           TextColor="#6B7280" />
+
+					<Border BackgroundColor="#F9FAFB"
+                            Stroke="#D1D5DB"
+                            StrokeThickness="1"
+                            Padding="10,4"
+                            StrokeShape="RoundRectangle 12">
+						<Picker x:Name="ModePicker"
+                                Title="Chọn chế độ phát"
+                                TextColor="#111827"
+                                TitleColor="#9CA3AF">
+							<Picker.Items>
+								<x:String>TTS</x:String>
+								<x:String>Audio</x:String>
+								<x:String>Auto</x:String>
+							</Picker.Items>
+						</Picker>
+					</Border>
+
+					<Label Text="Áp dụng cho cả thuyết minh và radio."
+                           FontSize="13"
+                           TextColor="#2563EB" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Nhóm nghe thử -->
+			<Border BackgroundColor="White"
+                    Stroke="#E5E7EB"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 18">
+				<VerticalStackLayout Spacing="12">
+
+					<HorizontalStackLayout Spacing="8">
+						<Label Text="🎧"
+                               FontSize="18" />
+						<Label Text="Nghe thử"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#111827" />
+					</HorizontalStackLayout>
+
+					<Label Text="Bạn có thể nghe thử giọng đọc theo ngôn ngữ đang chọn trước khi lưu."
+                           FontSize="13"
+                           TextColor="#6B7280" />
+
+					<Button Text="Nghe thử"
+                            Clicked="OnPreviewClicked"
+                            BackgroundColor="#EEF4FF"
+                            TextColor="#1D4ED8"
+                            CornerRadius="14"
+                            HeightRequest="48"
+                            FontAttributes="Bold" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Tóm tắt -->
+			<Border BackgroundColor="#ECFDF5"
+                    Stroke="#A7F3D0"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 18">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="Tóm tắt cài đặt"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="#065F46" />
+
+					<Label x:Name="SummaryLabel"
+                           Text="Hiện tại: Tiếng Việt | TTS"
+                           FontSize="14"
+                           TextColor="#047857" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Nút lưu -->
+			<Button Text="Lưu thay đổi"
+                    Clicked="OnSaveClicked"
+                    BackgroundColor="#16A34A"
+                    TextColor="White"
+                    CornerRadius="16"
+                    HeightRequest="52"
+                    FontAttributes="Bold" />
+
+		</VerticalStackLayout>
+	</ScrollView>
+</ContentPage>

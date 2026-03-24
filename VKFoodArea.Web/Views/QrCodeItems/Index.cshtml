@@ -1,0 +1,49 @@
+@model IEnumerable<VKFoodArea.Web.Models.QrCodeItem>
+@{
+    ViewData["Title"] = "QR Code";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Quản lý QR Code</h1>
+        <p class="text-muted mb-0">Mỗi mã QR gắn với một POI để app user mở đúng nội dung.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Tạo mới</a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Tiêu đề</th>
+                    <th>POI</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td><code>@item.Code</code></td>
+                    <td>@item.Title</td>
+                    <td>@item.Poi?.Name</td>
+                    <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @if (item.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

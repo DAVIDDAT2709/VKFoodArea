@@ -1,0 +1,61 @@
+@model VKFoodArea.Web.ViewModels.PoiFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Latitude" class="form-label"></label>
+        <input asp-for="Latitude" class="form-control" />
+        <span asp-validation-for="Latitude" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Longitude" class="form-label"></label>
+        <input asp-for="Longitude" class="form-control" />
+        <span asp-validation-for="Longitude" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="RadiusMeters" class="form-label"></label>
+        <input asp-for="RadiusMeters" class="form-control" />
+        <span asp-validation-for="RadiusMeters" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-12">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="TtsScriptVi" class="form-label"></label>
+        <textarea asp-for="TtsScriptVi" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="TtsScriptVi" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="TtsScriptEn" class="form-label"></label>
+        <textarea asp-for="TtsScriptEn" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="TtsScriptEn" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="QrCode" class="form-label"></label>
+        <input asp-for="QrCode" class="form-control" />
+        <span asp-validation-for="QrCode" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 d-flex align-items-end">
+        <div class="form-check mb-2">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

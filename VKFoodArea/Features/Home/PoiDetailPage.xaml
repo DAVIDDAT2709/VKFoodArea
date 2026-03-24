@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Home.PoiDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:VKFoodArea.Features.Home"
+    BackgroundColor="White"
+    x:DataType="local:PoiDetailPage"
+    Title="{Binding Poi.Name}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="16">
+
+            <Image Source="{Binding Poi.ImageUrl}"
+                   HeightRequest="240"
+                   Aspect="AspectFill" />
+
+            <Label Text="{Binding Poi.Name}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="#111827" />
+
+            <Label Text="{Binding Poi.Address}"
+                   FontSize="14"
+                   TextColor="#6B7280" />
+
+            <Border BackgroundColor="#F9FAFB"
+                    Stroke="#E5E7EB"
+                    Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Giới thiệu"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#111827" />
+
+                    <Label Text="{Binding Poi.Description}"
+                           FontSize="15"
+                           TextColor="#374151" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="🔊 Nghe thuyết minh"
+                    Clicked="OnPlayNarrationClicked"
+                    BackgroundColor="#111827"
+                    TextColor="White"
+                    CornerRadius="14" />
+
+            <Button Text="Book quán"
+                    Clicked="OnBookClicked"
+                    BackgroundColor="#16A34A"
+                    TextColor="White"
+                    CornerRadius="14" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Home.HomeDesignPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:VKFoodArea.Features.Home"
+    xmlns:models="clr-namespace:VKFoodArea.Models"
+    x:DataType="viewModels:HomeViewModel"
+    BackgroundColor="#FFFFFF"
+    Padding="0"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,250,Auto,*,Auto"
+          BackgroundColor="#FFFFFF">
+
+        <!-- HEADER -->
+        <VerticalStackLayout Grid.Row="0"
+                             Padding="14,6,14,6"
+                             Spacing="8"
+                             BackgroundColor="#FFFFFF">
+
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+      HeightRequest="42">
+
+                <Border Grid.Column="0"
+                        WidthRequest="122"
+                        HeightRequest="40"
+                        BackgroundColor="#EDE9FE"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 10">
+
+                    <Label Text="VKFood"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="#6D28D9" />
+                </Border>
+                <Button Grid.Column="2"
+        Text="QR"
+        Clicked="OnQrClicked"
+        WidthRequest="52"
+        HeightRequest="42"
+        CornerRadius="10"
+        BackgroundColor="#EDE9FE"
+        TextColor="#6D28D9"
+        FontSize="14"
+        FontAttributes="Bold" />
+                <Button Grid.Column="3"
+                        Text="⚙"
+                        Clicked="OnSettingsClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="10"
+                        BackgroundColor="#F5EBD7"
+                        TextColor="#6B7280"
+                        FontSize="16" />
+            </Grid>
+
+            <!-- SEARCH THẬT -->
+            <Border BackgroundColor="#F3F4F6"
+                    StrokeThickness="0"
+                    Padding="8,2"
+                    StrokeShape="RoundRectangle 14">
+
+                <SearchBar x:Name="PoiSearchBar"
+                           Placeholder="Tìm quán ăn..."
+                           PlaceholderColor="#9CA3AF"
+                           TextColor="#111827"
+                           BackgroundColor="Transparent"
+                           CancelButtonColor="#7C3AED"
+                           FontSize="14"
+                           SearchButtonPressed="OnSearchButtonPressed"
+                           TextChanged="OnSearchTextChanged" />
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- MAP -->
+        <Grid Grid.Row="1"
+              Margin="14,0,14,10">
+
+            <ContentView x:Name="MapHost"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill" />
+
+            <VerticalStackLayout HorizontalOptions="End"
+                                 VerticalOptions="Start"
+                                 Spacing="10"
+                                 Margin="0,12,12,0">
+
+                <Button Text="+"
+                        Clicked="OnZoomInClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="21"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        FontSize="22"
+                        FontAttributes="Bold" />
+
+                <Button Text="-"
+                        Clicked="OnZoomOutClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="21"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        FontSize="22"
+                        FontAttributes="Bold" />
+
+                <Button Text="◎"
+                        Clicked="OnMyLocationClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="21"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        FontSize="18" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- TITLE -->
+        <HorizontalStackLayout Grid.Row="2"
+                               Padding="16,4,16,10"
+                               Spacing="6">
+            <Border Margin="16,0,16,8"
+                BackgroundColor="#F5F3FF"
+                StrokeThickness="0"
+                Padding="10"
+                StrokeShape="RoundRectangle 12">
+                <Label Text="{Binding NearestPoiText}"
+                   TextColor="#6D28D9"
+                   FontSize="13"
+                   FontAttributes="Bold" /> 
+            </Border>
+            <Label Text="Quán nổi bật"
+                   FontSize="19"
+                   FontAttributes="Bold"
+                   TextColor="#111827" />
+
+            <Label Text="›"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="#9CA3AF"
+                   VerticalTextAlignment="Center" />
+        </HorizontalStackLayout>
+
+        <!-- LIST -->
+        <ScrollView Grid.Row="3">
+            <VerticalStackLayout Spacing="10">
+
+                <CollectionView x:Name="PoiCollectionView"
+                                SelectionMode="None"
+                                Margin="16,0,16,0">
+
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical"
+                                         Span="2"
+                                         HorizontalItemSpacing="12"
+                                         VerticalItemSpacing="12" />
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Poi">
+
+                            <Border BackgroundColor="White"
+                                    Stroke="#E5E7EB"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 16">
+
+                                <Grid RowDefinitions="118,Auto">
+
+                                    <Grid>
+                                        <Image Source="{Binding ImageUrl}"
+                                               Aspect="AspectFill"
+                                               HeightRequest="118" />
+
+                                        <Button Text="🔊"
+                                                WidthRequest="34"
+                                                HeightRequest="34"
+                                                CornerRadius="17"
+                                                FontSize="14"
+                                                BackgroundColor="White"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="End"
+                                                Margin="0,0,8,8"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PlayPoiAudioCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </Grid>
+
+                                    <VerticalStackLayout Grid.Row="1"
+                                                         Padding="10,10,10,12"
+                                                         Spacing="3">
+
+                                        <Label Text="{Binding Name}"
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               TextColor="#111827"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+
+                                        <Label Text="{Binding Address}"
+                                               FontSize="11.5"
+                                               TextColor="#6B7280"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="2" />
+                                    </VerticalStackLayout>
+
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnPoiCardTapped" />
+                                    </Grid.GestureRecognizers>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Border Margin="16,4,16,8"
+                        BackgroundColor="#F5F3FF"
+                        StrokeThickness="0"
+                        Padding="12"
+                        StrokeShape="RoundRectangle 12">
+
+                    <Label Text="{Binding StatusText}"
+                           TextColor="#6D28D9"
+                           FontSize="13" />
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- BOTTOM NAV -->
+        <Grid Grid.Row="4"
+              ColumnDefinitions="*,*,*,*"
+              Padding="10,8,10,12"
+              ColumnSpacing="8"
+              BackgroundColor="White">
+
+            <Border Grid.Column="0"
+                    BackgroundColor="#F3E8FF"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="⌂&#10;Trang chủ"
+                        Clicked="OnGoHomeClicked"
+                        FontSize="11"
+                        FontAttributes="Bold"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#7C3AED"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+            <Border Grid.Column="1"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="⌖&#10;Bản đồ"
+                        Clicked="OnOpenFullMapClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+            <Border Grid.Column="2"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="🕘&#10;Lịch sử"
+                        Clicked="OnHistoryClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+            <Border Grid.Column="3"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="👤&#10;Người dùng"
+                        Clicked="OnUserClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+        </Grid>
+    </Grid>
+</ContentPage>

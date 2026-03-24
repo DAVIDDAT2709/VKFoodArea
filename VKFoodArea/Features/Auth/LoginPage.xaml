@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Auth.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#FFFFFF"
+    Title="Đăng nhập">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24,90,24,24" Spacing="18">
+
+            <Label Text="VKFoodArea"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   TextColor="#16A34A" />
+
+            <Label Text="Đăng nhập để sử dụng ứng dụng"
+                   FontSize="16"
+                   TextColor="#374151" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="#F3F4F6"
+                    Padding="14"
+                    StrokeShape="RoundRectangle 18">
+                <Entry x:Name="UsernameEntry"
+                       Placeholder="Tên đăng nhập" />
+            </Border>
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="#F3F4F6"
+                    Padding="14"
+                    StrokeShape="RoundRectangle 18">
+                <Entry x:Name="PasswordEntry"
+                       Placeholder="Mật khẩu"
+                       IsPassword="True" />
+            </Border>
+
+            <Button Text="Đăng nhập"
+                    Clicked="OnLoginClicked"
+                    BackgroundColor="#16A34A"
+                    TextColor="White"
+                    CornerRadius="16"
+                    HeightRequest="50" />
+
+            <Label x:Name="MessageLabel"
+                   TextColor="Red" />
+
+            <Border StrokeThickness="0"
+                    BackgroundColor="#F9FAFB"
+                    Padding="14"
+                    StrokeShape="RoundRectangle 18">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Tài khoản demo"
+                           FontAttributes="Bold"
+                           TextColor="#111111" />
+                    
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,25 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace VKFoodArea.Web.Models;
+
+public class NarrationHistory
+{
+    public int Id { get; set; }
+
+    public int PoiId { get; set; }
+    public Poi? Poi { get; set; }
+
+    [Required, StringLength(120)]
+    public string PoiName { get; set; } = string.Empty;
+
+    [Required, StringLength(10)]
+    public string Language { get; set; } = "vi";
+
+    [Required, StringLength(20)]
+    public string TriggerSource { get; set; } = "manual"; // gps | qr | manual
+
+    [Required, StringLength(20)]
+    public string Mode { get; set; } = "tts";
+
+    public DateTime PlayedAt { get; set; } = DateTime.Now;
+}

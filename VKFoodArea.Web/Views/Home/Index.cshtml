@@ -1,0 +1,97 @@
+@model VKFoodArea.Web.ViewModels.HomeDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Dashboard quản trị</h1>
+        <p class="text-muted mb-0">Quản lý dữ liệu POI, QR và theo dõi lịch sử nghe từ app người dùng.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-muted small">Tổng POI</div>
+                <div class="display-6 fw-bold">@Model.PoiCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-muted small">QR đang hoạt động</div>
+                <div class="display-6 fw-bold">@Model.ActiveQrCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-muted small">Lượt nghe đã ghi nhận</div>
+                <div class="display-6 fw-bold">@Model.NarrationHistoryCount</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>Lịch sử nghe gần đây</strong>
+                <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-sm btn-outline-secondary">Xem tất cả</a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentNarrations.Any())
+                {
+                    <div class="p-3 text-muted">Chưa có dữ liệu lịch sử nghe.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>POI</th>
+                                    <th>Ngôn ngữ</th>
+                                    <th>Nguồn</th>
+                                    <th>Thời gian</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var item in Model.RecentNarrations)
+                            {
+                                <tr>
+                                    <td>@item.PoiName</td>
+                                    <td>@item.Language</td>
+                                    <td>@item.TriggerSource</td>
+                                    <td>@item.PlayedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+                <h2 class="h6">Việc nên làm tiếp</h2>
+                <ul class="mb-0 text-muted">
+                    <li>Thêm chỉnh sửa/xóa QR Code.</li>
+                    <li>Thêm form quản lý script đa ngôn ngữ cho POI.</li>
+                    <li>Chuẩn bị API sync cho app mobile.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="d-grid gap-2">
+            <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Tạo POI mới</a>
+            <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-primary">Tạo QR Code</a>
+        </div>
+    </div>
+</div>

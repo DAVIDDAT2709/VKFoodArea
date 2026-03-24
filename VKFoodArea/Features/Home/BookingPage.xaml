@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Home.BookingPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:VKFoodArea.Models"
+    Title="Book quán"
+    BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="18">
+
+            <Label Text="{Binding Poi.Name}"
+                   FontSize="24"
+                   FontAttributes="Bold" />
+
+            <Label Text="{Binding Poi.Address}"
+                   FontSize="14"
+                   TextColor="Gray" />
+
+            <Label Text="{Binding PhoneDisplay}"
+                   FontSize="13"
+                   TextColor="#6B7280" />
+
+            <Button Text="📞 Gọi điện đặt bàn"
+                    Clicked="OnCallClicked"
+                    BackgroundColor="#16A34A"
+                    TextColor="White"
+                    CornerRadius="14" />
+
+            <Label Text="Thông tin đặt bàn"
+                   FontSize="18"
+                   FontAttributes="Bold" />
+
+            <Entry x:Name="NameEntry"
+                   Placeholder="Tên người đặt" />
+
+            <Entry x:Name="PhoneEntry"
+                   Placeholder="Số điện thoại"
+                   Keyboard="Telephone" />
+
+            <DatePicker x:Name="DatePicker" />
+
+            <TimePicker x:Name="TimePicker" />
+
+            <Stepper x:Name="GuestStepper"
+                     Minimum="1"
+                     Maximum="20"
+                     Value="1"
+                     ValueChanged="OnGuestChanged" />
+
+            <Label x:Name="GuestLabel"
+                   Text="Số người: 1" />
+
+            <Label Text="Chọn món"
+                   FontSize="18"
+                   FontAttributes="Bold" />
+
+            <Label Text="Quán này chưa có menu trong dữ liệu."
+                   IsVisible="{Binding IsMenuEmpty}"
+                   FontSize="14"
+                   TextColor="Gray" />
+
+            <CollectionView
+                ItemsSource="{Binding FoodItems}"
+                SelectionMode="None">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:FoodItem">
+
+                        <Border Stroke="#E5E7EB"
+                                BackgroundColor="White"
+                                Padding="12"
+                                Margin="0,0,0,8">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="14" />
+                            </Border.StrokeShape>
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+
+                                <VerticalStackLayout Spacing="4">
+
+                                    <Label Text="{Binding Name}"
+                                           FontAttributes="Bold" />
+
+                                    <Label Text="{Binding Category}"
+                                           FontSize="13"
+                                           TextColor="Gray" />
+
+                                    <Label Text="{Binding Price, StringFormat='Giá: {0:N0} đ'}"
+                                           FontSize="13"
+                                           TextColor="#F59E0B" />
+
+                                </VerticalStackLayout>
+
+                                <Button Grid.Column="1"
+                                        Text="Thêm"
+                                        Clicked="OnAddFoodClicked"
+                                        CommandParameter="{Binding}"
+                                        BackgroundColor="#111827"
+                                        TextColor="White"
+                                        CornerRadius="12" />
+
+                            </Grid>
+
+                        </Border>
+
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+            <Label Text="Món đã chọn"
+                   FontSize="18"
+                   FontAttributes="Bold" />
+
+            <Label Text="{Binding SelectedFoodsSummary}"
+                   FontSize="14"
+                   TextColor="#6B7280" />
+
+            <CollectionView
+                ItemsSource="{Binding SelectedFoods}"
+                SelectionMode="None">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:FoodItem">
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding Name}"
+                                       FontSize="15"
+                                       FontAttributes="Bold" />
+
+                                <Label Text="{Binding Price, StringFormat='Giá: {0:N0} đ'}"
+                                       FontSize="13"
+                                       TextColor="Gray" />
+                            </VerticalStackLayout>
+
+                            <Button Grid.Column="1"
+                                    Text="Xóa"
+                                    Clicked="OnRemoveFoodClicked"
+                                    CommandParameter="{Binding}"
+                                    BackgroundColor="#DC2626"
+                                    TextColor="White"
+                                    CornerRadius="12" />
+
+                        </Grid>
+
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+            <Button Text="Xác nhận đặt quán"
+                    Clicked="OnConfirmBookingClicked"
+                    BackgroundColor="#F59E0B"
+                    TextColor="White"
+                    CornerRadius="14" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

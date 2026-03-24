@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Home.QrScannerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
+    BackgroundColor="Black"
+    Title="Quét QR">
+
+	<Grid RowDefinitions="*,Auto">
+
+		<zxing:CameraBarcodeReaderView
+            x:Name="QrReader"
+            BarcodesDetected="OnBarcodesDetected" />
+
+		<Grid Grid.Row="1"
+              Padding="16"
+              BackgroundColor="#AA000000"
+              ColumnDefinitions="*,Auto,Auto"
+              ColumnSpacing="10">
+
+			<Label Text="Đưa mã QR của quán vào giữa khung hình"
+                   TextColor="White"
+                   VerticalOptions="Center"
+                   FontSize="14" />
+
+			<Button Grid.Column="1"
+                    Text="Đèn"
+                    Clicked="OnTorchClicked"
+                    BackgroundColor="#111827"
+                    TextColor="White"
+                    CornerRadius="12" />
+
+			<Button Grid.Column="2"
+                    Text="Đóng"
+                    Clicked="OnCloseClicked"
+                    BackgroundColor="#DC2626"
+                    TextColor="White"
+                    CornerRadius="12" />
+		</Grid>
+
+	</Grid>
+</ContentPage>

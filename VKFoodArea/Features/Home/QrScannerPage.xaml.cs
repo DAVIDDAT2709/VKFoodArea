@@ -1,0 +1,147 @@
+﻿using Microsoft.Maui.ApplicationModel;
+using ZXing.Net.Maui;
+using VKFoodArea.Repositories;
+using VKFoodArea.Services;
+
+namespace VKFoodArea.Features.Home;
+
+public partial class QrScannerPage : ContentPage
+{
+    private readonly QrLookupService _qrLookupService;
+    private readonly PoiRepository _poiRepository;
+    private readonly NarrationService _narrationService;
+    private readonly FoodRepository _foodRepository;
+
+    private bool _isHandlingResult;
+    private bool _isTorchOn;
+
+    public QrScannerPage(
+        QrLookupService qrLookupService,
+        PoiRepository poiRepository,
+        NarrationService narrationService,
+        FoodRepository foodRepository)
+    {
+        InitializeComponent();
+
+        _qrLookupService = qrLookupService;
+        _poiRepository = poiRepository;
+        _narrationService = narrationService;
+        _foodRepository = foodRepository;
+
+        QrReader.Options = new BarcodeReaderOptions
+        {
+            Formats = BarcodeFormats.TwoDimensional,
+            AutoRotate = true,
+            Multiple = false
+        };
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (!BarcodeScanning.IsSupported)
+        {
+            await DisplayAlert("Không hỗ trợ", "Thiết bị này không có camera để quét QR.", "OK");
+            await Navigation.PopAsync();
+            return;
+        }
+
+        var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+        if (status != PermissionStatus.Granted)
+            status = await Permissions.RequestAsync<Permissions.Camera>();
+
+        if (status != PermissionStatus.Granted)
+        {
+            await DisplayAlert("Thiếu quyền", "Ứng dụng cần quyền camera để quét QR.", "OK");
+            await Navigation.PopAsync();
+            return;
+        }
+
+        _isHandlingResult = false;
+        QrReader.IsDetecting = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        QrReader.IsDetecting = false;
+    }
+
+    private async void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
+    {
+        if (_isHandlingResult)
+            return;
+
+        var value = e.Results?.FirstOrDefault()?.Value?.Trim();
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        _isHandlingResult = true;
+        QrReader.IsDetecting = false;
+
+        try
+        {
+            var poi = await _qrLookupService.FindPoiFromWebByQrAsync(value);
+
+            poi ??= await _poiRepository.GetByQrCodeAsync(value);
+
+            if (poi is null)
+            {
+                var retry = await MainThread.InvokeOnMainThreadAsync(() =>
+                    DisplayAlert(
+                        "Không tìm thấy quán",
+                        $"QR không khớp dữ liệu web hoặc local: {value}",
+                        "Quét lại",
+                        "Đóng"));
+
+                if (retry)
+                {
+                    _isHandlingResult = false;
+                    QrReader.IsDetecting = true;
+                }
+                else
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() => Navigation.PopAsync());
+                }
+
+                return;
+            }
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+                Navigation.PushAsync(new PoiDetailPage(poi, _narrationService, _foodRepository)));
+
+            _isHandlingResult = false;
+        }
+        catch (Exception ex)
+        {
+            var retry = await MainThread.InvokeOnMainThreadAsync(() =>
+                DisplayAlert(
+                    "Lỗi kết nối QR",
+                    ex.Message,
+                    "Quét lại",
+                    "Đóng"));
+
+            if (retry)
+            {
+                _isHandlingResult = false;
+                QrReader.IsDetecting = true;
+            }
+            else
+            {
+                await MainThread.InvokeOnMainThreadAsync(() => Navigation.PopAsync());
+            }
+        }
+    }
+
+    private void OnTorchClicked(object sender, EventArgs e)
+    {
+        _isTorchOn = !_isTorchOn;
+        QrReader.IsTorchOn = _isTorchOn;
+    }
+
+    private async void OnCloseClicked(object sender, EventArgs e)
+    {
+        await Navigation.PopAsync();
+    }
+}

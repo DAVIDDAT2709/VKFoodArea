@@ -1,0 +1,108 @@
+@model VKFoodArea.Web.ViewModels.PoiFormViewModel
+@{
+    ViewData["Title"] = "Tạo POI";
+}
+
+<h2 class="mb-3">Tạo POI</h2>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Name" class="form-label">Tên</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Address" class="form-label">Địa chỉ</label>
+            <input asp-for="Address" class="form-control" />
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="ImageUrl" class="form-label">Ảnh / URL ảnh</label>
+            <input asp-for="ImageUrl" class="form-control" />
+            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="Latitude" class="form-label">Latitude</label>
+            <input asp-for="Latitude" class="form-control" />
+            <span asp-validation-for="Latitude" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="Longitude" class="form-label">Longitude</label>
+            <input asp-for="Longitude" class="form-control" />
+            <span asp-validation-for="Longitude" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="RadiusMeters" class="form-label">Radius (m)</label>
+            <input asp-for="RadiusMeters" class="form-control" />
+            <span asp-validation-for="RadiusMeters" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="Description" class="form-label">Mô tả</label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="QrCode" class="form-label">QR mặc định</label>
+            <input asp-for="QrCode" class="form-control" />
+            <span asp-validation-for="QrCode" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="TtsScriptVi" class="form-label">Script tiếng Việt</label>
+            <textarea asp-for="TtsScriptVi" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="TtsScriptVi" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="TtsScriptEn" class="form-label">Script English</label>
+            <textarea asp-for="TtsScriptEn" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="TtsScriptEn" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="TtsScriptZh" class="form-label">Script 中文</label>
+            <textarea asp-for="TtsScriptZh" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="TtsScriptZh" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="TtsScriptJa" class="form-label">Script 日本語</label>
+            <textarea asp-for="TtsScriptJa" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="TtsScriptJa" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label asp-for="TtsScriptDe" class="form-label">Script Deutsch</label>
+            <textarea asp-for="TtsScriptDe" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="TtsScriptDe" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label">Kích hoạt</label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

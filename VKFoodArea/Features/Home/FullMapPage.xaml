@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Home.FullMapPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#FFFFFF"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False"
+    Title="Bản đồ">
+
+	<Grid RowDefinitions="*,Auto,Auto"
+          BackgroundColor="#FFFFFF">
+
+		<!-- MAP -->
+		<Grid Grid.Row="0">
+			<ContentView x:Name="MapHost"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill" />
+
+			<VerticalStackLayout HorizontalOptions="End"
+                                 VerticalOptions="Start"
+                                 Margin="0,20,16,0"
+                                 Spacing="10">
+
+				<Button Text="+"
+                        Clicked="OnZoomInClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="21"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        FontSize="22"
+                        FontAttributes="Bold" />
+
+				<Button Text="-"
+                        Clicked="OnZoomOutClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="21"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        FontSize="22"
+                        FontAttributes="Bold" />
+
+				<Button Text="◎"
+                        Clicked="OnMyLocationClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="21"
+                        BackgroundColor="White"
+                        TextColor="#111827"
+                        FontSize="18" />
+			</VerticalStackLayout>
+		</Grid>
+
+		<!-- INFO -->
+		<Border Grid.Row="1"
+                BackgroundColor="#F5F3FF"
+                StrokeThickness="0"
+                Padding="12"
+                StrokeShape="RoundRectangle 0">
+			<Label x:Name="InfoLabel"
+                   Text="Chạm marker để xem tên quán"
+                   FontSize="13"
+                   TextColor="#6D28D9" />
+		</Border>
+
+		<!-- BOTTOM NAV -->
+		<Grid Grid.Row="2"
+              ColumnDefinitions="*,*,*,*"
+              Padding="10,8,10,12"
+              ColumnSpacing="8"
+              BackgroundColor="White">
+
+			<Border Grid.Column="0"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+				<Button Text="⌂&#10;Trang chủ"
+                        Clicked="OnGoHomeClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+			</Border>
+
+			<Border Grid.Column="1"
+                    BackgroundColor="#F3E8FF"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+				<Button Text="⌖&#10;Bản đồ"
+                        Clicked="OnMapCurrentClicked"
+                        FontSize="11"
+                        FontAttributes="Bold"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#7C3AED"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+			</Border>
+
+			<Border Grid.Column="2"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+				<Button Text="🕘&#10;Lịch sử"
+                        Clicked="OnHistoryClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+			</Border>
+
+			<Border Grid.Column="3"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+				<Button Text="👤&#10;Người dùng"
+                        Clicked="OnUserClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+			</Border>
+
+		</Grid>
+	</Grid>
+</ContentPage>
