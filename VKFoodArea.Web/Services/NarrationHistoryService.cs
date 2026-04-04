@@ -30,32 +30,23 @@ public class NarrationHistoryService : INarrationHistoryService
         return await query.ToListAsync();
     }
 
-    public async Task<NarrationHistoryApiViewModel> CreateFromAppAsync(NarrationHistoryCreateApiViewModel vm)
+    public async Task<NarrationHistoryApiViewModel?> CreateFromAppAsync(NarrationHistoryCreateApiViewModel vm)
     {
         var language = (vm.Language ?? "vi").Trim().ToLowerInvariant();
         var triggerSource = (vm.TriggerSource ?? "manual").Trim().ToLowerInvariant();
         var mode = (vm.Mode ?? "tts").Trim().ToLowerInvariant();
 
-        string poiName = string.Empty;
-
         var poi = await _context.Pois
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == vm.PoiId);
+            .FirstOrDefaultAsync(x => x.Id == vm.PoiId && x.IsActive);
 
-        if (poi is not null)
-        {
-            poiName = poi.Name;
-        }
-
-        if (string.IsNullOrWhiteSpace(poiName))
-        {
-            poiName = (vm.PoiName ?? string.Empty).Trim();
-        }
+        if (poi is null)
+            return null;
 
         var entity = new NarrationHistory
         {
             PoiId = vm.PoiId,
-            PoiName = poiName,
+            PoiName = poi.Name,
             Language = language,
             TriggerSource = triggerSource,
             Mode = mode,

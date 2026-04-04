@@ -3,24 +3,57 @@
     ViewData["Title"] = "Xóa POI";
 }
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        <h1 class="h4 text-danger">Xác nhận xóa POI</h1>
-        <p class="mb-4">Bạn có chắc muốn xóa địa điểm <strong>@Model.Name</strong> không?</p>
-
-        <dl class="row mb-0">
-            <dt class="col-sm-3">Địa chỉ</dt>
-            <dd class="col-sm-9">@Model.Address</dd>
-
-            <dt class="col-sm-3">Tọa độ</dt>
-            <dd class="col-sm-9">@Model.Latitude, @Model.Longitude</dd>
-        </dl>
+<section class="page-intro page-section">
+    <div>
+        <span class="eyebrow">Xóa dữ liệu</span>
+        <h2>Xác nhận xóa POI khỏi hệ thống</h2>
+        <p>Thao tác này sẽ loại bỏ địa điểm khỏi web quản trị và ảnh hưởng đến dữ liệu mà app mobile có thể đồng bộ.</p>
     </div>
-    <div class="card-footer bg-white d-flex justify-content-end gap-2">
-        <a asp-action="Index" class="btn btn-light">Hủy</a>
-        <form asp-action="Delete" method="post">
-            <input type="hidden" asp-for="Id" />
-            <button type="submit" class="btn btn-danger">Xóa</button>
-        </form>
+</section>
+
+<section class="card-surface page-section">
+    <div class="delete-grid">
+        <div>
+            <span class="eyebrow">POI sắp xóa</span>
+            <h3>@Model.Name</h3>
+            <p class="text-muted mb-4">@Model.Address</p>
+
+            <div class="list-stack">
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>Tọa độ</strong>
+                        <p>@Model.Latitude.ToString("0.######"), @Model.Longitude.ToString("0.######")</p>
+                    </div>
+                </div>
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>Bán kính geofence</strong>
+                        <p>@Model.RadiusMeters.ToString("0.#") m</p>
+                    </div>
+                </div>
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>QR mặc định</strong>
+                        <p>@(string.IsNullOrWhiteSpace(Model.QrCode) ? "Chưa có" : Model.QrCode)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="warning-panel">
+            <h3>Cần lưu ý</h3>
+            <p>
+                Nếu app đang dùng POI này để kích hoạt thuyết minh bằng GPS hoặc QR, việc xóa có thể làm
+                mất luồng demo tương ứng.
+            </p>
+
+            <div class="page-actions">
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger">Xóa POI</button>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
+</section>

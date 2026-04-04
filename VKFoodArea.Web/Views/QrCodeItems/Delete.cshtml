@@ -1,0 +1,56 @@
+@model VKFoodArea.Web.Models.QrCodeItem
+@{
+    ViewData["Title"] = "Xóa QR code";
+}
+
+<section class="page-intro page-section">
+    <div>
+        <span class="eyebrow">Xóa mã QR</span>
+        <h2>Xác nhận xóa QR code khỏi hệ thống</h2>
+        <p>Mã đã xóa sẽ không còn dùng được để mở nội dung trên app.</p>
+    </div>
+</section>
+
+<section class="card-surface page-section">
+    <div class="delete-grid">
+        <div>
+            <span class="eyebrow">QR sắp xóa</span>
+            <h3>@Model.Title</h3>
+            <div class="list-stack">
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>Mã QR</strong>
+                        <p class="mono">@Model.Code</p>
+                    </div>
+                </div>
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>POI liên kết</strong>
+                        <p>@(Model.Poi?.Name ?? "POI không tồn tại")</p>
+                    </div>
+                </div>
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>Ngày tạo</strong>
+                        <p>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="warning-panel">
+            <h3>Cần lưu ý</h3>
+            <p>
+                Nếu mã này đã in ra hoặc gắn ngoài thực tế, người dùng sẽ không còn mở được đúng nội dung sau khi xóa.
+            </p>
+
+            <div class="page-actions">
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger">Xóa QR</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

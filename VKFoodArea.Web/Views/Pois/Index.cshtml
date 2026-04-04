@@ -1,43 +1,164 @@
 @model IEnumerable<VKFoodArea.Web.Models.Poi>
 @{
-    ViewData["Title"] = "POI";
+    ViewData["Title"] = "Quản lý POI";
+    var pois = Model.ToList();
+    var activeCount = pois.Count(x => x.IsActive);
+    var defaultQrCount = pois.Count(x => !string.IsNullOrWhiteSpace(x.QrCode));
+    var multilingualCount = pois.Count(x => GetLanguageCodes(x).Count >= 2);
 }
 
-<h2 class="mb-3">Quản lý POI</h2>
+<section class="page-intro page-section">
+    <div>
+        <span class="eyebrow">CMS nội dung</span>
+        <h2>Quản lý điểm POI và vùng kích hoạt thuyết minh</h2>
+        <p>
+            Mỗi POI lưu thông tin địa điểm, tọa độ geofence, mô tả ngắn, QR mặc định và các script phục vụ
+            thuyết minh đa ngôn ngữ cho ứng dụng mobile.
+        </p>
+    </div>
+    <div class="page-intro__actions">
+        <a asp-action="Create" class="btn btn-primary">Thêm địa điểm</a>
+    </div>
+</section>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Tạo mới</a>
-</p>
+<section class="metrics-grid page-section">
+    <article class="metric-card">
+        <span class="metric-card__label">Tổng POI</span>
+        <strong class="metric-card__value">@pois.Count</strong>
+        <p class="metric-card__hint">Toàn bộ điểm thuyết minh đang có trong hệ thống.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">POI hoạt động</span>
+        <strong class="metric-card__value">@activeCount</strong>
+        <p class="metric-card__hint">Sẵn sàng cho app mobile lấy dữ liệu.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">POI có QR mặc định</span>
+        <strong class="metric-card__value">@defaultQrCount</strong>
+        <p class="metric-card__hint">Cho phép mở nội dung nhanh mà không cần geofence.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">POI đa ngôn ngữ</span>
+        <strong class="metric-card__value">@multilingualCount</strong>
+        <p class="metric-card__hint">Có ít nhất 2 script TTS được cấu hình.</p>
+    </article>
+</section>
 
-<table class="table table-bordered table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Tên</th>
-            <th>Địa chỉ</th>
-            <th>SĐT</th>
-            <th>QR mặc định</th>
-            <th>Lat</th>
-            <th>Lng</th>
-            <th>Kích hoạt</th>
-            <th style="width:160px;">Thao tác</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var p in Model)
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Danh sách dữ liệu</span>
+            <h2>POI hiện có</h2>
+        </div>
+        <span class="text-muted small">Ưu tiên hiển thị trạng thái, geofence và mức độ sẵn sàng nội dung.</span>
+    </div>
+
+    @if (!pois.Any())
     {
-        <tr>
-            <td>@p.Name</td>
-            <td>@p.Address</td>
-            <td>@p.PhoneNumber</td>
-            <td>@p.QrCode</td>
-            <td>@p.Latitude</td>
-            <td>@p.Longitude</td>
-            <td>@(p.IsActive ? "Có" : "Không")</td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Sửa</a>
-                <a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-danger">Xóa</a>
-            </td>
-        </tr>
+        <div class="empty-state">
+            <h3>Chưa có điểm POI nào</h3>
+            <p>Hãy tạo địa điểm đầu tiên để bắt đầu cấu hình geofence và script thuyết minh.</p>
+        </div>
     }
-    </tbody>
-</table>
+    else
+    {
+        <div class="table-responsive">
+            <table class="table data-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>POI</th>
+                        <th>Geofence</th>
+                        <th>Nội dung</th>
+                        <th>QR / Media</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var poi in pois)
+                {
+                    var languages = GetLanguageCodes(poi);
+                    <tr>
+                        <td>
+                            <div class="table-title">@poi.Name</div>
+                            <div class="table-meta">@poi.Address</div>
+                            @if (!string.IsNullOrWhiteSpace(poi.PhoneNumber))
+                            {
+                                <div class="table-meta">SĐT: @poi.PhoneNumber</div>
+                            }
+                        </td>
+                        <td>
+                            <div class="mono">@poi.Latitude.ToString("0.######"), @poi.Longitude.ToString("0.######")</div>
+                            <div class="table-meta">Bán kính kích hoạt: @poi.RadiusMeters.ToString("0.#") m</div>
+                        </td>
+                        <td>
+                            <div class="truncate-text">@(string.IsNullOrWhiteSpace(poi.Description) ? "Chưa có mô tả ngắn." : poi.Description)</div>
+                            <div class="badge-cluster mt-2">
+                                @if (!languages.Any())
+                                {
+                                    <span class="status-pill status-pill--muted">Chưa có script</span>
+                                }
+                                else
+                                {
+                                    @foreach (var lang in languages)
+                                    {
+                                        <span class="lang-pill">@lang</span>
+                                    }
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(poi.QrCode))
+                            {
+                                <span class="status-pill status-pill--muted">Chưa có QR</span>
+                            }
+                            else
+                            {
+                                <div class="mono">@poi.QrCode</div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(poi.ImageUrl))
+                            {
+                                <div class="table-meta mt-2">
+                                    <a href="@poi.ImageUrl" target="_blank" rel="noopener noreferrer" class="text-link">Mở ảnh minh họa</a>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            @if (poi.IsActive)
+                            {
+                                <span class="status-pill status-pill--success">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-pill--muted">Đang ẩn</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions justify-content-end">
+                                <a asp-action="Edit" asp-route-id="@poi.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@poi.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@functions {
+    private static List<string> GetLanguageCodes(VKFoodArea.Web.Models.Poi poi)
+    {
+        var result = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(poi.TtsScriptVi)) result.Add("VI");
+        if (!string.IsNullOrWhiteSpace(poi.TtsScriptEn)) result.Add("EN");
+        if (!string.IsNullOrWhiteSpace(poi.TtsScriptZh)) result.Add("ZH");
+        if (!string.IsNullOrWhiteSpace(poi.TtsScriptJa)) result.Add("JA");
+        if (!string.IsNullOrWhiteSpace(poi.TtsScriptDe)) result.Add("DE");
+
+        return result;
+    }
+}

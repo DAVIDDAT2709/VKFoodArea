@@ -1,60 +1,162 @@
 @model IEnumerable<VKFoodArea.Web.Models.NarrationHistory>
 @{
     ViewData["Title"] = "Lịch sử nghe";
-    var currentSource = ViewBag.CurrentSource as string;
+    var currentSource = (ViewBag.CurrentSource as string ?? string.Empty).Trim().ToLowerInvariant();
+    var items = Model.ToList();
+    var todayCount = items.Count(x => x.PlayedAt >= DateTime.Today);
+    var gpsCount = items.Count(x => string.Equals(x.TriggerSource, "gps", StringComparison.OrdinalIgnoreCase));
+    var qrCount = items.Count(x => string.Equals(x.TriggerSource, "qr", StringComparison.OrdinalIgnoreCase));
+    var topPois = items
+        .GroupBy(x => x.PoiName)
+        .Select(x => new { PoiName = x.Key, Count = x.Count() })
+        .OrderByDescending(x => x.Count)
+        .ThenBy(x => x.PoiName)
+        .Take(4)
+        .ToList();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<section class="page-intro page-section">
     <div>
-        <h1 class="h3 mb-1">Lịch sử nghe</h1>
-        <p class="text-muted mb-0">Theo dõi lượt phát thuyết minh từ app người dùng.</p>
+        <span class="eyebrow">Theo dõi sử dụng</span>
+        <h2>Giám sát lịch sử phát thuyết minh từ ứng dụng</h2>
+        <p>Dữ liệu tại đây giúp kiểm tra luồng GPS, QR và thống kê nhanh POI nào đang được nghe nhiều nhất.</p>
     </div>
-</div>
+</section>
 
-<div class="card shadow-sm border-0 mb-3">
-    <div class="card-body">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-sm-4">
-                <label class="form-label">Lọc theo nguồn</label>
-                <select name="source" class="form-select">
-                    <option value="">Tất cả</option>
-                    <option value="manual" selected="@(currentSource == "manual")">manual</option>
-                    <option value="gps" selected="@(currentSource == "gps")">gps</option>
-                    <option value="qr" selected="@(currentSource == "qr")">qr</option>
+<section class="metrics-grid page-section">
+    <article class="metric-card">
+        <span class="metric-card__label">Tổng lượt nghe</span>
+        <strong class="metric-card__value">@items.Count</strong>
+        <p class="metric-card__hint">Số log phát đã ghi nhận trong cơ sở dữ liệu.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">Lượt nghe hôm nay</span>
+        <strong class="metric-card__value">@todayCount</strong>
+        <p class="metric-card__hint">Theo ngày hiện tại của máy chủ web.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">Kích hoạt bằng GPS</span>
+        <strong class="metric-card__value">@gpsCount</strong>
+        <p class="metric-card__hint">Giúp kiểm tra luồng geofence tự động.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">Kích hoạt bằng QR</span>
+        <strong class="metric-card__value">@qrCount</strong>
+        <p class="metric-card__hint">Hữu ích cho kịch bản quét mã tại điểm dừng.</p>
+    </article>
+</section>
+
+<section class="page-grid page-grid--narrow page-section">
+    <article class="card-surface">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Bộ lọc</span>
+                <h2>Lọc theo nguồn kích hoạt</h2>
+            </div>
+        </div>
+
+        <form method="get" class="filter-form">
+            <div>
+                <label class="form-label" for="source">Nguồn phát</label>
+                <select id="source" name="source" class="form-select">
+                    <option value="" selected="@(string.IsNullOrWhiteSpace(currentSource) ? "selected" : null)">Tất cả</option>
+                    <option value="manual" selected="@(currentSource == "manual" ? "selected" : null)">Thủ công</option>
+                    <option value="gps" selected="@(currentSource == "gps" ? "selected" : null)">GPS</option>
+                    <option value="qr" selected="@(currentSource == "qr" ? "selected" : null)">QR</option>
                 </select>
             </div>
-            <div class="col-sm-auto">
-                <button type="submit" class="btn btn-primary">Lọc</button>
-                <a asp-action="Index" class="btn btn-light">Reset</a>
+            <div class="page-actions">
+                <button type="submit" class="btn btn-primary">Áp dụng</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
             </div>
         </form>
-    </div>
-</div>
+    </article>
 
-<div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>POI</th>
-                    <th>Ngôn ngữ</th>
-                    <th>Nguồn</th>
-                    <th>Chế độ</th>
-                    <th>Thời gian</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.PoiName</td>
-                    <td>@item.Language</td>
-                    <td>@item.TriggerSource</td>
-                    <td>@item.Mode</td>
-                    <td>@item.PlayedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
-                </tr>
-            }
-            </tbody>
-        </table>
+    <article class="card-surface">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Top POI</span>
+                <h2>Điểm được nghe nhiều trong bộ lọc hiện tại</h2>
+            </div>
+        </div>
+
+        @if (!topPois.Any())
+        {
+            <div class="empty-state compact">
+                <p>Chưa có dữ liệu để xếp hạng.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-stack">
+                @foreach (var item in topPois)
+                {
+                    <div class="list-row">
+                        <div class="list-row__content">
+                            <strong>@item.PoiName</strong>
+                        </div>
+                        <span class="soft-pill">@item.Count lượt</span>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+</section>
+
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Nhật ký phát</span>
+            <h2>Chi tiết từng lượt nghe</h2>
+        </div>
     </div>
-</div>
+
+    @if (!items.Any())
+    {
+        <div class="empty-state">
+            <h3>Không có dữ liệu phù hợp</h3>
+            <p>Hãy thử đổi bộ lọc hoặc chạy app mobile để gửi thêm log.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table data-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>POI</th>
+                        <th>Ngôn ngữ</th>
+                        <th>Nguồn</th>
+                        <th>Chế độ</th>
+                        <th>Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>
+                            <div class="table-title">@item.PoiName</div>
+                        </td>
+                        <td><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
+                        <td><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
+                        <td>@item.Mode.ToUpperInvariant()</td>
+                        <td>@item.PlayedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@functions {
+    private static string MapSource(string source) =>
+        source?.Trim().ToLowerInvariant() switch
+        {
+            "gps" => "GPS",
+            "qr" => "QR",
+            "manual" => "Thủ công",
+            _ => "Khác"
+        };
+}

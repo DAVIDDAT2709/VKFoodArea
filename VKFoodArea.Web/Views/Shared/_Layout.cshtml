@@ -1,3 +1,11 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+
+    string NavClass(string controller) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+            ? "app-nav__link active"
+            : "app-nav__link";
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -8,39 +16,72 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VKFoodArea.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm mb-4">
-            <div class="container">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">VKFoodArea Admin</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto gap-lg-2">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Pois" asp-action="Index">POI</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="QrCodeItems" asp-action="Index">QR Code</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="NarrationHistories" asp-action="Index">Lịch sử nghe</a></li>
-                    </ul>
+<body class="app-body">
+    <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="brand-panel">
+                <a class="brand-mark" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark__eyebrow">VK Food Area</span>
+                    <span class="brand-mark__title">Narration CMS</span>
+                </a>
+                <p class="brand-mark__copy">
+                    Trung tâm quản trị nội dung thuyết minh tự động cho khu ẩm thực Vĩnh Khánh:
+                    POI, QR, lịch sử nghe và dữ liệu phục vụ app mobile.
+                </p>
+            </div>
+
+            <nav class="app-nav" aria-label="Điều hướng chính">
+                <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">Tổng quan</a>
+                <a class="@NavClass("Pois")" asp-controller="Pois" asp-action="Index">Điểm POI</a>
+                <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">QR code</a>
+                <a class="@NavClass("NarrationHistories")" asp-controller="NarrationHistories" asp-action="Index">Lịch sử nghe</a>
+            </nav>
+
+            <section class="sidebar-card">
+                <span class="eyebrow">Phạm vi web</span>
+                <h2>CMS sẵn sàng cho demo đồ án</h2>
+                <p>
+                    Giao diện này ưu tiên thao tác nhanh, theo dõi dữ liệu tập trung và trình bày rõ
+                    phần đã có để đối chiếu với yêu cầu của đề tài.
+                </p>
+                <div class="pill-cloud">
+                    <span class="soft-pill">POI & geofence</span>
+                    <span class="soft-pill">QR kích hoạt</span>
+                    <span class="soft-pill">Script đa ngôn ngữ</span>
+                    <span class="soft-pill">API cho mobile</span>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </section>
+        </aside>
 
-    <div class="container pb-4">
-        @if (TempData["SuccessMessage"] is string message)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                @message
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        }
+        <div class="app-main">
+            <header class="topbar">
+                <div>
+                    <p class="topbar__eyebrow">Bảng điều khiển nội dung</p>
+                    <h1 class="topbar__title">@((string?)ViewData["Title"] ?? "VKFoodArea Admin")</h1>
+                </div>
 
-        <main role="main">
-            @RenderBody()
-        </main>
+                <div class="topbar__actions">
+                    <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Thêm POI</a>
+                    <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-secondary">Thêm QR</a>
+                </div>
+            </header>
+
+            <div class="page-wrap">
+                @if (TempData["SuccessMessage"] is string message)
+                {
+                    <div class="alert alert-success alert-dismissible fade show page-section" role="alert">
+                        @message
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                    </div>
+                }
+
+                <main id="main-content" class="page-content" role="main">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

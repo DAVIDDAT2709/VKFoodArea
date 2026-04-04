@@ -1,26 +1,50 @@
 @model VKFoodArea.Web.ViewModels.QrCodeItemFormViewModel
 
-<div class="mb-3">
-    <label asp-for="Code" class="form-label"></label>
-    <input asp-for="Code" class="form-control" />
-    <span asp-validation-for="Code" class="text-danger"></span>
-</div>
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
-<div class="mb-3">
-    <label asp-for="Title" class="form-label"></label>
-    <input asp-for="Title" class="form-control" />
-    <span asp-validation-for="Title" class="text-danger"></span>
-</div>
+<div class="editor-layout editor-layout--compact">
+    <section class="card-surface">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Thiết lập mã</span>
+                <h2>Thông tin QR code</h2>
+            </div>
+        </div>
 
-<div class="mb-3">
-    <label asp-for="PoiId" class="form-label"></label>
-    <select asp-for="PoiId" asp-items="Model.PoiOptions" class="form-select">
-        <option value="">-- Chọn POI --</option>
-    </select>
-    <span asp-validation-for="PoiId" class="text-danger"></span>
-</div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Code" class="form-label"></label>
+                <input asp-for="Code" class="form-control" placeholder="Nhập mã QR duy nhất" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" placeholder="Tên gợi nhớ cho mã QR" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="col-md-8">
+                <label asp-for="PoiId" class="form-label"></label>
+                <select asp-for="PoiId" asp-items="Model.PoiOptions" class="form-select">
+                    <option value="">-- Chọn POI --</option>
+                </select>
+                <span asp-validation-for="PoiId" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check form-switch field-switch">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<div class="form-check mb-3">
-    <input asp-for="IsActive" class="form-check-input" />
-    <label asp-for="IsActive" class="form-check-label"></label>
+    <aside class="card-surface side-note">
+        <span class="eyebrow">Gợi ý sử dụng</span>
+        <h3>Để QR dễ quản lý hơn</h3>
+        <ul class="check-list">
+            <li>Mỗi QR nên có tiêu đề phản ánh rõ khu vực hoặc điểm đặt mã.</li>
+            <li>Không dùng lại cùng một mã cho nhiều POI khác nhau.</li>
+            <li>Nếu cần ngưng tạm trong lúc demo, chỉ cần tắt trạng thái hoạt động.</li>
+        </ul>
+    </aside>
 </div>

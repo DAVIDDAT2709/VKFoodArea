@@ -1,49 +1,109 @@
 @model IEnumerable<VKFoodArea.Web.Models.QrCodeItem>
 @{
-    ViewData["Title"] = "QR Code";
+    ViewData["Title"] = "Quản lý QR code";
+    var items = Model.ToList();
+    var activeCount = items.Count(x => x.IsActive);
+    var coveredPoiCount = items.Select(x => x.PoiId).Distinct().Count();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<section class="page-intro page-section">
     <div>
-        <h1 class="h3 mb-1">Quản lý QR Code</h1>
-        <p class="text-muted mb-0">Mỗi mã QR gắn với một POI để app user mở đúng nội dung.</p>
+        <span class="eyebrow">Kích hoạt bằng QR</span>
+        <h2>Quản lý QR code cho từng điểm thuyết minh</h2>
+        <p>
+            Module này phục vụ luồng quét QR tại điểm dừng hoặc quầy hàng, giúp người dùng nghe ngay nội dung
+            mà không cần chờ GPS kích hoạt.
+        </p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Tạo mới</a>
-</div>
+    <div class="page-intro__actions">
+        <a asp-action="Create" class="btn btn-primary">Tạo QR mới</a>
+    </div>
+</section>
 
-<div class="card shadow-sm border-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Tiêu đề</th>
-                    <th>POI</th>
-                    <th>Ngày tạo</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td><code>@item.Code</code></td>
-                    <td>@item.Title</td>
-                    <td>@item.Poi?.Name</td>
-                    <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>
-                        @if (item.IsActive)
-                        {
-                            <span class="badge bg-success">Active</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">Inactive</span>
-                        }
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+<section class="metrics-grid page-section">
+    <article class="metric-card">
+        <span class="metric-card__label">Tổng QR</span>
+        <strong class="metric-card__value">@items.Count</strong>
+        <p class="metric-card__hint">Bao gồm toàn bộ mã đã được tạo trong module QR.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">QR đang hoạt động</span>
+        <strong class="metric-card__value">@activeCount</strong>
+        <p class="metric-card__hint">Có thể dùng để mở nội dung trên app.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">POI đã gắn QR phụ</span>
+        <strong class="metric-card__value">@coveredPoiCount</strong>
+        <p class="metric-card__hint">Số điểm đang có ít nhất một mã QR trong module này.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-card__label">QR đang ẩn</span>
+        <strong class="metric-card__value">@(items.Count - activeCount)</strong>
+        <p class="metric-card__hint">Dùng để giữ lại mã nhưng tạm thời ngưng cho app sử dụng.</p>
+    </article>
+</section>
+
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">Danh sách QR</span>
+            <h2>QR code hiện có</h2>
+        </div>
     </div>
-</div>
+
+    @if (!items.Any())
+    {
+        <div class="empty-state">
+            <h3>Chưa có QR code nào</h3>
+            <p>Hãy tạo QR để phục vụ kịch bản quét mã mở nội dung mà không cần GPS.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table data-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã QR</th>
+                        <th>Tiêu đề</th>
+                        <th>POI liên kết</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td class="mono">@item.Code</td>
+                        <td>
+                            <div class="table-title">@item.Title</div>
+                        </td>
+                        <td>
+                            <div class="table-title">@(item.Poi?.Name ?? "POI không tồn tại")</div>
+                        </td>
+                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="status-pill status-pill--success">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-pill--muted">Đang ẩn</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="table-actions justify-content-end">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

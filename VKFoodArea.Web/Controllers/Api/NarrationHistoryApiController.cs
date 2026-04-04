@@ -28,6 +28,8 @@ public class NarrationHistoryApiController : ControllerBase
     public async Task<IActionResult> Create([FromBody] NarrationHistoryCreateApiViewModel vm)
     {
         var created = await _narrationHistoryService.CreateFromAppAsync(vm);
+        if (created is null)
+            return BadRequest("POI không tồn tại hoặc đang bị ẩn.");
 
         return CreatedAtAction(
             nameof(GetById),
