@@ -1,0 +1,500 @@
+<doc>
+    <assembly>
+        <name>SkiaSharp.Views.Maui.Core</name>
+    </assembly>
+    <members>
+        <member name="T:SkiaSharp.Views.Maui.Extensions">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiColor(SkiaSharp.SKColor)">
+            <param name="color">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiColor(SkiaSharp.SKColorF)">
+            <param name="color">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiPoint(SkiaSharp.SKPoint)">
+            <param name="point">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiPoint(SkiaSharp.SKPointI)">
+            <param name="point">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiPointF(SkiaSharp.SKPoint)">
+            <param name="point">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiPointF(SkiaSharp.SKPointI)">
+            <param name="point">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiRectangle(SkiaSharp.SKRect)">
+            <param name="rect">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiRectangle(SkiaSharp.SKRectI)">
+            <param name="rect">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiRectangleF(SkiaSharp.SKRect)">
+            <param name="rect">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiRectangleF(SkiaSharp.SKRectI)">
+            <param name="rect">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiSize(SkiaSharp.SKSize)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiSize(SkiaSharp.SKSizeI)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiSizeF(SkiaSharp.SKSize)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToMauiSizeF(SkiaSharp.SKSizeI)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKColor(Microsoft.Maui.Graphics.Color)">
+            <param name="color">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKColorF(Microsoft.Maui.Graphics.Color)">
+            <param name="color">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKPoint(Microsoft.Maui.Graphics.Point)">
+            <param name="point">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKPoint(Microsoft.Maui.Graphics.PointF)">
+            <param name="point">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKRect(Microsoft.Maui.Graphics.Rect)">
+            <param name="rect">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKRect(Microsoft.Maui.Graphics.RectF)">
+            <param name="rect">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKSize(Microsoft.Maui.Graphics.Size)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Extensions.ToSKSize(Microsoft.Maui.Graphics.SizeF)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.ISKBitmapImageSource">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKBitmapImageSource.Bitmap">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.ISKCanvasView">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKCanvasView.CanvasSize">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKCanvasView.EnableTouchEvents">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKCanvasView.IgnorePixelScaling">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.ISKCanvasView.InvalidateSurface">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.ISKCanvasView.OnCanvasSizeChanged(SkiaSharp.SKSizeI)">
+            <param name="size">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.ISKCanvasView.OnPaintSurface(SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs)">
+            <param name="e">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.ISKCanvasView.OnTouch(SkiaSharp.Views.Maui.SKTouchEventArgs)">
+            <param name="e">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.ISKImageImageSource">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKImageImageSource.Image">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.ISKPictureImageSource">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKPictureImageSource.Dimensions">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKPictureImageSource.Picture">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.ISKPixmapImageSource">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.ISKPixmapImageSource.Pixmap">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.SKMouseButton">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKMouseButton.Left">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKMouseButton.Middle">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKMouseButton.Right">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKMouseButton.Unknown">
+            <summary>To be added.</summary>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTarget)">
+            <param name="surface">To be added.</param>
+            <param name="renderTarget">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTarget,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType)">
+            <param name="surface">To be added.</param>
+            <param name="renderTarget">To be added.</param>
+            <param name="origin">To be added.</param>
+            <param name="colorType">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs.BackendRenderTarget">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs.ColorType">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs.Origin">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs.Surface">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)">
+            <param name="surface">To be added.</param>
+            <param name="info">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo,SkiaSharp.SKImageInfo)">
+            <param name="surface">To be added.</param>
+            <param name="info">To be added.</param>
+            <param name="rawInfo">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs.Info">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs.RawInfo">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs.Surface">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.SKTouchAction">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.Cancelled">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.Entered">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.Exited">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.Moved">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.Pressed">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.Released">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchAction.WheelChanged">
+            <summary>To be added.</summary>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.SKTouchDeviceType">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchDeviceType.Mouse">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchDeviceType.Pen">
+            <summary>To be added.</summary>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.SKTouchDeviceType.Touch">
+            <summary>To be added.</summary>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.SKTouchEventArgs">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKTouchEventArgs(System.Int64,SkiaSharp.Views.Maui.SKTouchAction,SkiaSharp.SKPoint,System.Boolean)">
+            <param name="id">To be added.</param>
+            <param name="type">To be added.</param>
+            <param name="location">To be added.</param>
+            <param name="inContact">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKTouchEventArgs(System.Int64,SkiaSharp.Views.Maui.SKTouchAction,SkiaSharp.Views.Maui.SKMouseButton,SkiaSharp.Views.Maui.SKTouchDeviceType,SkiaSharp.SKPoint,System.Boolean)">
+            <param name="id">To be added.</param>
+            <param name="type">To be added.</param>
+            <param name="mouseButton">To be added.</param>
+            <param name="deviceType">To be added.</param>
+            <param name="location">To be added.</param>
+            <param name="inContact">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKTouchEventArgs(System.Int64,SkiaSharp.Views.Maui.SKTouchAction,SkiaSharp.Views.Maui.SKMouseButton,SkiaSharp.Views.Maui.SKTouchDeviceType,SkiaSharp.SKPoint,System.Boolean,System.Int32)">
+            <param name="id">To be added.</param>
+            <param name="type">To be added.</param>
+            <param name="mouseButton">To be added.</param>
+            <param name="deviceType">To be added.</param>
+            <param name="location">To be added.</param>
+            <param name="inContact">To be added.</param>
+            <param name="wheelDelta">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.SKTouchEventArgs(System.Int64,SkiaSharp.Views.Maui.SKTouchAction,SkiaSharp.Views.Maui.SKMouseButton,SkiaSharp.Views.Maui.SKTouchDeviceType,SkiaSharp.SKPoint,System.Boolean,System.Int32,System.Single)">
+            <param name="id">To be added.</param>
+            <param name="type">To be added.</param>
+            <param name="mouseButton">To be added.</param>
+            <param name="deviceType">To be added.</param>
+            <param name="location">To be added.</param>
+            <param name="inContact">To be added.</param>
+            <param name="wheelDelta">To be added.</param>
+            <param name="pressure">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.ActionType">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.DeviceType">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.Handled">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.Id">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.InContact">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.Location">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.MouseButton">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.Pressure">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.SKTouchEventArgs.ToString">
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="P:SkiaSharp.Views.Maui.SKTouchEventArgs.WheelDelta">
+            <summary>To be added.</summary>
+            <value>To be added.</value>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler(Microsoft.Maui.PropertyMapper,Microsoft.Maui.CommandMapper)">
+            <param name="mapper">To be added.</param>
+            <param name="commands">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler.CreatePlatformView">
+            <summary>To be added.</summary>
+            <returns>To be added.</returns>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler.MapEnableTouchEvents(SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler,SkiaSharp.Views.Maui.ISKCanvasView)">
+            <param name="handler">To be added.</param>
+            <param name="canvasView">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler.MapIgnorePixelScaling(SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler,SkiaSharp.Views.Maui.ISKCanvasView)">
+            <param name="handler">To be added.</param>
+            <param name="canvasView">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="M:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler.OnInvalidateSurface(SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler,SkiaSharp.Views.Maui.ISKCanvasView,System.Object)">
+            <param name="handler">To be added.</param>
+            <param name="canvasView">To be added.</param>
+            <param name="args">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler.SKCanvasViewCommandMapper">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="F:SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler.SKCanvasViewMapper">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="T:SkiaSharp.Views.Maui.Handlers.SKImageSourceService">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.Handlers.SKImageSourceService">
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+        <member name="C:SkiaSharp.Views.Maui.Handlers.SKImageSourceService(Microsoft.Extensions.Logging.ILogger)">
+            <param name="logger">To be added.</param>
+            <summary>To be added.</summary>
+            <remarks>To be added.</remarks>
+        </member>
+    </members>
+</doc>

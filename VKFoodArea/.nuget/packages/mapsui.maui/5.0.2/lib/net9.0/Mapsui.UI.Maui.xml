@@ -1,0 +1,1280 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Mapsui.UI.Maui</name>
+    </assembly>
+    <members>
+        <member name="M:Mapsui.UI.Maui.Extensions.ColorExtensions.ToMaui(Mapsui.Styles.Color)">
+            <summary>
+            Convert Mapsui.Styles.Color to Microsoft.Maui.Graphics.Color
+            </summary>
+            <param name="color">Color in Mapsui format</param>
+            <returns>Color in Microsoft.Maui.Graphics format</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Extensions.ColorExtensions.ToMapsui(Microsoft.Maui.Graphics.Color)">
+            <summary>
+            Convert Microsoft.Maui.Graphics.Color to Mapsui.Style.Color
+            </summary>
+            <param name="color">Color in Microsoft.Maui.Graphics.Color format </param>
+            <returns>Color in Mapsui.Styles.Color format</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Extensions.TextAlignmentExtensions.ToMapsui(Microsoft.Maui.TextAlignment)">
+            <summary>
+            Convert Microsoft.Maui.TextAlignment to Mapsui/RichTextKit.Styles.Color
+            </summary>
+            <param name="textAlignment">TextAlignment in Microsoft.Maui format</param>
+            <returns>TextAlignment in Mapsui/RichTextKit format</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Extensions.PositionExtensions.ToMaui(Mapsui.MPoint)">
+            <summary>
+            Convert Mapsui.Geometries.Point to Mapsui.UI.Maui.Position
+            </summary>
+            <param name="point">Point in Mapsui format</param>
+            <returns>Return a Position type</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Extensions.ZoomLevelExtensions.ToMapsuiResolution(System.Double)">
+            <summary>
+            Convert zoom level (as described at https://wiki.openstreetmap.org/wiki/Zoom_levels) into a Mapsui resolution
+            </summary>
+            <param name="zoomLevel">Zoom level</param>
+            <returns>Resolution in Mapsui format</returns>
+        </member>
+        <member name="T:Mapsui.UI.Maui.MapControl">
+            <summary>
+            UI component that displays an interactive map 
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapControl.IsStaleTimeSpan">
+            <summary>
+            If finger position is not updated during the IsStaleTimeSpan period, the touch event is considered stale and is removed.
+            Touch input is not always reliable. This could be because of bugs in SkiaSharp, WinUI, iOS or Android, MAUI, 
+            in hardware drivers, or hardware. To work around this we remove the touch events if they did not change after 
+            some period. Making this period too short could remove valid events, making it too long would result in a longer 
+            period of dangling ghost touches. You might want to tweak this value to your needs.
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.OpenInBrowser(System.String)">
+            <summary>
+            Public functions
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.ClearTouchState">
+            <summary>
+            Clears the Touch State
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapControl.MaxTapGestureMovement">
+            <summary>
+            The movement allowed between a touch down and touch up in a touch gestures in device independent pixels.
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapControl.UseFling">
+            <summary>
+            Use fling gesture to move the map. Default is true. Fling means that the map will continue to move for a 
+            short time after the user has lifted the finger.
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapControl.Info">
+            <summary>
+            Called whenever the map is clicked. The MapInfoEventArgs contain the features that were hit in
+            the layers that have IsMapInfoLayer set to true. 
+            </summary>
+            <remarks>
+            The Map.Tapped event is preferred over the Info event. This event is kept for backwards compatibility.
+            </remarks>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapControl.MapTapped">
+            <summary>
+            Event that is triggered when the map is tapped. Can be a single tap, double tap or long press.
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapControl.MapPointerPressed">
+            <summary>
+            Event that is triggered when on pointer down.
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapControl.MapPointerMoved">
+            <summary>
+            Event that is triggered when on pointer move. Can be a drag or hover.
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapControl.MapPointerReleased">
+            <summary>
+            Event that is triggered when on pointer up.
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.ForceUpdate">
+            <summary>
+            Force a update of control
+            </summary>
+            <remarks>
+            When this function is called, the control draws itself once 
+            </remarks>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapControl.PropertyChanged">
+            <summary>
+            Called whenever a property is changed
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.Unsubscribe">
+            <summary>
+            Unsubscribe from map events 
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.SubscribeToMapEvents(Mapsui.Map)">
+            <summary>
+            Subscribe to map events
+            </summary>
+            <param name="map">Map, to which events to subscribe</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.UnsubscribeFromMapEvents(Mapsui.Map)">
+            <summary>
+            Unsubscribe from map events
+            </summary>
+            <param name="map">Map, to which events to unsubscribe</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.RefreshData(Mapsui.ChangeType)">
+            <summary>
+            Refresh data of Map, but don't paint it
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.GetSnapshot(System.Collections.Generic.IEnumerable{Mapsui.Layers.ILayer},Mapsui.Rendering.RenderFormat,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapControl.TryUpdateViewportSize">
+            <summary>
+            Tries to set the size of the MapControl.Map.Viewport.
+            </summary>
+        </member>
+        <member name="T:Mapsui.UI.Maui.KnownColor">
+            <summary> Known Color Helper for Maui </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.CalloutClickedEventArgs.Callout">
+            <summary>
+            Callout that is clicked
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.CalloutClickedEventArgs.Point">
+            <summary>
+            Point of click in EPSG:4326 coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.CalloutClickedEventArgs.ScreenPoint">
+            <summary>
+            Point of click in screen coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.CalloutClickedEventArgs.GestureType">
+            <summary>
+            Number of taps
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.CalloutClickedEventArgs.Handled">
+            <summary>
+            Flag, if this event was handled
+            </summary>
+            <value><c>true</c> if handled; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.DrawableClickedEventArgs.Point">
+            <summary>
+            Point of click in EPSG:4326 coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.DrawableClickedEventArgs.ScreenPoint">
+            <summary>
+            Point of click in screen coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.DrawableClickedEventArgs.GestureType">
+            <summary>
+            Number of taps
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.DrawableClickedEventArgs.Handled">
+            <summary>
+            Flag, if this event was handled
+            </summary>
+            <value><c>true</c> if handled; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapClickedEventArgs.Point">
+            <summary>
+            Point of click in EPSG:4326 coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapClickedEventArgs.GestureType">
+            <summary>
+            Number of taps
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapClickedEventArgs.Handled">
+            <summary>
+            Flag, if this event was handled
+            </summary>
+            <value><c>true</c> if handled; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapLongClickedEventArgs.Point">
+            <summary>
+            Point of click in EPSG:4326 coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapLongClickedEventArgs.Handled">
+            <summary>
+            Flag, if this event was handled
+            </summary>
+            <value><c>true</c> if handled; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.PinClickedEventArgs.Pin">
+            <summary>
+            Pin that was clicked
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.PinClickedEventArgs.Point">
+            <summary>
+            Point of click in EPSG:4326 coordinates
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.PinClickedEventArgs.GestureType">
+            <summary>
+            Number of taps
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.PinClickedEventArgs.Handled">
+            <summary>
+            Flag, if this event was handled
+            </summary>
+            <value><c>true</c> if handled; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.SelectedPinChangedEventArgs.SelectedPin">
+            <summary>
+            Pin that was selected
+            </summary>
+        </member>
+        <member name="T:Mapsui.UI.Maui.MapView">
+            <summary>
+            Class, that uses the API of the original Xamarin.Forms MapView
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapView.PinClicked">
+            <summary>
+             Occurs when a pin clicked
+             </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapView.SelectedPinChanged">
+            <summary>
+            Occurs when selected pin changed
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Maui.MapView.MapClicked">
+            <summary>
+            Occurs when map clicked
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.MyLocationLayer">
+            <summary>
+            MyLocation layer
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.MyLocationEnabled">
+            <summary>
+            Should my location be visible on map
+            </summary>
+            <remarks>
+            Needs a BeginInvokeOnMainThread to change MyLocationLayer.Enabled
+            </remarks>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.MyLocationFollow">
+            <summary>
+            Should center of map follow my location
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.Pins">
+            <summary>
+            Pins on map
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.SelectedPin">
+            <summary>
+            Selected pin
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapView.GetCallouts">
+            <summary>
+            Get callouts on map (those that are currently visible).
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.UniqueCallout">
+            <summary>
+            Single or multiple callouts possible
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.Drawables">
+            <summary>
+            List of drawables like polyline and polygon
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.RotationLock">
+            <summary>
+            Enable rotation with pinch gesture
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.ZoomLock">
+            <summary>
+            Enable zooming
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.PanLock">
+            <summary>
+            Enable panning
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.IsZoomButtonVisible">
+            <summary>
+            Enable zoom buttons
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.IsMyLocationButtonVisible">
+            <summary>
+            Enable My Location button
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.IsNorthingButtonVisible">
+            <summary>
+            Enable Northing button
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.ButtonMargin">
+            <summary>
+            Margin for buttons
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.ButtonSpacing">
+            <summary>
+            Spacing between buttons
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapView.ButtonSize">
+            <summary>
+            Size of buttons in x- and y-direction
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapView.HideCallouts">
+            <summary>
+            Hide all visible callouts
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapView.HandlerViewportChanged(System.Object,Mapsui.ViewportChangedEventArgs)">
+            <summary>
+            Viewport of map has changed
+            </summary>
+            <param name="sender">Viewport of this event</param>
+            <param name="e">Event arguments containing what changed</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapView.AddLayers">
+            <summary>
+            Add all layers that MapView uses
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapView.RemoveLayers">
+            <summary>
+            Remove all layers that MapView uses
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Pin">
+            <summary>
+            Pin to which this callout belongs
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Type">
+            <summary>
+            Type of Callout
+            </summary>
+            <remarks>
+            Could be single, detail or custom. The last is a bitmap id for an owner drawn image.
+            </remarks>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Anchor">
+            <summary>
+            Anchor position of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TailAlignment">
+            <summary>
+            Tail alignment of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TailWidth">
+            <summary>
+            Width from arrow of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TailHeight">
+            <summary>
+            Height from arrow of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TailPosition">
+            <summary>
+            Relative position of anchor of Callout on the side given by <see cref="P:Mapsui.UI.Maui.Callout.TailAlignment"/>
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Color">
+            <summary>
+            Color of stroke around Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.BackgroundColor">
+            <summary>
+            BackgroundColor of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.ShadowWidth">
+            <summary>
+            Shadow width around Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.StrokeWidth">
+            <summary>
+            Stroke width of frame around Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Rotation">
+            <summary>
+            Rotation of Callout around the anchor
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.RotateWithMap">
+            <summary>
+            Rotate Callout with map
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.RectRadius">
+            <summary>
+            Radius of rounded corners of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Padding">
+            <summary>
+            Padding around content of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Spacing">
+            <summary>
+            Space between Title and Subtitle of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.MaxWidth">
+            <summary>
+            MaxWidth for Title and Subtitle of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.IsVisible">
+            <summary>
+            Is Callout visible on map
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.IsClosableByClick">
+            <summary>
+            Is Callout closable by a click on the callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.ContentId">
+            <summary>
+            Content of Callout
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Title">
+            <summary>
+            Content of Callout title label
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TitleFontName">
+            <summary>
+            Font name to use rendering title
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TitleFontSize">
+            <summary>
+            Font size to rendering title
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TitleFontAttributes">
+            <summary>
+            Font attributes to render title
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TitleFontColor">
+            <summary>
+            Font color to render title
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.TitleTextAlignment">
+            <summary>
+            Text alignment of title
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Subtitle">
+            <summary>
+            Content of Callout detail label
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.SubtitleFontName">
+            <summary>
+            Font name to use rendering subtitle
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.SubtitleFontSize">
+            <summary>
+            Font size to rendering subtitle
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.SubtitleFontAttributes">
+            <summary>
+            Font attributes to render subtitle
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.SubtitleFontColor">
+            <summary>
+            Font color to render subtitle
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.SubtitleTextAlignment">
+            <summary>
+            Text alignment of title
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Callout.Feature">
+            <summary>
+            Feature, which belongs to callout. Should be the same as for the pin to which this callout belongs.
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Callout.HandleCalloutClicked(System.Object,Mapsui.UI.Maui.CalloutClickedEventArgs)">
+            <summary>
+            Callout is touched
+            </summary>
+            <param name="sender">Sender</param>
+            <param name="e">CalloutClickedEventArgs</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Callout.UpdateContent">
+            <summary>
+            Checks type of Callout and activates correct content
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Callout.UpdateCalloutStyle">
+            <summary>
+            Update CalloutStyle of Feature
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Callout.Update">
+            <summary>
+            Update content and style of callout before display it the first time
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Circle.Center">
+            <summary>
+            Center of circle
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Circle.Radius">
+            <summary>
+            Radius of circle in meters
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Circle.FillColor">
+            <summary>
+            Color to fill circle with
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Circle.Quality">
+            <summary>
+            Quality for circle. Determines, how many points used to draw circle. 3 is poorest, 360 best quality.
+            </summary>
+        </member>
+        <member name="T:Mapsui.UI.Maui.Distance">
+            <summary>
+            Distance between to positions
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.Distance.MetersPerMile">
+            <summary>
+            Conversion for for Miles in Meters
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.Distance.MetersPerNauticalMile">
+            <summary>
+            Conversion from Nautic Miles in Meters
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.Distance.MetersPerKilometer">
+            <summary>
+            Conversion from Kilometers in Meters
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Distance.#ctor(System.Double)">
+            <summary>
+            Constructor for <see cref="T:Mapsui.UI.Forms.Distance"/> object.
+            </summary>
+            <param name="meters">Meters.</param>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Distance.Meters">
+            <summary>
+            Distance in meters
+            </summary>
+            <value>Distance in meters</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Distance.Miles">
+            <summary>
+            Distance in miles
+            </summary>
+            <value>Distance im miles</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Distance.Kilometers">
+            <summary>
+            Distance in kilometers
+            </summary>
+            <value>Distance in kilometers</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Distance.NauticalMiles">
+            <summary>
+            Distance in nautic miles
+            </summary>
+            <value>Distance in nautical miles</value>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Distance.FromMiles(System.Double)">
+            <summary>
+            Create distance object for distance in miles
+            </summary>
+            <returns>Distance object</returns>
+            <param name="miles">Distance in miles</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Distance.FromMeters(System.Double)">
+            <summary>
+            Create distance object for distance in meters
+            </summary>
+            <returns>Distance object</returns>
+            <param name="meters">Distance in meters</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Distance.FromKilometers(System.Double)">
+            <summary>
+            Create distance object for distance in kilometers
+            </summary>
+            <returns>Distance object</returns>
+            <param name="kilometers">Distance in kilometers</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Distance.FromNauticalMiles(System.Double)">
+            <summary>
+            Create distance object for distance in nautic miles
+            </summary>
+            <returns>Distance object</returns>
+            <param name="nauticMiles">Distance in nautic miles</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Distance.Equals(Mapsui.UI.Maui.Distance)">
+            <summary>
+            Determines whether the specified <see cref="T:Mapsui.UI.Maui.Distance"/> is equal to the current <see cref="T:Mapsui.UI.Forms.Distance"/>.
+            </summary>
+            <param name="other">The <see cref="T:Mapsui.UI.Maui.Distance"/> to compare with the current <see cref="T:Mapsui.UI.Forms.Distance"/></param>
+            <returns><c>True</c> if the specified <see cref="T:Mapsui.UI.Maui.Distance"/> is equal to the current
+            <see cref="T:Mapsui.UI.Forms.Distance"/>; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="T:Mapsui.UI.Maui.MapSpan">
+            <summary>
+            MapSpan represents an area of the earth
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.MapSpan.EarthRadiusKm">
+            <summary>
+            Radius of earth in EPSG:4327 in kilometers
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.MapSpan.EarthCircumferenceKm">
+            <summary>
+            Circumference of earth in km.
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.MapSpan.MinimumRangeDegrees">
+            <summary>
+            Minimum range degrees, here 1 m in degrees
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.#ctor(Mapsui.UI.Maui.Position,System.Double,System.Double)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.MapSpan"/> class.
+            </summary>
+            <param name="center">Center of the MapSpan</param>
+            <param name="latitudeDegrees">Extend of MapSpan in latitude direction in degrees</param>
+            <param name="longitudeDegrees">Extend of MapSpan in longitude direction in degrees</param>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapSpan.Center">
+            <summary>
+            Center of MapSpan
+            </summary>
+            <value>Center of MapSpan</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapSpan.LatitudeDegrees">
+            <summary>
+            Extend of MapSpan in latitude degrees
+            </summary>
+            <value>Extend in latitude degrees</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapSpan.LongitudeDegrees">
+            <summary>
+            Extend of MapSpan in longitude degrees
+            </summary>
+            <value>Extend in longitude degrees</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.MapSpan.Radius">
+            <summary>
+            Radius of smallest circle thats fit into MapSpan
+            </summary>
+            <value>The radius.</value>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.ClampLatitude(System.Double,System.Double)">
+            <summary>
+            Clamp latitude between north and south
+            </summary>
+            <returns>MapSpan with center clamped between north and south</returns>
+            <param name="north">Maximal latitude degrees for north</param>
+            <param name="south">Maximal latitude degrees for south</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:Mapsui.UI.Forms.MapSpan"/>
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with current <see cref="T:Mapsui.UI.Forms.MapSpan"/></param>
+            <returns><c>true</c> if the specified <see cref="T:System.Object"/> is equal to the current
+            <see cref="T:Mapsui.UI.Forms.MapSpan"/>; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.FromCenterAndRadius(Mapsui.UI.Maui.Position,Mapsui.UI.Maui.Distance)">
+            <summary>
+            Create a new MapSpan from center and radius
+            </summary>
+            <returns>New MapSpan</returns>
+            <param name="center">Center for new MapSpan</param>
+            <param name="radius">Radius for new MapSpan</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.FromPositions(System.Collections.Generic.IEnumerable{Mapsui.UI.Maui.Position})">
+            <summary>
+            Create a new MapSpan from multiple positions
+            </summary>
+            <returns>New MapSpan</returns>
+            <param name="positions">List of positions to get the new MapSpan</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.WithZoom(System.Double)">
+            <summary>
+            Create a new MapSPan with given zoom factor
+            </summary>
+            <returns>New MapSpan</returns>
+            <param name="zoomFactor">Zoom factor</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.DistanceToLatitudeDegrees(Mapsui.UI.Maui.Distance)">
+            <summary>
+            Convert a distance into latitude degrees.
+            </summary>
+            <returns>Latitude degrees</returns>
+            <param name="distance">Distance</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.DistanceToLongitudeDegrees(Mapsui.UI.Maui.Position,Mapsui.UI.Maui.Distance)">
+            <summary>
+            Convert a distances into longitude degrees
+            </summary>
+            <returns>Longitude degrees</returns>
+            <param name="position">Position for latitude to use for circumference</param>
+            <param name="distance">Distance</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.LatitudeCircumferenceKm(Mapsui.UI.Maui.Position)">
+            <summary>
+            Calculate circumference in km for given latitude
+            </summary>
+            <returns>Circumference in km</returns>
+            <param name="position">Position to calculate circumference for</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.LatitudeDegreesToKm(System.Double)">
+            <summary>
+            Calculate distance for latitudes degrees in km
+            </summary>
+            <returns>Distance in km</returns>
+            <param name="latitudeDegrees">Latitude degrees</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.MapSpan.LongitudeDegreesToKm(Mapsui.UI.Maui.Position,System.Double)">
+            <summary>
+            Calculate distance for longitude degrees in km
+            </summary>
+            <returns>Distance in km</returns>
+            <param name="position">Position for latitude to use for calculation</param>
+            <param name="longitudeDegrees">Longitude degrees</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Pin.#ctor(Mapsui.UI.Maui.MapView)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Pin"/> class
+            </summary>
+            <param name="mapView">MapView to which this pin belongs</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Pin.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Pin"/> class
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.MapView">
+            <summary>
+            Internal MapView for refreshing of screen
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Type">
+            <summary>
+            Type of pin. There are some predefined pins.
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Position">
+            <summary>
+            Position of pin, place where anchor is
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Scale">
+            <summary>
+            Scaling of pin
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Color">
+            <summary>
+            Color of pin
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Label">
+            <summary>
+            Label of pin
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Address">
+            <summary>
+            Adress (like street) of pin
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Rotation">
+            <summary>
+            Rotation in degrees around the anchor point
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.RotateWithMap">
+            <summary>
+            When true a symbol will rotate along with the rotation of the map.
+            The default is false.
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.IsVisible">
+            <summary>
+            Determins, if the pin is drawn on map
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.MinVisible">
+            <summary>
+            MinVisible for pin in resolution of Mapsui (smaller values are higher zoom levels)
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.MaxVisible">
+            <summary>
+            MaxVisible for pin in resolution of Mapsui (smaller values are higher zoom levels)
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Width">
+            <summary>
+            Width of the bitmap after scaling, if there is one, if not, than -1
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Height">
+            <summary>
+            Height of the bitmap after scaling, if there is one, if not, than -1
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Anchor">
+            <summary>
+            Anchor of bitmap in pixel
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Transparency">
+            <summary>
+            Transparency of pin
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Tag">
+            <summary>
+            Tag holding free data
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Feature">
+            <summary>
+            Mapsui feature for this pin
+            </summary>
+            <value>Mapsui feature</value>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.Callout">
+            <summary>
+            Gets the callout
+            </summary>
+            <value>Callout for this pin</value>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Pin.ShowCallout">
+            <summary>
+            Show corresponding callout
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Pin.HideCallout">
+            <summary>
+            Hide corresponding callout
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Pin.IsCalloutVisible">
+            <summary>
+            Check visibility for corresponding callout
+            </summary>
+            <returns>True, if callout is visible on map</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Pin.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:Mapsui.UI.Forms.Pin"/>.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:Mapsui.UI.Forms.Pin"/>.</param>
+            <returns><c>true</c> if the specified <see cref="T:System.Object"/> is equal to the current
+            <see cref="T:Mapsui.UI.Forms.Pin"/>; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Pin.ImageSource">
+            <summary> Gets or sets an ImageSource for the Pin </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.PinType.Pin">
+            <summary>
+            Pin with image, which could change color
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.PinType.ImageSource">
+            <summary>
+            Pin as ImageSource
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Polygon.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Polygon"/> class.
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Polygon.FillColor">
+            <summary>
+             Color to fill circle with
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Polygon.Positions">
+            <summary>
+            Outer contour of polygon
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Polygon.Holes">
+            <summary>
+            Holes contained by polygon
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Polyline.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Polyline"/> class.
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Polyline.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Polyline"/> class from encoded string as described here
+            https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+            </summary>
+            <param name="encodedPolyline">Encoded polyline</param>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Polyline.Positions">
+            <summary>
+            Positions of line
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Polyline.CreateFeature">
+            <summary>
+            Create feature
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Polyline.DecodePolyline(System.String)">
+            <summary>
+            Decode polyline
+            </summary>
+            <param name="encodedPolyline">Encoded polyline</param>
+        </member>
+        <member name="T:Mapsui.UI.Maui.Position">
+            <summary>
+            Structure holding latitude and longitude of a position in spherical coordinate system
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Position.#ctor(System.Double,System.Double)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Position"/> from latitude and longitude
+            </summary>
+            <param name="latitude">Latitude of position</param>
+            <param name="longitude">Longitude of position</param>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Position.#ctor(Mapsui.UI.Maui.Position)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Position"/> from position
+            </summary>
+            <param name="point">Position to use</param>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Position.Latitude">
+            <summary>
+            Latitude of position
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Maui.Position.Longitude">
+            <summary>
+            Longitude of position
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Position.ToMapsui">
+            <summary>
+            Convert Xamarin.Forms.Maps.Position to Mapsui.Geometries.Point
+            </summary>
+            <returns>Position in Mapsui format</returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Position.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:Mapsui.UI.Forms.Position"/>
+            </summary>
+            <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:Mapsui.UI.Forms.Position"/></returns>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Position.ToString(System.String)">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:Mapsui.UI.Forms.Position"/> in a given format
+            </summary>
+            <remarks>
+            <para>
+            Format string has 6 parts. This are separated by a "|" character. The first part is the 
+            format for the latitude, the second the format for the longitude part. Than follow shortcuts
+            for the orientations: north, south, east, west.
+            </para>
+            <para>
+            The parameters for the format for latitude and longitude are
+            - P: Cardinal direction like north or east
+            - D: Degrees as integer number. If there are more D than numbers, than there are trailing zeros. E.g. "DDD" and 13 is replaced as "013"
+            - d: Decimal degrees as numbers. Each d is replaced with a number, e.g. "ddd" and 13.5467 degrees gives "546"
+            - M: Minutes as integer number. If there are more M than numbers, than there are trailing zeros. E.g. "MM" and 5 is replaced as "05"
+            - m: Decimal minutes as numbers. Each m is replaced with a number, e.g. "mmm" and 13.5467 minutes gives "546"
+            - S: Seconds as integer number. If there are more S than numbers, than there are trailing zeros. E.g. "SS" and 5 is replaced as "05"
+            - s: Decimal seconds as numbers. Each s is replaced with a number, e.g. "sss" and 13.5467 minutes gives "546"
+            </para>
+            <para>
+            Examples
+            All following examples are for the position 38.959390°, -95.265483°.
+            - The format string "P DD° MM.mmm'|P DDD° MM.mmm'|N|S|E|W" gives "N 38° 57.563' W 095° 15.928'".
+            - The format string "PDD° MM.mmm'|PDDD° MM.mmm'||-||-" gives "38° 57.563' -095° 15.928'".
+            - The format string "DD° MM' SS.sss" P|DDD° MM' SS.sss" P|North|South|East|West" gives "38° 57' 33.804" North 095° 15' 55.739" West".
+            </para>
+            </remarks>
+            <returns>Position as string</returns>
+            <param name="format">Format string</param>
+        </member>
+        <member name="F:Mapsui.UI.Maui.Position.DecimalDegrees">
+            <summary>
+            Format for coordinates with decimal degrees
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.Position.DecimalMinutes">
+            <summary>
+            Format for coordinates with decimal minutes
+            </summary>
+        </member>
+        <member name="F:Mapsui.UI.Maui.Position.DecimalSeconds">
+            <summary>
+            Format for coordinates with decimal seconds
+            </summary>
+        </member>
+        <member name="T:Mapsui.UI.Maui.Utils.PolylineConverter">
+            <summary>
+            Polyline helper class
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Maui.Utils.PolylineConverter.DecodePolyline(System.String)">
+            <summary>
+            Decode
+            </summary>
+            <param name="encodedPolyline"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Mapsui.UI.Objects.Drawable">
+            <summary>
+            Base class for all drawables like polyline, polygon and circle
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.Label">
+            <summary>
+            Label of drawable
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.StrokeWidth">
+            <summary>
+            StrokeWidth of drawable in pixel
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.StrokeColor">
+            <summary>
+            StrokeColor for drawable
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.MinVisible">
+            <summary>
+            MinVisible for drawable in resolution of Mapsui (smaller values are higher zoom levels)
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.MaxVisible">
+            <summary>
+            MaxVisible for drawable in resolution of Mapsui (smaller values are higher zoom levels)
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.ZIndex">
+            <summary>
+            ZIndex of this drawable
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.IsClickable">
+            <summary>
+            Is this drawable clickable
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.Tag">
+            <summary>
+            Object for free use
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.Drawable.Feature">
+            <summary>
+            Mapsui Feature belonging to this drawable
+            </summary>
+        </member>
+        <member name="E:Mapsui.UI.Objects.Drawable.Clicked">
+            <summary>
+            Event called, if this drawable is clicked an IsClickable is true
+            </summary>
+        </member>
+        <member name="T:Mapsui.UI.Objects.IClickable">
+            <summary>
+            Interface for objects that are clickable
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.IClickable.IsClickable">
+            <summary>
+            Gets a value indicating whether this <see cref="T:Mapsui.UI.Objects.IClickable"/> is clickable.
+            </summary>
+            <value><c>true</c> if is clickable; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="M:Mapsui.UI.Objects.IClickable.HandleClicked(Mapsui.UI.Maui.DrawableClickedEventArgs)">
+            <summary>
+            Handle click event
+            </summary>
+            <param name="e">Event args for drawable clicked</param>
+        </member>
+        <member name="E:Mapsui.UI.Objects.IClickable.Clicked">
+            <summary>
+            Get information, when this object is clicked
+            </summary>
+        </member>
+        <member name="T:Mapsui.UI.Objects.MyLocationLayer">
+            <summary>
+            A layer to display a symbol for own location
+            </summary>
+            <remarks>
+            There are two different symbols for own location: one is used when there isn't a change in position (still),
+            and one is used, if the position changes (moving).
+            </remarks>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.IsMoving">
+            <summary>
+            Should be moving arrow or round circle displayed
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.MyLocation">
+            <summary>
+            Position of location, that is displayed
+            </summary>
+            <value>Position of location</value>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.Direction">
+            <summary>
+            Movement direction of device at location
+            </summary>
+            <value>Direction at location</value>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.ViewingDirection">
+            <summary>
+            Viewing direction of device (in degrees wrt. north direction)
+            </summary>
+            <value>Direction at location</value>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.Scale">
+            <summary>
+            Scale of symbol
+            </summary>
+            <value>Scale of symbol</value>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.CalloutText">
+            <summary>
+            The text that is displayed in the MyLocation callout
+            (can contain line breaks).
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.ShowCallout">
+            <summary>
+            Show or hide a callout with further infos next to the MyLocation symbol.
+            </summary>
+        </member>
+        <member name="P:Mapsui.UI.Objects.MyLocationLayer.MapView">
+            <summary> Sets Map View </summary>
+        </member>
+        <member name="E:Mapsui.UI.Objects.MyLocationLayer.Clicked">
+            <summary>
+            This event is triggered whenever the MyLocation symbol or label is clicked.
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.#ctor(Mapsui.UI.Maui.MapView,Mapsui.UI.Maui.Position)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Objects.MyLocationLayer"/> class
+            with a starting location.
+            </summary>
+            <param name="view">MapView, to which this layer belongs</param>
+            <param name="position">Position, where to start</param>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.#ctor(Mapsui.UI.Maui.MapView)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Objects.MyLocationLayer"/> class.
+            </summary>
+            <param name="view">MapView, to which this layer belongs</param>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Mapsui.UI.Objects.MyLocationLayer"/> class.
+            </summary>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.UpdateMyLocation(Mapsui.UI.Maui.Position,System.Boolean)">
+            <summary>
+            Updates my location
+            </summary>
+            <param name="newLocation">New location</param>
+            <param name="animated">true if there is an animation from the old to the new location.</param>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.UpdateMyDirection(System.Double,System.Double,System.Boolean)">
+            <summary>
+            Updates my movement direction
+            </summary>
+            <param name="newDirection">New direction</param>
+            <param name="newViewportRotation">New viewport rotation</param>
+            <param name="animated">true if animated</param>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.UpdateMySpeed(System.Double)">
+            <summary>
+            Updates my speed
+            </summary>
+            <param name="newSpeed">New speed</param>
+        </member>
+        <member name="M:Mapsui.UI.Objects.MyLocationLayer.UpdateMyViewDirection(System.Double,System.Double,System.Boolean)">
+            <summary>
+            Updates my view direction
+            </summary>
+            <param name="newDirection">New direction</param>
+            <param name="newViewportRotation">New viewport rotation</param>
+            <param name="animated">true if animated</param>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.Maui.Controls.Compatibility</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.Maui.Controls.Compatibility.Platform.UAP.BootstrapHelper">
+            <summary>
+            Enables C++ code to simulate ICLRRuntimeHost2::ExecuteAssembly on top of ICLRRuntimeHost2::CreateDelegate in .net core 2.
+            </summary>
+        </member>
+    </members>
+</doc>

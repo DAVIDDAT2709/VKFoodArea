@@ -140,8 +140,8 @@ public class HomeViewModel : INotifyPropertyChanged
 
         LoadNarrationSettings();
 
-        var pois = await _poiRepository.GetActiveAsync();
         await _poiSyncService.SyncPoisAsync();
+        var pois = await _poiRepository.GetActiveAsync();
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
@@ -291,7 +291,7 @@ public class HomeViewModel : INotifyPropertyChanged
             StatusText = $"Đang phát thuyết minh: {poi.Name} | {NarrationSummary}";
         });
 
-        await _narrationService.PlayPoiAsync(poi.Id);
+        await _narrationService.PlayPoiAsync(poi.Id, "auto");
     }
 
     private void UpdateNearbyPois(Location location, IEnumerable<Poi> pois)

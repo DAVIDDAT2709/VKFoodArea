@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.Media;
 using VKFoodArea.Services;
 
 namespace VKFoodArea.Features.Settings;
@@ -11,6 +10,7 @@ public partial class SettingsPage : ContentPage
 {
     private readonly AppSettingsService _settings;
     private readonly AppLanguageService _languageService;
+    private readonly NarrationService _narrationService;
 
     private readonly List<LanguageItem> _languages = new()
     {
@@ -28,11 +28,15 @@ public partial class SettingsPage : ContentPage
         "TTS"
     };
 
-    public SettingsPage(AppSettingsService settings, AppLanguageService languageService)
+    public SettingsPage(
+        AppSettingsService settings,
+        AppLanguageService languageService,
+        NarrationService narrationService)
     {
         InitializeComponent();
         _settings = settings;
         _languageService = languageService;
+        _narrationService = narrationService;
 
         LanguagePicker.ItemsSource = _languages;
         LanguagePicker.ItemDisplayBinding = new Binding(nameof(LanguageItem.DisplayName));
@@ -94,20 +98,7 @@ public partial class SettingsPage : ContentPage
                 _ => "Xin chào, đây là phần nghe thử giọng đọc đã chọn."
             };
 
-            var locales = await TextToSpeech.Default.GetLocalesAsync();
-            var locale = locales.FirstOrDefault(x =>
-                !string.IsNullOrWhiteSpace(x.Language) &&
-                x.Language.StartsWith(languageCode, StringComparison.OrdinalIgnoreCase));
-
-            var options = new SpeechOptions
-            {
-                Pitch = 1.0f,
-                Volume = 1.0f,
-                Rate = 1.0f,
-                Locale = locale
-            };
-
-            await TextToSpeech.Default.SpeakAsync(previewText, options);
+            await _narrationService.PreviewAsync(previewText, languageCode);
         }
         catch (Exception ex)
         {

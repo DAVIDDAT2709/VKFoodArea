@@ -3,6 +3,7 @@
     x:Class="VKFoodArea.Features.Home.HomeDesignPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:home="clr-namespace:VKFoodArea.Features.Home"
     xmlns:viewModels="clr-namespace:VKFoodArea.Features.Home"
     xmlns:models="clr-namespace:VKFoodArea.Models"
     x:DataType="viewModels:HomeViewModel"
@@ -73,6 +74,50 @@
                            FontSize="14"
                            SearchButtonPressed="OnSearchButtonPressed"
                            TextChanged="OnSearchTextChanged" />
+            </Border>
+
+            <Border x:Name="SearchSuggestionContainer"
+                    IsVisible="False"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#E5E7EB"
+                    StrokeThickness="1"
+                    Padding="6"
+                    StrokeShape="RoundRectangle 16">
+
+                <CollectionView x:Name="SearchSuggestionCollectionView"
+                                SelectionMode="Single"
+                                SelectionChanged="OnSuggestionSelected">
+
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical"
+                                           ItemSpacing="4" />
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="home:HomePoiSuggestion">
+                            <Border BackgroundColor="#FFFFFF"
+                                    StrokeThickness="0"
+                                    Padding="8,10"
+                                    StrokeShape="RoundRectangle 12">
+
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="14"
+                                           FontAttributes="Bold"
+                                           TextColor="#111827"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+
+                                    <Label Text="{Binding Address}"
+                                           FontSize="12"
+                                           TextColor="#6B7280"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
             </Border>
         </VerticalStackLayout>
 

@@ -1,4 +1,6 @@
-﻿using Mapsui;
+using System.Globalization;
+using System.Text;
+using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Features;
 using Mapsui.Layers;
@@ -23,15 +25,21 @@ public partial class HomeDesignPage : ContentPage
     private readonly SettingsPage _settingsPage;
     private readonly FullMapPage _fullMapPage;
     private readonly IServiceProvider _serviceProvider;
+    private readonly PoiRepository _poiRepository;
     private readonly FoodRepository _foodRepository;
+    private readonly Dictionary<int, PoiSearchDescriptor> _poiSearchCache = new();
 
     private DateTime _lastMapTapTime = DateTime.MinValue;
     private bool _isOpeningFullMap;
+    private bool _isApplyingSuggestion;
 
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
     private MemoryLayer? _currentLocationLayer;
+
     private List<Poi> _allPois = new();
+    private List<Poi> _defaultPois = new();
+    private List<Poi> _displayedPois = new();
 
     private const string PoiPinSvg =
         "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 64 64'>" +
@@ -40,18 +48,20 @@ public partial class HomeDesignPage : ContentPage
         "</svg>";
 
     public HomeDesignPage(
-    HomeViewModel viewModel,
-    NarrationService narrationService,
-    SettingsPage settingsPage,
-    FullMapPage fullMapPage,
-    FoodRepository foodRepository,
-    IServiceProvider serviceProvider)
+        HomeViewModel viewModel,
+        NarrationService narrationService,
+        SettingsPage settingsPage,
+        FullMapPage fullMapPage,
+        PoiRepository poiRepository,
+        FoodRepository foodRepository,
+        IServiceProvider serviceProvider)
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
         _narrationService = narrationService;
         _settingsPage = settingsPage;
         _fullMapPage = fullMapPage;
+        _poiRepository = poiRepository;
         _foodRepository = foodRepository;
         _serviceProvider = serviceProvider;
     }
@@ -63,9 +73,17 @@ public partial class HomeDesignPage : ContentPage
         await _viewModel.InitializeAsync();
         _viewModel.RefreshNarrationSettings();
 
-        _allPois = _viewModel.NearbyPois.ToList();
-        PoiCollectionView.ItemsSource = _allPois;
+        _allPois = await _poiRepository.GetActiveAsync();
+        _defaultPois = _viewModel.NearbyPois.ToList();
 
+        if (_allPois.Count == 0)
+            _allPois = _defaultPois.ToList();
+
+        if (_defaultPois.Count == 0)
+            _defaultPois = _allPois.Take(10).ToList();
+
+        RebuildPoiSearchCache();
+        ApplySearch(PoiSearchBar.Text, closeSuggestions: true);
         InitializeMap();
     }
 
@@ -85,7 +103,7 @@ public partial class HomeDesignPage : ContentPage
             MapHost.Content = _mapControl;
         }
 
-        _mapControl.Map = BuildMap(_allPois);
+        _mapControl.Map = BuildMap(_displayedPois);
         _mapControl.Refresh();
     }
 
@@ -106,10 +124,10 @@ public partial class HomeDesignPage : ContentPage
 
         _currentLocationLayer = new MemoryLayer("CurrentLocation")
         {
-            Features = new List<IFeature>
-            {
+            Features =
+            [
                 CreateCurrentLocationFeature()
-            }
+            ]
         };
 
         map.Layers.Add(_poiLayer);
@@ -161,7 +179,7 @@ public partial class HomeDesignPage : ContentPage
             .ToMPoint();
 
         var feature = new PointFeature(point);
-        feature["Name"] = "Vị trí hiện tại";
+        feature["Name"] = "Vi tri hien tai";
 
         feature.Styles.Add(new SymbolStyle
         {
@@ -208,7 +226,7 @@ public partial class HomeDesignPage : ContentPage
         if (string.IsNullOrWhiteSpace(name))
             return;
 
-        await DisplayAlert("Quán ăn", name, "OK");
+        await DisplayAlert("Quan an", name, "OK");
     }
 
     private void OnZoomInClicked(object sender, EventArgs e)
@@ -240,38 +258,108 @@ public partial class HomeDesignPage : ContentPage
 
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
     {
-        ApplySearch(e.NewTextValue);
+        if (_isApplyingSuggestion)
+            return;
+
+        UpdateSuggestions(e.NewTextValue);
+        ApplySearch(e.NewTextValue, closeSuggestions: false);
     }
 
     private void OnSearchButtonPressed(object sender, EventArgs e)
     {
-        ApplySearch(PoiSearchBar.Text);
+        ApplySearch(PoiSearchBar.Text, closeSuggestions: true);
     }
 
-    private void ApplySearch(string? keyword)
+    private async void OnSuggestionSelected(object? sender, SelectionChangedEventArgs e)
     {
-        IEnumerable<Poi> filtered;
+        var suggestion = e.CurrentSelection.FirstOrDefault() as HomePoiSuggestion;
+        SearchSuggestionCollectionView.SelectedItem = null;
 
-        if (string.IsNullOrWhiteSpace(keyword))
+        if (suggestion is null)
+            return;
+
+        _isApplyingSuggestion = true;
+        PoiSearchBar.Text = suggestion.Name;
+        _isApplyingSuggestion = false;
+
+        ApplySearch(suggestion.Name, closeSuggestions: true);
+        await OpenPoiDetailAsync(suggestion.Poi);
+    }
+
+    private void UpdateSuggestions(string? keyword)
+    {
+        var suggestions = GetSuggestions(keyword);
+
+        SearchSuggestionContainer.IsVisible = suggestions.Count > 0;
+        SearchSuggestionCollectionView.ItemsSource = suggestions;
+        SearchSuggestionCollectionView.HeightRequest = suggestions.Count switch
         {
-            filtered = _allPois;
+            <= 0 => 0,
+            > 5 => 280,
+            _ => suggestions.Count * 56
+        };
+    }
+
+    private List<HomePoiSuggestion> GetSuggestions(string? keyword)
+    {
+        var normalizedKeyword = NormalizeSearchText(keyword);
+
+        if (string.IsNullOrWhiteSpace(normalizedKeyword))
+            return [];
+
+        return _allPois
+            .Select(poi => new
+            {
+                Poi = poi,
+                Score = GetSearchScore(poi, normalizedKeyword)
+            })
+            .Where(x => x.Score > int.MinValue)
+            .OrderByDescending(x => x.Score)
+            .ThenBy(x => x.Poi.Name.Length)
+            .Take(6)
+            .Select(x => new HomePoiSuggestion
+            {
+                Poi = x.Poi
+            })
+            .ToList();
+    }
+
+    private void ApplySearch(string? keyword, bool closeSuggestions)
+    {
+        var normalizedKeyword = NormalizeSearchText(keyword);
+
+        if (string.IsNullOrWhiteSpace(normalizedKeyword))
+        {
+            _displayedPois = _defaultPois.ToList();
         }
         else
         {
-            var search = keyword.Trim().ToLowerInvariant();
-
-            filtered = _allPois.Where(p =>
-                (!string.IsNullOrWhiteSpace(p.Name) && p.Name.ToLowerInvariant().Contains(search)) ||
-                (!string.IsNullOrWhiteSpace(p.Address) && p.Address.ToLowerInvariant().Contains(search)));
+            _displayedPois = _allPois
+                .Select(poi => new
+                {
+                    Poi = poi,
+                    Score = GetSearchScore(poi, normalizedKeyword)
+                })
+                .Where(x => x.Score > int.MinValue)
+                .OrderByDescending(x => x.Score)
+                .ThenBy(x => x.Poi.Name.Length)
+                .Select(x => x.Poi)
+                .ToList();
         }
 
-        var result = filtered.ToList();
-        PoiCollectionView.ItemsSource = result;
+        PoiCollectionView.ItemsSource = _displayedPois;
 
         if (_mapControl is not null)
         {
-            _mapControl.Map = BuildMap(result);
+            _mapControl.Map = BuildMap(_displayedPois);
             _mapControl.Refresh();
+        }
+
+        if (closeSuggestions || string.IsNullOrWhiteSpace(normalizedKeyword))
+        {
+            SearchSuggestionContainer.IsVisible = false;
+            SearchSuggestionCollectionView.ItemsSource = null;
+            SearchSuggestionCollectionView.HeightRequest = 0;
         }
     }
 
@@ -293,7 +381,7 @@ public partial class HomeDesignPage : ContentPage
         if (grid.BindingContext is not Poi poi)
             return;
 
-        await Navigation.PushAsync(new PoiDetailPage(poi, _narrationService, _foodRepository));
+        await OpenPoiDetailAsync(poi);
     }
 
     private async void OnGoHomeClicked(object sender, EventArgs e)
@@ -306,13 +394,100 @@ public partial class HomeDesignPage : ContentPage
         var page = _serviceProvider.GetRequiredService<HistoryPage>();
         await Navigation.PushAsync(page);
     }
+
     private async void OnQrClicked(object sender, EventArgs e)
     {
         var page = _serviceProvider.GetRequiredService<QrScannerPage>();
         await Navigation.PushAsync(page);
     }
+
     private async void OnUserClicked(object sender, EventArgs e)
     {
-        await DisplayAlert("Thông báo", "Chức năng người dùng sẽ làm tiếp.", "OK");
+        await DisplayAlert("Thong bao", "Chuc nang nguoi dung se lam tiep.", "OK");
     }
+
+    private Task OpenPoiDetailAsync(Poi poi)
+    {
+        return Navigation.PushAsync(new PoiDetailPage(poi, _narrationService, _foodRepository));
+    }
+
+    private void RebuildPoiSearchCache()
+    {
+        _poiSearchCache.Clear();
+
+        foreach (var poi in _allPois)
+        {
+            _poiSearchCache[poi.Id] = new PoiSearchDescriptor(
+                NormalizeSearchText(poi.Name),
+                NormalizeSearchText(poi.Address));
+        }
+    }
+
+    private int GetSearchScore(Poi poi, string normalizedKeyword)
+    {
+        if (!_poiSearchCache.TryGetValue(poi.Id, out var descriptor))
+            return int.MinValue;
+
+        var tokens = normalizedKeyword
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (tokens.Length == 0)
+            return int.MinValue;
+
+        var combined = $"{descriptor.NameKey} {descriptor.AddressKey}";
+
+        if (tokens.Any(token => !combined.Contains(token, StringComparison.Ordinal)))
+            return int.MinValue;
+
+        var score = 0;
+
+        if (descriptor.NameKey.StartsWith(normalizedKeyword, StringComparison.Ordinal))
+            score += 500;
+        else if (descriptor.NameKey.Contains(normalizedKeyword, StringComparison.Ordinal))
+            score += 360;
+        else if (descriptor.AddressKey.StartsWith(normalizedKeyword, StringComparison.Ordinal))
+            score += 260;
+        else if (descriptor.AddressKey.Contains(normalizedKeyword, StringComparison.Ordinal))
+            score += 180;
+
+        foreach (var token in tokens)
+        {
+            if (descriptor.NameKey.Contains(token, StringComparison.Ordinal))
+                score += 30;
+            else if (descriptor.AddressKey.Contains(token, StringComparison.Ordinal))
+                score += 16;
+        }
+
+        return score;
+    }
+
+    private static string NormalizeSearchText(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        var normalized = text.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(normalized.Length);
+
+        foreach (var character in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(character);
+
+            if (category == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            builder.Append(character switch
+            {
+                '\u0111' => 'd',
+                '\u0110' => 'd',
+                _ => character
+            });
+        }
+
+        return builder
+            .ToString()
+            .Normalize(NormalizationForm.FormC);
+    }
+
+    private sealed record PoiSearchDescriptor(string NameKey, string AddressKey);
 }

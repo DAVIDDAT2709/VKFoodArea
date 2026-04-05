@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ZXing.Net.MAUI</name>
+    </assembly>
+    <members>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Aztec">
+            <summary>Aztec 2D barcode format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Codabar">
+            <summary>CODABAR 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Code39">
+            <summary>Code 39 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Code93">
+            <summary>Code 93 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Code128">
+            <summary>Code 128 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.DataMatrix">
+            <summary>Data Matrix 2D barcode format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Ean8">
+            <summary>EAN-8 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Ean13">
+            <summary>EAN-13 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Itf">
+            <summary>ITF (Interleaved Two of Five) 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.MaxiCode">
+            <summary>MaxiCode 2D barcode format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Pdf417">
+            <summary>PDF417 format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.QrCode">
+            <summary>QR Code 2D barcode format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Rss14">
+            <summary>RSS 14</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.RssExpanded">
+            <summary>RSS EXPANDED</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.UpcA">
+            <summary>UPC-A 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.UpcE">
+            <summary>UPC-E 1D format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.UpcEanExtension">
+            <summary>UPC/EAN extension format. Not a stand-alone format.</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Msi">
+            <summary>MSI</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Plessey">
+            <summary>Plessey</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.Imb">
+            <summary>Intelligent Mail barcode</summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.BarcodeFormat.PharmaCode">
+            <summary>Pharmacode format.</summary>
+        </member>
+        <member name="P:ZXing.Net.Maui.BarcodeFormats.OneDimensional">
+            <summary>
+            UPC_A | UPC_E | EAN_13 | EAN_8 | CODABAR | CODE_39 | CODE_93 | CODE_128 | ITF | RSS_14 | RSS_EXPANDED
+            without MSI (to many false-positives) and IMB (not enough tested, and it looks more like a 2D)
+            </summary>
+        </member>
+        <member name="T:ZXing.Net.Maui.BarcodeScanning">
+            <summary>
+            Provides information about barcode scanning capabilities on the current device.
+            </summary>
+        </member>
+        <member name="P:ZXing.Net.Maui.BarcodeScanning.IsSupported">
+            <summary>
+            Gets a value indicating whether barcode scanning is supported on this device.
+            This checks if the device has a camera available.
+            Check this property before using barcode scanning features to avoid runtime exceptions
+            on devices without cameras.
+            </summary>
+        </member>
+        <member name="P:ZXing.Net.Maui.CameraManager.IsSupported">
+            <summary>
+            Gets a value indicating whether barcode scanning is supported on this device.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.Other">
+            <summary>
+            Unspecified, application-specific metadata. Maps to an unspecified {@link Object}.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.Orientation">
+            <summary>
+            Denotes the likely approximate orientation of the barcode in the image. This value
+            is given as degrees rotated clockwise from the normal, upright orientation.
+            For example a 1D barcode which was found by reading top-to-bottom would be
+            said to have orientation "90". This key maps to an {@link Integer} whose
+            value is in the range [0,360).
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.ByteSegments">
+            <summary>
+            <p>2D barcode formats typically encode text, but allow for a sort of 'byte mode'
+            which is sometimes used to encode binary data. While {@link Result} makes available
+            the complete raw bytes in the barcode for these formats, it does not offer the bytes
+            from the byte segments alone.</p>
+            <p>This maps to a {@link java.util.List} of byte arrays corresponding to the
+            raw bytes in the byte segments in the barcode, in order.</p>
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.ErrorCorrectionLevel">
+            <summary>
+            Error correction level used, if applicable. The value type depends on the
+            format, but is typically a String.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.IssueNumber">
+            <summary>
+            For some periodicals, indicates the issue number as an {@link Integer}.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.SuggestedPrice">
+            <summary>
+            For some products, indicates the suggested retail price in the barcode as a
+            formatted {@link String}.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.PossibleCountry">
+            <summary>
+            For some products, the possible country of manufacture as a {@link String} denoting the
+            ISO country code. Some map to multiple possible countries, like "US/CA".
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.UpcEanExtension">
+            <summary>
+            For some products, the extension text
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.StructuredAppendSequence">
+            <summary>
+            If the code format supports structured append and
+            the current scanned code is part of one then the
+            sequence number is given with it.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.StructuredAppendParity">
+            <summary>
+            If the code format supports structured append and
+            the current scanned code is part of one then the
+            parity is given with it.
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.Pdf417ExtraMetadata">
+            <summary>
+            PDF417-specific metadata
+            </summary>
+        </member>
+        <member name="F:ZXing.Net.Maui.MetadataType.AztecExtraMetadata">
+            <summary>
+            Aztec-specific metadata
+            </summary>
+        </member>
+        <member name="P:ZXing.Net.Maui.BarcodeBitmapRenderer.ForegroundColor">
+            <summary>
+            Gets or sets the foreground color.
+            </summary>
+            <value>The foreground color.</value>
+        </member>
+        <member name="M:ZXing.Net.Maui.ByteBufferYUVLuminanceSource.#ctor(Java.Nio.ByteBuffer,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:ZXing.PlanarYUVLuminanceSource"/> class.
+            </summary>
+            <param name="yuv">The yuv data.</param>
+            <param name="dataWidth">Width of the data.</param>
+            <param name="dataHeight">Height of the data.</param>
+            <param name="left">The left.</param>
+            <param name="top">The top.</param>
+            <param name="width">The width.</param>
+            <param name="height">The height.</param>
+        </member>
+        <member name="M:ZXing.Net.Maui.ByteBufferYUVLuminanceSource.getRow(System.Int32,System.Byte[])">
+            <summary>
+            Fetches one row of luminance data from the underlying platform's bitmap. Values range from
+            0 (black) to 255 (white). Because Java does not have an unsigned byte type, callers will have
+            to bitwise and with 0xff for each value. It is preferable for implementations of this method
+            to only fetch this row rather than the whole image, since no 2D Readers may be installed and
+            getMatrix() may never be called.
+            </summary>
+            <param name="y">The row to fetch, 0 &lt;= y &lt; Height.</param>
+            <param name="row">An optional preallocated array. If null or too small, it will be ignored.
+            Always use the returned object, and ignore the .length of the array.</param>
+            <returns>
+            An array containing the luminance data of the requested row.
+            </returns>
+        </member>
+        <member name="P:ZXing.Net.Maui.ByteBufferYUVLuminanceSource.CropSupported">
+            <returns> Whether this subclass supports cropping.</returns>
+        </member>
+        <member name="M:ZXing.Net.Maui.ByteBufferYUVLuminanceSource.crop(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Returns a new object with cropped image data. Implementations may keep a reference to the
+            original data rather than a copy. Only callable if CropSupported is true.
+            </summary>
+            <param name="left">The left coordinate, 0 &lt;= left &lt; Width.</param>
+            <param name="top">The top coordinate, 0 &lt;= top &lt;= Height.</param>
+            <param name="width">The width of the rectangle to crop.</param>
+            <param name="height">The height of the rectangle to crop.</param>
+            <returns>
+            A cropped version of this object.
+            </returns>
+        </member>
+        <member name="T:ZXing.Net.MAUI.Resource">
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
+        </member>
+    </members>
+</doc>

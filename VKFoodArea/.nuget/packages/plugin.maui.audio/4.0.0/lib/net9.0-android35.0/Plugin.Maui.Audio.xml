@@ -1,0 +1,1404 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Plugin.Maui.Audio</name>
+    </assembly>
+    <members>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.DecibelListener">
+            <summary>
+            A listener that uses the audio stream to determine the number of decibels currently coming through.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.DecibelListener.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.DecibelListener"/> class with default settings.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AudioListeners.DecibelListener.DecibelChanged">
+            <summary>
+            Event raised when the measured decibel level changes beyond a threshold.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.DecibelListener.Decibel">
+            <summary>
+            Gets the decibel value of the current audio stream.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.DecibelListener.MeasuringIntervalInMilliseconds">
+            <summary>
+            The time interval in milliseconds for which the decibel level is calculated.
+            Value 0 means the decibel level is calculated for each sample, regardless of the size.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.DecibelListener.BitDepth">
+            <summary>
+            Gets or sets the bit depth used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.DecibelListener.SampleRate">
+            <summary>
+            Gets or sets the sample rate in Hz used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.DecibelListener.Channels">
+            <summary>
+            Gets or sets the channel type (mono or stereo) used for audio processing.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.DecibelListener.HandleOrderedPcmAudio(Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs)">
+            <summary>
+            Processes ordered PCM audio data to calculate decibel levels.
+            </summary>
+            <param name="audioEventArgs">The ordered audio data to process.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.DecibelListener.Clear">
+            <inheritdoc/>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.IPcmAudioListener">
+            <summary>
+            Interface for PCM audio listeners that can process ordered PCM audio data.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.IPcmAudioListener.SampleRate">
+            <summary>
+            Gets or sets the sample rate in Hz used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.IPcmAudioListener.Channels">
+            <summary>
+            Gets or sets the channel type (mono or stereo) used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.IPcmAudioListener.BitDepth">
+            <summary>
+            Gets or sets the bit depth used for audio processing.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.IPcmAudioListener.HandleOrderedPcmAudio(Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs)">
+            <summary>
+            Processes ordered PCM audio data.
+            </summary>
+            <param name="audioEventArgs">The ordered audio data to process.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.IPcmAudioListener.Clear">
+            <summary>
+            Clear all data and reset values to initial state.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler">
+            <summary>
+            Orders PCM audio into little endian formatted audio and broadcasts it to registered listeners
+            Settings (SampleRate, ChannelType, BitDepth) are aligned to all listeners.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.#ctor(System.Int32,Plugin.Maui.Audio.ChannelType,Plugin.Maui.Audio.BitDepth)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler"/> class.
+            </summary>
+            <param name="sampleRate">The sample rate in Hz used for audio processing.</param>
+            <param name="channels">The channel type (mono or stereo) used for audio processing.</param>
+            <param name="bitDepth">The bit depth used for audio processing.</param>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.HandlerOutputMode">
+            <summary>
+            Gets or sets the mode that determines how audio data is processed and broadcast to listeners.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.ConvertedAudio">
+            <summary>
+            Optional audio output event raised when audio data is converted, even when not using listeners.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.SampleRate">
+            <summary>
+            Gets or sets the sample rate in Hz used for audio processing.
+            </summary>
+            <remarks>
+            When changed, the new value is propagated to all registered listeners.
+            </remarks>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.Channels">
+            <summary>
+            Gets or sets the channel type (mono or stereo) used for audio processing.
+            </summary>
+            <remarks>
+            When changed, the new value is propagated to all registered listeners.
+            </remarks>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.BitDepth">
+            <summary>
+            Gets or sets the bit depth used for audio processing.
+            </summary>
+            <remarks>
+            When changed, the new value is propagated to all registered listeners.
+            </remarks>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.Subscribe(Plugin.Maui.Audio.AudioListeners.IPcmAudioListener)">
+            <summary>
+            Registers a listener to receive audio data events.
+            </summary>
+            <param name="listener">The audio listener to register.</param>
+            <remarks>
+            The listener's settings will be aligned with the handler's current settings.
+            </remarks>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.Unsubscribe(Plugin.Maui.Audio.AudioListeners.IPcmAudioListener)">
+            <summary>
+            Unregisters a listener from receiving audio data events.
+            </summary>
+            <param name="listener">The audio listener to unregister.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.Clear">
+            <summary>
+            Clears all data and resets values in all registered listeners.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.HandlePcmAudio(System.Byte[])">
+            <summary>
+            Processes incoming PCM audio data and converts it for listeners.
+            </summary>
+            <param name="audio">The raw PCM audio data to process.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHandler.BroadcastAudio(System.Int32[],System.Byte[])">
+            <summary>
+            Broadcasts audio data to all registered listeners and raises the ConvertedAudio event.
+            </summary>
+            <param name="littleEndian">The audio data converted to little-endian formatted integers.</param>
+            <param name="original">The original raw audio data bytes.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers">
+            <summary>
+            Provides utility methods for working with PCM audio data.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers.RmsToDecibel(System.Double)">
+            <summary>
+            RMS to decibel value (negative decibel value, also named dBFS)
+            </summary>
+            <param name="rms">The RMS value to convert to decibel.</param>
+            <returns>The given RMS value converted to the equivalent decibel value.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers.DecibelToAbsoluteRms(System.Double)">
+            <summary>
+            Decibel to (positive) RMS value.
+            </summary>
+            <param name="decibel">Negative decibel value (also named dBFS).</param>
+            <returns>RMS (always positive; sign information not preserved)</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers.CalculateRms(System.Int32[],Plugin.Maui.Audio.BitDepth)">
+            <summary>
+            Calculate RMS (Root Mean Square) for each audio sample
+            </summary>
+            <param name="audioSamples"></param>
+            <param name="bitDepth"></param>
+            <returns>Calculated RMS values</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers.ConvertToSamplesPerChannel(System.Int32[],Plugin.Maui.Audio.ChannelType)">
+            <summary>
+            Convert Samples to Samples per channel
+            </summary>
+            <param name="samples"></param>
+            <param name="channels"></param>
+            <returns>Array with the amount of channels, each containing its samples</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers.ConvertRawPcmAudioBytesToOrderedAudioSamples(System.Byte[],Plugin.Maui.Audio.BitDepth)">
+            <summary>
+            Convert raw PCM audio bytes to ordered audio samples.
+            </summary>
+            <param name="pcmAudio"></param>
+            <param name="bitDepth"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.PcmAudioHelpers.ConvertOrderedAudioSamplesToRawPcmAudioBytes(System.Int32[],Plugin.Maui.Audio.BitDepth)">
+            <summary>
+            Convert ordered audio samples to raw PCM audio bytes.
+            </summary>
+            <param name="samples"></param>
+            <param name="bitDepth"></param>
+            <returns></returns>
+            <exception cref="T:System.Exception">when conversion fails</exception>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.AudioHandlerOutputMode">
+            <summary>
+            Specifies how audio data should be processed and broadcast to listeners.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.AudioListeners.AudioHandlerOutputMode.Sample">
+            <summary>
+            Conversion is done per sample
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.AudioListeners.AudioHandlerOutputMode.ChannelPair">
+            <summary>
+            Conversion is done per sample channel pair
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.AudioListeners.AudioHandlerOutputMode.Block">
+            <summary>
+            Conversion is done for complete block
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.DecibelChangedEventArgs">
+            <summary>
+            Event arguments for when the decibel level changes.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.DecibelChangedEventArgs.Decibel">
+            <summary>
+            Gets the current decibel level.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.DecibelChangedEventArgs.#ctor(System.Double)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.DecibelChangedEventArgs"/> class.
+            </summary>
+            <param name="decibel">The current decibel level.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.IsSilentChangedEventArgs">
+            <summary>
+            Event arguments for when the silence state changes.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.IsSilentChangedEventArgs.IsSilent">
+            <summary>
+            Gets a value indicating whether the audio is currently silent.
+            </summary>
+            <remarks>
+            Returns null when the silence state is undetermined.
+            </remarks>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.IsSilentChangedEventArgs.#ctor(System.Nullable{System.Boolean})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.IsSilentChangedEventArgs"/> class.
+            </summary>
+            <param name="isSilent">The current silence state.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs">
+            <summary>
+            Event arguments containing ordered PCM audio data.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs.OrderedAudio">
+            <summary>
+            Little endian ordered audio data
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs.OriginalAudio">
+            <summary>
+            Original (L)PCM audio data
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs.#ctor(System.Int32[],System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs"/> class.
+            </summary>
+            <param name="littleEndianOrderedAudio">Audio data in little-endian format as integers.</param>
+            <param name="originalAudio">Original raw audio data as bytes.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.RmsChangedEventArgs">
+            <summary>
+            Event arguments for when the RMS (Root Mean Square) value changes.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.RmsChangedEventArgs.Rms">
+            <summary>
+            Gets the current RMS (Root Mean Square) value.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.RmsChangedEventArgs.#ctor(System.Double)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.RmsChangedEventArgs"/> class.
+            </summary>
+            <param name="rms">The current RMS value.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.RmsListener">
+            <summary>
+            A listener that calculates the Root Mean Square (RMS) value from the incoming audio stream.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.RmsListener.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.RmsListener"/> class with default settings.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AudioListeners.RmsListener.RmsChanged">
+            <summary>
+            Event raised when the measured RMS value changes.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.RmsListener.Rms">
+            <summary>
+            Gets the current RMS (Root Mean Square) value of the audio stream.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.RmsListener.MeasuringIntervalInMilliseconds">
+            <summary>
+            The time interval in milliseconds for which the rms level is calculated.
+            Value 0 means the rms level is calculated for each sample, regardless of the size.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.RmsListener.BitDepth">
+            <summary>
+            Gets or sets the bit depth used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.RmsListener.SampleRate">
+            <summary>
+            Gets or sets the sample rate in Hz used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.RmsListener.Channels">
+            <summary>
+            Gets or sets the channel type (mono or stereo) used for audio processing.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.RmsListener.HandleOrderedPcmAudio(Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs)">
+            <summary>
+            Processes ordered PCM audio data to calculate RMS values.
+            </summary>
+            <param name="audioEventArgs">The ordered audio data to process.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.RmsListener.Clear">
+            <summary>
+            Clears all data and resets values to their initial state.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioListeners.SilenceListener">
+            <summary>
+            A listener that detects silence in an audio stream based on configurable thresholds.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.SilenceListener.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioListeners.SilenceListener"/> class with default settings.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.SilenceListener.SampleRate">
+            <summary>
+            Gets or sets the sample rate in Hz used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.SilenceListener.Channels">
+            <summary>
+            Gets or sets the channel type (mono or stereo) used for audio processing.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.SilenceListener.BitDepth">
+            <summary>
+            Gets or sets the bit depth used for audio processing.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AudioListeners.SilenceListener.IsSilentChanged">
+            <summary>
+            Event raised when the silence state changes.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.SilenceListener.IsSilent">
+            <summary>
+            Gets a value indicating whether the audio stream is currently silent.
+            </summary>
+            <remarks>
+            Returns null when the silence state is undetermined.
+            </remarks>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.SilenceListener.MinimalSilenceTimespanInMilliseconds">
+            <summary>
+            Minimal time it has to be silent to be considered as silence.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioListeners.SilenceListener.SilenceThresholdInDb">
+            <summary>
+            Silence threshold in decibel (dB) value 
+            (this system works with negative dB values, where lower in the negative value the softer the sound is)
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.SilenceListener.Clear">
+            <summary>
+            Clears all data and resets values to their initial state.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioListeners.SilenceListener.HandleOrderedPcmAudio(Plugin.Maui.Audio.AudioListeners.OrderedAudioEventArgs)">
+            <summary>
+            Processes ordered PCM audio data to detect silence.
+            </summary>
+            <param name="audioEventArgs">The ordered audio data to process.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioManager">
+            <summary>
+            Implementation of <see cref="T:Plugin.Maui.Audio.IAudioManager"/> providing the ability to create audio playback and recording instances.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioManager.Current">
+            <summary>
+            Gets the current implementation of the audio manager.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioManager.DefaultPlayerOptions">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudioManager.DefaultPlayerOptions"/>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioManager.DefaultRecorderOptions">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudioManager.DefaultRecorderOptions"/>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioManager.DefaultStreamerOptions">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudioManager.DefaultStreamerOptions"/>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreatePlayer(Plugin.Maui.Audio.AudioPlayerOptions)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreatePlayer(Plugin.Maui.Audio.AudioPlayerOptions)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreatePlayer(System.IO.Stream,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreatePlayer(System.IO.Stream,Plugin.Maui.Audio.AudioPlayerOptions)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreatePlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreatePlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreateAsyncPlayer(System.IO.Stream,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreateAsyncPlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreateAsyncPlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreateAsyncPlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreateRecorder(Plugin.Maui.Audio.AudioRecorderOptions)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreateRecorder(Plugin.Maui.Audio.AudioRecorderOptions)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioManager.CreateStreamer">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudioManager.CreateStreamer" />
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioMixer">
+            <summary>
+            Represents an audio mixer managing multiple audio channels and handling spatial audio calculations.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioMixer.ChannelCount">
+            <summary>
+            Gets the total number of channels managed by the AudioMixer.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioMixer.Channels">
+            <summary>
+            Gets a read-only list of audio channels.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioMixer.FastDecay">
+            <summary>
+            Gets the fast decay factor.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioMixer.SlowDecay">
+            <summary>
+            Gets the slow decay factor.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.#ctor(Plugin.Maui.Audio.IAudioManager,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioMixer"/> class with the specified number of channels.
+            </summary>
+            <param name="audioManager">The audio manager to create audio players.</param>
+            <param name="numberOfChannels">The number of audio channels to manage.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.Play(System.Int32,System.Boolean)">
+            <summary>
+            Play an already prepared channel.
+            </summary>
+            <param name="channelIndex">The index of the channel to play the sound on.</param>
+            <param name="loop">Indicates whether the audio should loop.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.Play(System.Int32,Plugin.Maui.Audio.IAudioSource,System.Boolean)">
+            <summary>
+            Plays the specified audio clip on the given channel.
+            </summary>
+            <param name="channelIndex">The index of the channel to play the sound on.</param>
+            <param name="audioClip">The audio clip to play.</param>
+            <param name="loop">Indicates whether the audio should loop.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the audio clip is null.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.Stop(System.Int32)">
+            <summary>
+            Stops playback on the specified channel.
+            </summary>
+            <param name="channelIndex">The index of the channel to stop.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.StopAll">
+            <summary>
+            Pauses playback on all channels.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.PauseAll">
+            <summary>
+            Pauses playback on all channels.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.ResumeAll">
+            <summary>
+            Resumes playback on all channels from unchanged positions.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.PlayAll">
+            <summary>
+            Starts  playback on all channels from zero.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.SetSource(System.Int32,Plugin.Maui.Audio.IAudioSource)">
+            <summary>
+            Sets the audio source for the specified channel without playing it.
+            </summary>
+            <param name="channelIndex">The index of the channel.</param>
+            <param name="audioClip">The audio clip to set as the source.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if the audio clip is null.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.GetChannel(System.Int32)">
+            <summary>
+            Gets the audio player for the specified channel.
+            </summary>
+            <param name="channelIndex">The index of the channel to retrieve.</param>
+            <returns>The audio player associated with the specified channel.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.SetBalance(System.Int32,System.Single)">
+            <summary>
+            Sets the stereo balance for the specified channel.
+            </summary>
+            <param name="channelIndex">The index of the channel.</param>
+            <param name="balance">The balance value ranging from -1 (full left) to +1 (full right).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.MapBalance(System.Single)">
+            <summary>
+            Changes the stereo balance for all channels, might need when device is rotated. 1 means not change. Range -1 to +1.
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.SetVolume(System.Int32,System.Single)">
+            <summary>
+            Sets the volume for the specified channel.
+            </summary>
+            <param name="channelIndex">The index of the channel.</param>
+            <param name="volume">The volume level (typically between 0.0 and 1.0).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is invalid.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.ValidateChannelIndex(System.Int32)">
+            <summary>
+            Validates that the provided channel index is within the valid range.
+            </summary>
+            <param name="channelIndex">The channel index to validate.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the channel index is out of range.</exception>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.PositionInSpace(System.Numerics.Vector3,System.Single,System.Single)">
+            <summary>
+            Calculates the adjusted Balance and Volume based on the 3D position relative to the listener.
+            </summary>
+            <param name="position">The 3D position vector of the sound source.</param>
+            <param name="baseVolume">The base volume before spatial adjustments.</param>
+            <param name="baseBalance">The base balance before spatial adjustments.</param>
+            <returns>A tuple containing the adjusted Balance and Volume.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.GetDistanceDecay(System.Single)">
+            <summary>
+            Calculates distance-based attenuation.
+            </summary>
+            <param name="dist">Distance from the listener.</param>
+            <returns>Attenuation factor.</returns>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioMixer.IsDisposed">
+            <summary>
+            Gets a value indicating whether this instance has been disposed.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:Plugin.Maui.Audio.AudioMixer"/> and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioMixer.Dispose">
+            <summary>
+            Disposes all managed audio players.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AsyncAudioPlayer">
+            <summary>
+            Provides async/await support by wrapping an <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/>.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AsyncAudioPlayer.Error">
+            <summary>
+            Raised when an error occurred while loading media or playing.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.#ctor(Plugin.Maui.Audio.IAudioPlayer)">
+            <summary>
+            Creates a new instance of <see cref="T:Plugin.Maui.Audio.AsyncAudioPlayer"/>.
+            This is particularly useful if you want to customise the audio playback settings before playback.
+            </summary>
+            <param name="audioPlayer">An <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> implementation to act as the underlying mechanism of playing audio.</param>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.Duration">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.Duration" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.CurrentPosition">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.CurrentPosition" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.Volume">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.Volume" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.Balance">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.Balance" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.Speed">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.Speed" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.MinimumSpeed">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.MinimumSpeed" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.MaximumSpeed">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.MaximumSpeed" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.CanSetSpeed">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.CanSetSpeed" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.IsPlaying">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.IsPlaying" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.Loop">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.Loop" />
+        </member>
+        <member name="P:Plugin.Maui.Audio.AsyncAudioPlayer.CanSeek">
+            <inheritdoc cref="P:Plugin.Maui.Audio.IAudio.CanSeek" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.PlayAsync(System.Threading.CancellationToken)">
+            <summary>
+            Begin audio playback asynchronously.
+            </summary>
+            <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken"/> to allow for canceling the audio playback.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous operation, awaiting this method will wait until the audio has finished playing before continuing.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.Seek(System.Double)">
+            <inheritdoc cref="M:Plugin.Maui.Audio.IAudio.Seek(System.Double)" />
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.Stop">
+            <summary>
+            Stops the currently playing audio.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.OnError(System.EventArgs)">
+            <summary>
+            Something bad happened while loading media or playing.
+            </summary>
+            <param name="error">Native platform error</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:Plugin.Maui.Audio.AsyncAudioPlayer"/> and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.Finalize">
+            <summary>
+            Finalizer that ensures unmanaged resources are freed.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AsyncAudioPlayer.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.AudioPlayer.isPlaying">
+            <summary>
+            Internal state machine for isPlaying. This is needed because when Reset is called, the player is not playing anymore, but in Idle state IsPlaying is not available
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AudioPlayer.Error">
+            <summary>
+            Raised when an error occurred while loading media or playing.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.AudioPlayer.PlaybackEnded">
+            <summary>
+            Raised when audio playback completes successfully.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioPlayer.Finalize">
+            <summary>
+            Finalizer that ensures unmanaged resources are freed.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioPlayer.OnError(System.EventArgs)">
+            <summary>
+            Something bad happened while loading media or playing.
+            </summary>
+            <param name="error">Native platform error</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioPlayer.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioPlayerOptions">
+            <summary>
+            Options that can be configured for an audio playback session.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioPlayerOptions.AudioContentType">
+            <summary>
+            Gets or sets the audio content type for Android. Default value: <see cref="F:Android.Media.AudioContentType.Unknown"/>.
+            </summary>
+            <remarks>
+            See https://developer.android.com/reference/android/media/AudioAttributes for more information.
+            </remarks>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioPlayerOptions.AudioUsageKind">
+            <summary>
+            Gets or sets the audio usage kind for Android. Default value: <see cref="F:Android.Media.AudioUsageKind.Unknown"/>.
+            </summary>
+            <remarks>
+            See https://developer.android.com/reference/android/media/AudioAttributes for more information.
+            On Android API26 and below, this is used to set the audio stream type. Where the following values are used:
+            <list type="bullet">
+            <item><see cref="F:Android.Media.AudioUsageKind.Media"/> - <see cref="F:Android.Media.Stream.Music"/></item>
+            <item><see cref="F:Android.Media.AudioUsageKind.Alarm"/> - <see cref="F:Android.Media.Stream.Alarm"/></item>
+            <item><see cref="F:Android.Media.AudioUsageKind.Notification"/> - <see cref="F:Android.Media.Stream.Notification"/></item>
+            <item><see cref="F:Android.Media.AudioUsageKind.VoiceCommunication"/> - <see cref="F:Android.Media.Stream.VoiceCall"/></item>
+            <item><see cref="F:Android.Media.AudioUsageKind.Unknown"/> - <see cref="F:Android.Media.Stream.System"/></item>
+            </list>
+            If any other value is used, the default value of <see cref="F:Android.Media.Stream.System"/> is used.
+            </remarks>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioStopwatch">
+            <summary>
+            A specialized stopwatch that handles audio playback timing with support for speed adjustments and start offsets.
+            </summary>
+            <param name="startOffset">The initial time offset to start from.</param>
+            <param name="speed">The playback speed factor.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioStopwatch.#ctor(System.TimeSpan,System.Double)">
+            <summary>
+            A specialized stopwatch that handles audio playback timing with support for speed adjustments and start offsets.
+            </summary>
+            <param name="startOffset">The initial time offset to start from.</param>
+            <param name="speed">The playback speed factor.</param>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStopwatch.StartOffset">
+            <summary>
+            Gets the initial time offset used when calculating elapsed time.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioStopwatch.Restart">
+            <summary>
+            Restarts the stopwatch and resets the start offset to zero.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStopwatch.ElapsedMilliseconds">
+            <summary>
+            Gets the total elapsed milliseconds, adjusted by the speed factor and including the start offset.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStopwatch.ElapsedTicks">
+            <summary>
+            Gets the total elapsed ticks, adjusted by the speed factor and including the start offset.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.IAudio">
+            <summary>
+            Exposes common audio related properties and methods.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.Duration">
+            <Summary>
+             Gets the length of audio in seconds.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.CurrentPosition">
+            <Summary>
+             Gets the current position of audio playback in seconds.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.Volume">
+            <Summary>
+             Gets or sets the playback volume 0 to 1 where 0 is no-sound and 1 is full volume.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.Balance">
+            <Summary>
+             Gets or sets the balance left/right: -1 is 100% left : 0% right, 1 is 100% right : 0% left, 0 is equal volume left/right.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.Speed">
+            <summary>
+             Gets the playback speed where 1 is normal speed. <see cref="P:Plugin.Maui.Audio.IAudio.MinimumSpeed"/> and <see cref="P:Plugin.Maui.Audio.IAudio.MaximumSpeed"/> can be used to determine the minimum and maximum value for each platform.
+             Sets the playback speed where 1 is normal speed. <see cref="P:Plugin.Maui.Audio.IAudio.MinimumSpeed"/> and <see cref="P:Plugin.Maui.Audio.IAudio.MaximumSpeed"/> can be used to determine the minimum and maximum value for each platform.
+            </summary>
+            <remarks>
+             The minimum and maximum speeds that can be set here are different per platform. Setting values outside of these ranges will not throw an exception, it will clamp to the minimum or maximum value.
+            <para>- Android: between 0 and 2.5. Setting the value to 0 will pause playback, playback will not be resumed when incrementing the value again.</para>
+            <para>- iOS: between 0.5 and 2.</para>
+            <para>- Windows: between 0 and 8. Setting the value to 0 will pause playback, playback will be resumed when incrementing the value again.</para>
+            </remarks>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.MinimumSpeed">
+            <summary>
+            Gets the minimum speed value that can be set for <see cref="P:Plugin.Maui.Audio.IAudio.Speed"/> on this platform.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.MaximumSpeed">
+            <summary>
+            Gets the maximum speed value that can be set for <see cref="P:Plugin.Maui.Audio.IAudio.Speed"/> on this platform.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.CanSetSpeed">
+            <Summary>
+             Gets a value indicating whether the playback speed can be changed.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.IsPlaying">
+            <Summary>
+             Gets a value indicating whether the currently loaded audio file is playing.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.Loop">
+            <Summary>
+             Gets or sets whether the player will continuously repeat the currently playing sound.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudio.CanSeek">
+            <Summary>
+             Gets a value indicating whether the position of the loaded audio file can be updated.
+            </Summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudio.Seek(System.Double)">
+            <Summary>
+             Set the current playback position (in seconds).
+            </Summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.IAudioPlayer">
+            <summary>
+            Provides the ability to play audio.
+            </summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.IAudioPlayer.PlaybackEnded">
+            <Summary>
+             Raised when audio playback completes successfully.
+            </Summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.IAudioPlayer.Error">
+            <summary>
+            Raised when an error occurred while loading media or playing.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioPlayer.Play">
+            <Summary>
+             Begin playback or resume if paused.
+            </Summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioPlayer.Pause">
+            <Summary>
+             Pause playback if playing (does not resume).
+            </Summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioPlayer.Stop">
+            <Summary>
+             Stop playback and set the current position to the beginning.
+            </Summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioPlayer.SetSource(System.IO.Stream)">
+            <summary>
+            Change current audio source, reusing the player instance.
+            </summary>
+            <param name="audioStream"></param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioRecorderOptions">
+            <summary>
+            Options that can be configured for an audio recording session.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioRecorderOptions.SampleRate">
+            <summary>
+            Sample rate of the audio recording.
+            44,100Hz is currently the only rate that is guaranteed to work on all devices on Android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioRecorderOptions.Channels">
+            <summary>
+            Channels of the audio recording.
+            Mono is guaranteed to work on all devices on Android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioRecorderOptions.BitDepth">
+            <summary>
+            Bit depth of the audio recording.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioRecorderOptions.Encoding">
+            <summary>
+            Encoding type of the audio recording.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioRecorderOptions.BitRate">
+            <summary>
+            Bit rate of the audio recording if using audio compression like AAC
+            Common bit rates such as 64 kbps, 96 kbps, 128 kbps, 192 kbps, 256 kbps, or 320 kbps
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioRecorderOptions.ThrowIfNotSupported">
+            <summary>
+            Gets or sets whether the functionality will throw an exception if the configured recording options are not supported.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.IAudioRecorder">
+            <summary>
+            Provides the ability to record audio.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioRecorder.CanRecordAudio">
+            <Summary>
+             Gets whether the device is capable of recording audio.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioRecorder.IsRecording">
+            <Summary>
+             Gets whether the recorder is currently recording audio.
+            </Summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioRecorder.StartAsync(Plugin.Maui.Audio.AudioRecorderOptions)">
+            <Summary>
+             Start recording audio to disk in a randomly generated file.
+            </Summary>
+            <param name="options">The audio recording options.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioRecorder.StartAsync(System.String,Plugin.Maui.Audio.AudioRecorderOptions)">
+            <Summary>
+             Start recording audio to disk in the supplied <paramref name="filePath"/>.
+            </Summary>
+            <param name="filePath">The path on disk to store the recording. If options are used, read the audio stream and write your own file. The default header might not match your options.</param>
+            <param name="options">The audio recording options.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioRecorder.StopAsync">
+            <Summary>
+             Stop recording and return the <see cref="T:Plugin.Maui.Audio.IAudioSource"/> instance with the recording data.
+            </Summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.BitDepth">
+            <summary>
+            Specifies the bit depth for audio processing.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.BitDepth.Pcm8bit">
+            <summary>
+            8-bit PCM audio.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.BitDepth.Pcm16bit">
+            <summary>
+            16-bit PCM audio.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.ChannelType">
+            <summary>
+            Specifies the channel configuration for audio processing.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.ChannelType.Mono">
+            <summary>
+            Single channel audio.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.ChannelType.Stereo">
+            <summary>
+            Dual channel audio.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.Encoding">
+            <summary>
+            iOS supports: Wav, ULaw, Alac, Flac, Aac <para />
+            Windows supports: Wav, Alac, Flac, Aac <para />
+            Android supports: Wav, Aac <para />
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.Encoding.Wav">
+            <summary>
+            Uncompressed WAV File (PCM).
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.Encoding.LinearPCM">
+            <summary>
+            Uncompressed WAV File (PCM).
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.Encoding.ULaw">
+            <summary>
+            Telephony Compression.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.Encoding.Alac">
+            <summary>
+            Apple Lossless Audio Compression.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.Encoding.Flac">
+            <summary>
+            Free Lossless Audio Compression.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.Encoding.Aac">
+            <summary>
+            Lossy Compression (AAC in MP4/M4A container).
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioStreamOptions">
+            <summary>
+            Options that can be configured for an audio streaming session.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStreamOptions.SampleRate">
+            <summary>
+            Sample rate of the audio recording.
+            For iOS 44800 Hz is recommended, for Android 44,100Hz is currently the only rate that is guaranteed to work on all devices, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStreamOptions.Channels">
+            <summary>
+            Channels of the audio recording.
+            Mono is guaranteed to work on all devices on Android, <see href="https://developer.android.com/reference/android/media/AudioRecord.html">Android audio record documentation</see>
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStreamOptions.BitDepth">
+            <summary>
+            Bit depth of the audio recording.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.IAudioStreamer">
+            <summary>
+            Provides the ability to stream audio.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioStreamer.CanStreamAudio">
+            <Summary>
+             Gets whether the device is capable of streaming audio.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioStreamer.IsStreaming">
+            <Summary>
+             Gets whether the streamer is currently streaming audio.
+            </Summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioStreamer.Options">
+            <summary>
+            Gets or sets the audio streaming options.
+            Android: 44100 Hz is recommended (supported: 8000, 16000 and 44100 Hz)
+            iOS: 48000 Hz is recommended
+            Windows: only BitDepth.Pcm16bit is supported
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioStreamer.StartAsync">
+            <Summary>
+             Start streaming audio to <see cref="E:Plugin.Maui.Audio.IAudioStreamer.OnAudioCaptured"/>.
+            </Summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioStreamer.StopAsync">
+            <Summary>
+             Stop streaming
+            </Summary>
+        </member>
+        <member name="E:Plugin.Maui.Audio.IAudioStreamer.OnAudioCaptured">
+            <summary>
+            Captured linear PCM audio (raw WAV audio)
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.AudioStreamEventArgs">
+            <summary>
+            Event arguments containing audio stream data.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.AudioStreamEventArgs.Audio">
+            <summary>
+            Gets the audio data as a byte array.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.AudioStreamEventArgs.#ctor(System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.AudioStreamEventArgs"/> class.
+            </summary>
+            <param name="audio">The audio data as a byte array.</param>
+        </member>
+        <member name="T:Plugin.Maui.Audio.BaseOptions">
+            <summary>
+            Base class for all audio operation option classes in the library.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.EmptyAudioSource">
+            <summary>
+            An <see cref="T:Plugin.Maui.Audio.IAudioSource"/> implementation that returns an empty audio stream.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.EmptyAudioSource.GetAudioStream">
+            <summary>
+            Gets an empty audio stream.
+            </summary>
+            <returns>A null stream representing empty audio content.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.FailedToLoadAudioException">
+            <summary>
+            When the audio fails to load this exception is thrown with details about the cause.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FailedToLoadAudioException.#ctor(System.String)">
+            <summary>
+            Creates a new instance of this exception.
+            </summary>
+            <param name="message">Message which describes the cause of the exception.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FailedToLoadAudioException.Throw(System.String)">
+            <summary>
+            Triggers a throw of this exception.
+            </summary>
+            <param name="message">Message which describes the cause of the exception.</param>
+            <exception cref="T:Plugin.Maui.Audio.FailedToLoadAudioException"></exception>
+        </member>
+        <member name="T:Plugin.Maui.Audio.FailedToStartRecordingException">
+            <summary>
+            When the recording fails to start this exception is thrown with details about the cause.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FailedToStartRecordingException.#ctor(System.String)">
+            <summary>
+            Creates a new instance of this exception.
+            </summary>
+            <param name="message">Message which describes the cause of the exception.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FailedToStartRecordingException.Throw(System.String)">
+            <summary>
+            Triggers a throw of this exception.
+            </summary>
+            <param name="message">Message which describes the cause of the exception.</param>
+            <exception cref="T:Plugin.Maui.Audio.FailedToLoadAudioException"></exception>
+        </member>
+        <member name="T:Plugin.Maui.Audio.FileAudioSource">
+            <summary>
+            A file based <see cref="T:Plugin.Maui.Audio.IAudioSource"/> implementation.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FileAudioSource.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.FileAudioSource"/> class.
+            </summary>
+            <param name="filePath">The path to the audio file.</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FileAudioSource.GetFilePath">
+            <summary>
+            Gets the file path of this audio source.
+            </summary>
+            <returns>The file path of the audio source.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.FileAudioSource.GetAudioStream">
+            <summary>
+            Provides a <see cref="T:System.IO.Stream"/> to allow for the playback of the audio contents.
+            </summary>
+            <returns>A <see cref="T:System.IO.Stream"/> with the contents of the audio file, or a null stream if the file doesn't exist.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.IAudioManager">
+            <summary>
+            Provides the ability to create audio playback and recording instances.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioManager.DefaultPlayerOptions">
+            <summary>
+            Gets or sets the default options to use when creating a new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/>.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioManager.DefaultRecorderOptions">
+            <summary>
+            Gets or sets the default options to use when creating a new <see cref="T:Plugin.Maui.Audio.IAudioRecorder"/>.
+            </summary>
+        </member>
+        <member name="P:Plugin.Maui.Audio.IAudioManager.DefaultStreamerOptions">
+            <summary>
+            Gets or sets the default options to use when creating a new <see cref="T:Plugin.Maui.Audio.IAudioStreamer"/>.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreatePlayer(Plugin.Maui.Audio.AudioPlayerOptions)">
+            <summary>
+            Creates a new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> with with an empty source.
+            </summary>
+            <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+            <returns>A new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> with an empty source.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreatePlayer(System.IO.Stream,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <summary>
+            Creates a new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.
+            </summary>
+            <param name="audioStream">The <see cref="T:System.IO.Stream"/> containing the audio to play.</param>
+            <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+            <returns>A new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> with the supplied <paramref name="audioStream"/> ready to play.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreatePlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <summary>
+            Creates a new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.
+            </summary>
+            <param name="fileName">The name of the file containing the audio to play.</param>
+            <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+            <returns>A new <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> with the supplied <paramref name="fileName"/> ready to play.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreateAsyncPlayer(System.IO.Stream,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <summary>Creates a new AsyncAudioPlayer with the supplied audioStream ready to play audio using async/await.</summary>
+            <param name="audioStream">The Stream containing the audio to play.</param>
+            <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+            <returns>A new AsyncAudioPlayer with the supplied audioStream ready to play.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreateAsyncPlayer(System.String,Plugin.Maui.Audio.AudioPlayerOptions)">
+            <summary>Creates a new AsyncAudioPlayer with the supplied fileName ready to play audio using async/await.</summary>
+            <param name="fileName">The name of the file containing the audio to play.</param>
+            <param name="options">Options to configure the audio player behavior, or null to use the default options.</param>
+            <returns>A new AsyncAudioPlayer with the supplied fileName ready to play.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreateRecorder(Plugin.Maui.Audio.AudioRecorderOptions)">
+            <summary>
+            Creates a new <see cref="T:Plugin.Maui.Audio.IAudioRecorder"/> ready to begin recording audio from the current device.
+            </summary>
+            <param name="options">Options to configure the audio recorder behavior, or null to use the default options.</param>
+            <returns>A new <see cref="T:Plugin.Maui.Audio.IAudioRecorder"/> ready to begin recording.</returns>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioManager.CreateStreamer">
+            <summary>
+            Creates a new <see cref="T:Plugin.Maui.Audio.IAudioStreamer"/> ready to begin streaming audio from the current device.
+            </summary>
+            <returns>A new <see cref="T:Plugin.Maui.Audio.IAudioRecorder"/> ready to begin streaming.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.IAudioSource">
+            <summary>
+            Definition of a source of audio.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.IAudioSource.GetAudioStream">
+            <summary>
+            Provides a <see cref="T:System.IO.Stream"/> to allow for the playback of the audio contents.
+            </summary>
+            <returns>A <see cref="T:System.IO.Stream"/> with the contents of the audio to play.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.MauiAppBuilderExtensions">
+            <summary>
+            Provides extension methods for registering Plugin.Maui.Audio services with the MAUI dependency injection container.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.MauiAppBuilderExtensions.AddAudio(Microsoft.Maui.Hosting.MauiAppBuilder,System.Action{Plugin.Maui.Audio.AudioPlayerOptions},System.Action{Plugin.Maui.Audio.AudioRecorderOptions},System.Action{Plugin.Maui.Audio.AudioStreamOptions})">
+             <summary>
+             Adds the <see cref="T:Plugin.Maui.Audio.IAudioManager"/> as a singleton to the dependency injection container and provides the ability to configure
+             the shared options for both audio playback and recording.
+             </summary>
+             <param name="mauiAppBuilder">The <see cref="T:Microsoft.Maui.Hosting.MauiAppBuilder"/> to register the package with.</param>
+             <param name="configurePlaybackOptions">
+             The mechanism to define the shared options for use with the <see cref="T:Plugin.Maui.Audio.IAudioPlayer"/> implementations. Note this is optional.
+             An example of configuring the audio playback options for iOS/macOS and Android, is as follows:
+             <code>
+             builder
+                 .AddAudio(
+            			configurePlaybackOptions: playbackOptions =>
+            			{
+            #if IOS || MACCATALYST
+            				playbackOptions.Category = AVFoundation.AVAudioSessionCategory.Playback;
+            				playbackOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
+            				playbackOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.DefaultToSpeaker;
+            #endif
+            #if ANDROID
+            				playbackOptions.AudioContentType = Android.Media.AudioContentType.Music;
+            				playbackOptions.AudioUsageKind = Android.Media.AudioUsageKind.Media;
+             #endif
+            			});
+             </code>
+             </param>
+             <param name="configureRecordingOptions">
+             The mechanism to define the shared options for use with the <see cref="T:Plugin.Maui.Audio.IAudioRecorder"/> implementations. Note this is optional.
+             An example of configuring the audio playback options for iOS and macOS, is as follows:
+             <code>
+             builder
+                 .AddAudio(
+            			configureRecordingOptions: recordingOptions =>
+            			{
+            #if IOS || MACCATALYST
+            				recordingOptions.Category = AVFoundation.AVAudioSessionCategory.Record;
+            				recordingOptions.Mode = AVFoundation.AVAudioSessionMode.Default;
+            				recordingOptions.CategoryOptions = AVFoundation.AVAudioSessionCategoryOptions.DefaultToSpeaker;
+            #endif
+            			});
+             </code>
+             </param>
+             <param name="configureStreamerOptions">Configures options for streaming much alike the playback and recording options.</param>
+             <returns>The <paramref name="mauiAppBuilder"/> supplied in order to allow for chaining of method calls.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.BitsPerSample">
+            <summary>
+            Enumeration for supported bits per sample in PCM audio.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.BitsPerSample.Bit8">
+            <summary>
+            8-bit sample depth.
+            </summary>
+        </member>
+        <member name="F:Plugin.Maui.Audio.BitsPerSample.Bit16">
+            <summary>
+            16-bit sample depth.
+            </summary>
+        </member>
+        <member name="T:Plugin.Maui.Audio.RawAudioSource">
+            <summary>
+            WAV audio clip created from raw PCM sound data without header.
+            The <see cref="P:Plugin.Maui.Audio.RawAudioSource.Bytes"/> property provides the complete WAV file with header, usable inside a player.
+            Supports both 8-bit and 16-bit PCM audio.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.RawAudioSource.#ctor(System.ReadOnlySpan{System.Byte},System.Int32,System.Int32,Plugin.Maui.Audio.BitsPerSample)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.RawAudioSource"/> class with 8-bit samples.
+            </summary>
+            <param name="soundData">Raw PCM sound data as a span of bytes.</param>
+            <param name="sampleRate">Sample rate in Hz (e.g., 44100).</param>
+            <param name="nbOfChannels">Number of audio channels (e.g., 1 for mono, 2 for stereo).</param>
+            <param name="bitsPerSample">Bits per sample (e.g., 8 or 16).</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.RawAudioSource.#ctor(System.Byte[],System.Int32,System.Int32,Plugin.Maui.Audio.BitsPerSample)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Plugin.Maui.Audio.RawAudioSource"/> class with specified bits per sample.
+            </summary>
+            <param name="soundData">Raw PCM sound data as a byte array.</param>
+            <param name="sampleRate">Sample rate in Hz (e.g., 44100).</param>
+            <param name="nbOfChannels">Number of audio channels (e.g., 1 for mono, 2 for stereo).</param>
+            <param name="bitsPerSample">Bits per sample (e.g., 8 or 16).</param>
+        </member>
+        <member name="M:Plugin.Maui.Audio.RawAudioSource.GetAudioStream">
+            <summary>
+            Gets a stream providing access to the audio data with WAV header.
+            </summary>
+            <returns>A memory stream containing the complete WAV file data.</returns>
+        </member>
+        <member name="P:Plugin.Maui.Audio.RawAudioSource.Bytes">
+            <summary>
+            Gets the complete WAV file data, including the header.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.RawAudioSource.BuildWavFile">
+            <summary>
+            Constructs the WAV file by prepending the appropriate header to the raw PCM data.
+            </summary>
+            <returns>Byte array containing the complete WAV file.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.TaskExtensions">
+            <summary>
+            Provides extension methods for Task-related operations.
+            </summary>
+        </member>
+        <member name="M:Plugin.Maui.Audio.TaskExtensions.WhenCanceled(System.Threading.CancellationToken)">
+            <summary>
+            Provides a mechanism to await until the supplied <paramref name="cancellationToken"/> has been cancelled.
+            </summary>
+            <param name="cancellationToken">The <see cref="T:System.Threading.CancellationToken"/> to await.</param>
+            <returns>A task that represents the asynchronous operation.</returns>
+        </member>
+        <member name="T:Plugin.Maui.Audio.Resource">
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
+        </member>
+    </members>
+</doc>

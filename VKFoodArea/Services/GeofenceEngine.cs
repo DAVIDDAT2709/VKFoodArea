@@ -9,12 +9,13 @@ public class GeofenceEngine
 
     private static readonly TimeSpan PoiCooldown = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GlobalCooldown = TimeSpan.FromSeconds(20);
-    private static readonly TimeSpan Debounce = TimeSpan.FromSeconds(6);
+    private static readonly TimeSpan Debounce = TimeSpan.FromSeconds(2);
 
     /// <summary>
     /// Nếu khoảng cách giữa 2 quán chỉ lệch rất ít thì mới dùng Priority để phân xử.
     /// </summary>
     private const double PriorityTieThresholdMeters = 5;
+    private const double TriggerBufferMeters = 12;
 
     public GeofenceEngine(
         HaversineDistanceCalculator distanceCalculator,
@@ -37,14 +38,14 @@ public class GeofenceEngine
 
         foreach (var item in candidates)
         {
-            if (item.Distance <= item.Poi.RadiusMeters)
+            if (item.Distance <= GetTriggerRadiusMeters(item.Poi))
                 _cooldownStore.MarkInside(item.Poi.Id);
             else
                 _cooldownStore.MarkOutside(item.Poi.Id);
         }
 
         var inRange = candidates
-            .Where(x => x.Distance <= x.Poi.RadiusMeters)
+            .Where(x => x.Distance <= GetTriggerRadiusMeters(x.Poi))
             .OrderBy(x => x.Distance)
             .ToList();
 
@@ -115,6 +116,8 @@ public class GeofenceEngine
 
         return tiedCandidates.First();
     }
+
+    private static double GetTriggerRadiusMeters(Poi poi) => poi.RadiusMeters + TriggerBufferMeters;
 
     private sealed class PoiCandidate
     {
