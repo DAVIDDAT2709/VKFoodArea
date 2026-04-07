@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ thống du lịch ẩm thực Vĩnh Khánh</title>
+    <style>
+      :root {
+        --ink: #1e293b;
+        --sub: #64748b;
+        --line: #dbe4ee;
+        --paper: #ffffff;
+        --bg: #f4f7fb;
+        --brand: #0f766e;
+        --brand-2: #115e59;
+        --soft: #ecfeff;
+        --soft-2: #f8fafc;
+        --ok: #166534;
+        --warn: #b45309;
+        --late: #b91c1c;
+        --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        --radius: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.7;
+      }
+
+      .shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 22px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(219, 228, 238, 0.9);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 14px 0;
+      }
+
+      .logo {
+        font-weight: 800;
+        color: var(--brand-2);
+        letter-spacing: -0.3px;
+      }
+
+      .menu {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .menu a {
+        text-decoration: none;
+        color: var(--sub);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .menu a:hover {
+        background: var(--soft);
+        color: var(--brand-2);
+      }
+
+      .hero {
+        padding: 54px 0 32px;
+      }
+
+      .hero-wrap {
+        background: linear-gradient(135deg, #0f766e, #0f766e 38%, #14b8a6 100%);
+        color: white;
+        border-radius: 28px;
+        padding: 38px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-wrap::after {
+        content: "";
+        position: absolute;
+        inset: auto -60px -60px auto;
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .hero h1 {
+        font-size: 40px;
+        line-height: 1.15;
+        margin-bottom: 14px;
+        max-width: 800px;
+      }
+
+      .hero p {
+        font-size: 16px;
+        max-width: 860px;
+        opacity: 0.96;
+      }
+
+      .pill-row {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      section {
+        padding: 18px 0 34px;
+      }
+
+      .section-card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .section-head small {
+        color: var(--brand);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+        font-size: 11px;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .section-head h2 {
+        font-size: 30px;
+        line-height: 1.2;
+      }
+
+      .section-head p {
+        color: var(--sub);
+        max-width: 860px;
+        font-size: 14px;
+      }
+
+      .mini-note {
+        color: var(--sub);
+        font-size: 13px;
+        padding: 10px 14px;
+        background: var(--soft-2);
+        border-radius: 14px;
+        border: 1px dashed var(--line);
+      }
+
+      .cards {
+        display: grid;
+        gap: 16px;
+      }
+
+      .two {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      .three {
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      }
+      .four {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      }
+
+      .box {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px;
+        background: linear-gradient(180deg, #fff, #fbfdff);
+      }
+
+      .box h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+        color: var(--brand-2);
+      }
+
+      .box p,
+      .box li {
+        font-size: 14px;
+        color: var(--sub);
+      }
+
+      .box ul {
+        padding-left: 18px;
+      }
+
+      .cluster {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 14px;
+        margin-top: 6px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        background: #fff;
+        text-align: center;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 28px;
+        color: var(--brand);
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .metric span {
+        color: var(--sub);
+        font-size: 13px;
+      }
+
+      .ladder {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .ladder-item {
+        display: grid;
+        grid-template-columns: 160px 1fr;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .ladder-item .left {
+        background: var(--soft);
+        color: var(--brand-2);
+        font-weight: 800;
+        padding: 16px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+      }
+
+      .ladder-item .right {
+        padding: 16px;
+        color: var(--sub);
+        font-size: 14px;
+      }
+
+      .flowline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+        align-items: center;
+      }
+
+      .node {
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--ink);
+      }
+
+      .join {
+        color: var(--sub);
+        font-size: 18px;
+      }
+
+      .board {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .board-item {
+        border-left: 4px solid var(--brand);
+        background: var(--soft-2);
+        border-radius: 0 18px 18px 0;
+        padding: 14px 16px;
+      }
+
+      .board-item h4 {
+        color: var(--brand-2);
+        font-size: 16px;
+        margin-bottom: 4px;
+      }
+
+      .board-item p {
+        color: var(--sub);
+        font-size: 14px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        margin-top: 14px;
+      }
+
+      table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        background: #fff;
+      }
+
+      th {
+        background: #effaf9;
+        color: var(--brand-2);
+        text-align: left;
+        padding: 14px;
+        font-size: 13px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      td {
+        padding: 14px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        color: var(--sub);
+        vertical-align: top;
+      }
+
+      tr:hover td {
+        background: #fcfefe;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tag.ok {
+        background: #ecfdf5;
+        color: var(--ok);
+      }
+      .tag.mid {
+        background: #fff7ed;
+        color: var(--warn);
+      }
+      .tag.no {
+        background: #fef2f2;
+        color: var(--late);
+      }
+
+      .duo {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+      }
+
+      .callout {
+        margin-top: 16px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid #c7f9f1;
+        background: linear-gradient(180deg, #f0fdfa, #ecfeff);
+        color: #115e59;
+        font-size: 14px;
+      }
+
+      footer {
+        padding: 8px 0 40px;
+        color: var(--sub);
+        text-align: center;
+        font-size: 13px;
+      }
+
+      @media (max-width: 920px) {
+        .cluster {
+          grid-template-columns: 1fr;
+        }
+        .ladder-item {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 740px) {
+        .menu {
+          display: none;
+        }
+        .hero h1 {
+          font-size: 30px;
+        }
+        .hero-wrap,
+        .section-card {
+          padding: 22px;
+        }
+        .shell {
+          padding: 0 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="shell topbar-inner">
+        <div class="logo">VKFoodArea · System Specification</div>
+        <div class="menu">
+          <a href="#product">Sản phẩm</a>
+          <a href="#map-system">Bản đồ hệ thống</a>
+          <a href="#backend-space">Không gian Web</a>
+          <a href="#mobile-space">Không gian App</a>
+          <a href="#operating-flow">Vận hành</a>
+          <a href="#entity-model">Dữ liệu</a>
+          <a href="#completion">Hoàn thiện</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell">
+      <div class="hero">
+        <div class="hero-wrap">
+          <h1>Hệ thống du lịch ẩm thực Vĩnh Khánh - VKFoodArea</h1>
+          <p>
+            Đây là bản đặc tả hệ thống được viết lại theo phong cách khác với
+            PRD cũ: tập trung vào cách hệ thống vận hành, vai trò của từng khối
+            chức năng, luồng dữ liệu giữa web và app, cùng mức độ hoàn thiện của
+            từng phần.
+          </p>
+          <div class="pill-row">
+            <div class="pill">CMS cho POI</div>
+            <div class="pill">QR kích hoạt nội dung</div>
+            <div class="pill">GPS + Geofence</div>
+            <div class="pill">TTS đa ngôn ngữ</div>
+            <div class="pill">SQLite local</div>
+            <div class="pill">Đồng bộ Web ↔ App</div>
+          </div>
+        </div>
+      </div>
+
+      <section id="product">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần A</small>
+              <h2>Bức tranh sản phẩm</h2>
+              <p>
+                VKFoodArea là hệ thống hỗ trợ giới thiệu ẩm thực Vĩnh Khánh bằng
+                công nghệ số. Người quản trị nhập dữ liệu trên web, còn người
+                dùng trên mobile app có thể tiếp cận nội dung bằng bản đồ, GPS
+                hoặc QR.
+              </p>
+            </div>
+            <div class="mini-note">
+              Phiên bản tài liệu này ưu tiên ngôn ngữ trình bày gần với báo cáo
+              hệ thống hơn là phong cách slide PRD.
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric">
+              <strong>02</strong
+              ><span>không gian vận hành chính<br />web và mobile</span>
+            </div>
+            <div class="metric">
+              <strong>03</strong
+              ><span>nguồn kích hoạt narration<br />gps, qr, thủ công</span>
+            </div>
+            <div class="metric">
+              <strong>05</strong
+              ><span>ngôn ngữ nội dung<br />vi en zh ja de</span>
+            </div>
+            <div class="metric">
+              <strong>01</strong
+              ><span>nguồn dữ liệu quản trị<br />web admin</span>
+            </div>
+          </div>
+
+          <div class="cards three" style="margin-top: 18px">
+            <div class="box">
+              <h3>Bài toán</h3>
+              <p>
+                Khu ẩm thực có nhiều quán nhưng trải nghiệm tiếp cận thông tin
+                còn rời rạc. Người dùng cần một cách nhanh để biết quán nào đáng
+                chú ý và nội dung quán đó là gì.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Giải pháp</h3>
+              <p>
+                Dùng web để chuẩn hóa dữ liệu POI, dùng app để phát nội dung
+                theo vị trí hoặc QR, đồng thời lưu lại log sử dụng để theo dõi
+                mức độ tương tác.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Trọng tâm giá trị</h3>
+              <p>
+                Điểm mạnh không nằm ở một tính năng đơn lẻ mà ở việc nhiều phần
+                nhỏ ghép lại thành một trải nghiệm hoàn chỉnh từ quản trị, đồng
+                bộ, hiển thị đến phát narration.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="map-system">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần B</small>
+              <h2>Bản đồ chức năng của hệ thống</h2>
+              <p>
+                Nếu nhìn theo góc độ kỹ thuật, hệ thống hiện tại có thể chia
+                thành 4 lớp: lớp dữ liệu nguồn, lớp quản trị web, lớp dịch vụ
+                đồng bộ và lớp trải nghiệm người dùng trên app.
+              </p>
+            </div>
+          </div>
+
+          <div class="ladder">
+            <div class="ladder-item">
+              <div class="left">Lớp 1 · Dữ liệu nguồn</div>
+              <div class="right">
+                POI, QR code, narration history, ảnh quán và script thuyết minh
+                được tổ chức ở web như nguồn dữ liệu trung tâm.
+              </div>
+            </div>
+            <div class="ladder-item">
+              <div class="left">Lớp 2 · Quản trị</div>
+              <div class="right">
+                Admin thao tác qua giao diện MVC để thêm, sửa, xóa quán; cập
+                nhật nội dung; gắn QR; kiểm tra lịch sử sử dụng.
+              </div>
+            </div>
+            <div class="ladder-item">
+              <div class="left">Lớp 3 · Đồng bộ</div>
+              <div class="right">
+                App gọi API để kéo POI từ web về local SQLite, đồng thời đẩy
+                narration history từ app trở ngược lên web.
+              </div>
+            </div>
+            <div class="ladder-item">
+              <div class="left">Lớp 4 · Trải nghiệm</div>
+              <div class="right">
+                Người dùng trên app xem bản đồ, xem quán gần, quét QR, đến gần
+                quán bằng GPS và nghe thuyết minh bằng ngôn ngữ đã chọn.
+              </div>
+            </div>
+          </div>
+
+          <div class="flowline">
+            <div class="node">Web lưu POI</div>
+            <div class="join">→</div>
+            <div class="node">App đồng bộ POI</div>
+            <div class="join">→</div>
+            <div class="node">Người dùng tương tác</div>
+            <div class="join">→</div>
+            <div class="node">Narration được phát</div>
+            <div class="join">→</div>
+            <div class="node">Log được gửi về web</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="backend-space">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần C</small>
+              <h2>Không gian vận hành của Web Admin</h2>
+              <p>
+                Web không chỉ là nơi nhập dữ liệu mà còn là “trạm điều phối nội
+                dung” cho toàn hệ thống. Mọi dữ liệu quan trọng đều xuất phát từ
+                đây trước khi app sử dụng.
+              </p>
+            </div>
+          </div>
+
+          <div class="cluster">
+            <div class="stack">
+              <div class="box">
+                <h3>1. Dashboard điều hành</h3>
+                <p>
+                  Dashboard tổng hợp số POI, số QR, tổng lịch sử narration, top
+                  quán được nghe nhiều và các dữ liệu tóm tắt khác để nhìn nhanh
+                  tình trạng hệ thống.
+                </p>
+              </div>
+              <div class="box">
+                <h3>2. Quản lý POI</h3>
+                <p>
+                  Mỗi POI gồm tên quán, địa chỉ, số điện thoại, ảnh, tọa độ, bán
+                  kính kích hoạt, độ ưu tiên, mô tả và script thuyết minh theo
+                  nhiều ngôn ngữ.
+                </p>
+              </div>
+              <div class="box">
+                <h3>3. Quản lý QR code</h3>
+                <p>
+                  QR được quản lý tách biệt để một quán có thể có nhiều mã ở
+                  nhiều điểm đặt khác nhau. Điều này làm luồng kích hoạt nội
+                  dung linh hoạt hơn.
+                </p>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="box">
+                <h3>4. Nhật ký narration</h3>
+                <p>
+                  Web tiếp nhận log phát narration từ app, từ đó xây được lịch
+                  sử sử dụng và phục vụ dashboard.
+                </p>
+              </div>
+              <div class="box">
+                <h3>5. API nguồn cho app</h3>
+                <p>
+                  App lấy POI, tra cứu QR và gửi narration history thông qua
+                  web. Điều này khiến web đóng vai trò giống backend API hơn là
+                  chỉ một site quản trị đơn thuần.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Khối web</th>
+                  <th>Chức năng cốt lõi</th>
+                  <th>Dữ liệu liên quan</th>
+                  <th>Ý nghĩa khi báo cáo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Home / Dashboard</strong></td>
+                  <td>Tổng hợp số liệu vận hành</td>
+                  <td>POI, QR, narration history</td>
+                  <td>Cho thấy đồ án có phần giám sát chứ không chỉ CRUD</td>
+                </tr>
+                <tr>
+                  <td><strong>Pois</strong></td>
+                  <td>CRUD quán ăn và nội dung</td>
+                  <td>Tên, tọa độ, bán kính, ưu tiên, script, ảnh</td>
+                  <td>Là trung tâm nội dung của toàn hệ thống</td>
+                </tr>
+                <tr>
+                  <td><strong>QrCodeItems</strong></td>
+                  <td>Ánh xạ QR đến POI</td>
+                  <td>Code, PoiId, IsActive</td>
+                  <td>Tạo kênh kích hoạt nội dung song song với GPS</td>
+                </tr>
+                <tr>
+                  <td><strong>NarrationHistories</strong></td>
+                  <td>Lưu log sử dụng</td>
+                  <td>PoiName, Language, TriggerSource, PlayedAt</td>
+                  <td>Tạo dữ liệu thực để thống kê và đánh giá</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout">
+            <strong>Nhìn theo góc độ hệ thống:</strong> Web hiện tại là lớp quản
+            trị + dữ liệu gốc + API nguồn. Đây là lý do vì sao phần web của bạn
+            nên được trình bày như “backend quản trị nội dung”, không nên chỉ
+            gọi đơn giản là site CRUD.
+          </div>
+
+          <div class="table-wrap" style="margin-top: 18px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bảng dữ liệu Web</th>
+                  <th>Thuộc khối</th>
+                  <th>Mục đích sử dụng</th>
+                  <th>Ghi chú nghiệp vụ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Pois</code></td>
+                  <td>Content</td>
+                  <td>
+                    Lưu dữ liệu quán, tọa độ, bán kính, ưu tiên, mô tả, script
+                    TTS, QR mặc định, ảnh
+                  </td>
+                  <td>
+                    Là bảng trung tâm, được app đồng bộ về local để hiển thị và
+                    kích hoạt narration
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>QrCodeItems</code></td>
+                  <td>QR Management</td>
+                  <td>Lưu các QR phụ ánh xạ đến từng POI</td>
+                  <td>
+                    Hỗ trợ một quán có nhiều điểm quét khác nhau thay vì chỉ một
+                    QR duy nhất
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>NarrationHistories</code></td>
+                  <td>Analytics / Log</td>
+                  <td>
+                    Lưu lịch sử app đã phát narration theo POI, ngôn ngữ, nguồn
+                    kích hoạt và thời gian
+                  </td>
+                  <td>
+                    Dùng cho dashboard, top quán được nghe và báo cáo sử dụng
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 18px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Service / Thành phần Web</th>
+                  <th>Vai trò chính</th>
+                  <th>Input chính</th>
+                  <th>Output chính</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>HomeService</code></td>
+                  <td>Tổng hợp dữ liệu dashboard</td>
+                  <td>POI, QR, NarrationHistories</td>
+                  <td>DashboardViewModel</td>
+                </tr>
+                <tr>
+                  <td><code>PoiService</code></td>
+                  <td>Xử lý nghiệp vụ CRUD POI, ảnh, script, QR mặc định</td>
+                  <td>PoiFormViewModel / Poi</td>
+                  <td>Poi, danh sách POI, trạng thái lưu</td>
+                </tr>
+                <tr>
+                  <td><code>QrCodeItemService</code></td>
+                  <td>Quản lý QR phụ và lookup QR</td>
+                  <td>Qr code string / Qr form data</td>
+                  <td>Qr item hoặc POI tương ứng</td>
+                </tr>
+                <tr>
+                  <td><code>NarrationHistoryService</code></td>
+                  <td>Nhận và lưu lịch sử narration từ app</td>
+                  <td>NarrationHistoryDto / App log</td>
+                  <td>Bản ghi lịch sử đã chuẩn hóa</td>
+                </tr>
+                <tr>
+                  <td><code>TtsTranslationService</code></td>
+                  <td>Sinh nội dung TTS theo nhiều ngôn ngữ từ tiếng Việt</td>
+                  <td>Description / TtsScriptVi</td>
+                  <td>TtsScriptEn, Zh, Ja, De</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="mobile-space">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần D</small>
+              <h2>Không gian vận hành của Mobile App</h2>
+              <p>
+                App là nơi các dữ liệu từ web được biến thành trải nghiệm thật.
+                Người dùng không nhìn thấy POI như một bản ghi cơ sở dữ liệu, mà
+                thấy nó dưới dạng quán gần mình, mã QR, bản đồ và lời thuyết
+                minh.
+              </p>
+            </div>
+          </div>
+
+          <div class="cards four">
+            <div class="box">
+              <h3>AuthService</h3>
+              <p>
+                Phục vụ đăng nhập local demo, đủ để app có trạng thái người dùng
+                riêng trong phạm vi đồ án.
+              </p>
+            </div>
+            <div class="box">
+              <h3>AppDbContext</h3>
+              <p>
+                Duy trì local database cho POI, user, narration log, geofence
+                event và dữ liệu hỗ trợ.
+              </p>
+            </div>
+            <div class="box">
+              <h3>PoiSyncService</h3>
+              <p>
+                Đưa dữ liệu thật từ web về app và giữ app luôn có dữ liệu mới
+                nhất phù hợp với phần quản trị.
+              </p>
+            </div>
+            <div class="box">
+              <h3>QrLookupService</h3>
+              <p>
+                Tạo con đường truy cập nhanh vào nội dung quán mà không phụ
+                thuộc GPS.
+              </p>
+            </div>
+            <div class="box">
+              <h3>HomeViewModel</h3>
+              <p>
+                Điều phối màn hình chính: nearby, location, sync, narration, map
+                state.
+              </p>
+            </div>
+            <div class="box">
+              <h3>FullMapPage</h3>
+              <p>
+                Hiển thị trực quan vị trí người dùng và các POI trên bản đồ để
+                tạo cảm giác khám phá tại hiện trường.
+              </p>
+            </div>
+            <div class="box">
+              <h3>History</h3>
+              <p>
+                Cho người dùng xem lại quán đã nghe và làm nền để đối soát log
+                với web.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Settings</h3>
+              <p>
+                Tùy chỉnh ngôn ngữ narration và chế độ phát, giúp trải nghiệm cá
+                nhân hóa hơn.
+              </p>
+            </div>
+          </div>
+
+          <div class="board">
+            <div class="board-item">
+              <h4>GeofenceEngine là bộ chọn ngữ cảnh</h4>
+              <p>
+                Nhiệm vụ của nó không phải phát âm thanh, mà là quyết định quán
+                nào đủ điều kiện phát dựa trên khoảng cách, bán kính, độ ưu tiên
+                và cooldown.
+              </p>
+            </div>
+            <div class="board-item">
+              <h4>NarrationService là bộ điều phối âm thanh</h4>
+              <p>
+                Nó xử lý play/stop, delay khi đổi quán, anti-spam cùng quán,
+                chọn script theo ngôn ngữ và giữ cho trải nghiệm nghe mượt nhất
+                có thể.
+              </p>
+            </div>
+            <div class="board-item">
+              <h4>LocationTrackerService là lớp cấp dữ liệu vị trí</h4>
+              <p>
+                GPS không được dùng trực tiếp trong UI mà đi qua service, giúp
+                toàn bộ app dễ quản lý hơn và dễ gắn với geofence.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 18px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bảng dữ liệu App</th>
+                  <th>Thuộc lớp</th>
+                  <th>Mục đích sử dụng</th>
+                  <th>Ghi chú nghiệp vụ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Pois</code></td>
+                  <td>Local Content Cache</td>
+                  <td>
+                    Lưu bản sao POI từ web để app hiển thị nhanh và hoạt động ổn
+                    định
+                  </td>
+                  <td>
+                    Được sync từ web, có thể tồn tại cả seed data lẫn dữ liệu
+                    thật
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>FoodItems</code></td>
+                  <td>UI Content</td>
+                  <td>
+                    Lưu dữ liệu món ăn minh họa hoặc thông tin bổ trợ cho POI
+                  </td>
+                  <td>Phục vụ làm giàu trải nghiệm hiển thị</td>
+                </tr>
+                <tr>
+                  <td><code>AppUsers</code></td>
+                  <td>Local Auth</td>
+                  <td>Lưu tài khoản đăng nhập local trong phạm vi demo</td>
+                  <td>
+                    Không phải auth online, chủ yếu phục vụ kịch bản sử dụng app
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>NarrationLogs</code></td>
+                  <td>User Activity</td>
+                  <td>Lưu lịch sử nghe ở phía app</td>
+                  <td>Là nguồn để hiển thị History và đồng bộ lên web</td>
+                </tr>
+                <tr>
+                  <td><code>GeofenceEventLogs</code></td>
+                  <td>Tracking / Debug</td>
+                  <td>Lưu sự kiện liên quan đến geofence</td>
+                  <td>
+                    Giúp kiểm tra logic vào vùng, ra vùng, phát hoặc không phát
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 18px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Service / Thành phần App</th>
+                  <th>Vai trò chính</th>
+                  <th>Input chính</th>
+                  <th>Output chính</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>AuthService</code></td>
+                  <td>Đăng nhập local và giữ phiên user hiện tại</td>
+                  <td>Username, Password</td>
+                  <td>CurrentUser / trạng thái đăng nhập</td>
+                </tr>
+                <tr>
+                  <td><code>PoiSyncService</code></td>
+                  <td>Đồng bộ dữ liệu POI từ web về app</td>
+                  <td>Danh sách POI từ API web</td>
+                  <td>Pois local đã thêm, cập nhật hoặc xóa</td>
+                </tr>
+                <tr>
+                  <td><code>QrLookupService</code></td>
+                  <td>Tra QR để lấy đúng POI</td>
+                  <td>QR string</td>
+                  <td>RemotePoiDto / Poi tương ứng</td>
+                </tr>
+                <tr>
+                  <td><code>LocationTrackerService</code></td>
+                  <td>Lấy vị trí hiện tại và theo dõi GPS</td>
+                  <td>Permission + thiết bị</td>
+                  <td>Latitude, Longitude, Accuracy</td>
+                </tr>
+                <tr>
+                  <td><code>GeofenceEngine</code></td>
+                  <td>Chọn POI đang phù hợp để kích hoạt narration</td>
+                  <td>Location hiện tại + danh sách POI</td>
+                  <td>POI tốt nhất / quyết định có phát hay không</td>
+                </tr>
+                <tr>
+                  <td><code>NarrationService</code></td>
+                  <td>Điều khiển phát narration, chống spam, xử lý đổi quán</td>
+                  <td>Poi, Language, Mode</td>
+                  <td>Audio/TTS playback + log narration</td>
+                </tr>
+                <tr>
+                  <td><code>HomeViewModel</code></td>
+                  <td>Điều phối màn hình chính</td>
+                  <td>Services + UI command</td>
+                  <td>Nearby list, current state, narration action</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="operating-flow">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần E</small>
+              <h2>Cách dữ liệu chảy trong hệ thống</h2>
+              <p>
+                Dưới đây là cách trình bày lại luồng vận hành theo phong cách
+                khác: không đi theo format PRD cũ mà đi theo “hành trình dữ
+                liệu”. Luồng cốt lõi vẫn giữ nguyên đúng với code.
+              </p>
+            </div>
+          </div>
+
+          <div class="duo">
+            <div class="box">
+              <h3>Hành trình 1 · Từ admin đến người dùng</h3>
+              <ul>
+                <li>Admin tạo hoặc chỉnh sửa POI trên web</li>
+                <li>
+                  Web lưu dữ liệu quán, tọa độ, QR, ảnh và script narration
+                </li>
+                <li>App đồng bộ về local SQLite</li>
+                <li>Người dùng nhìn thấy quán trên danh sách và bản đồ</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>Hành trình 2 · Từ người dùng trở lại web</h3>
+              <ul>
+                <li>Người dùng nghe narration bằng GPS, QR hoặc chọn tay</li>
+                <li>App tạo narration log cục bộ</li>
+                <li>App gửi dữ liệu log lên web</li>
+                <li>Web lưu narration history để thống kê</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="flowline">
+            <div class="node">POI được tạo trên Web</div>
+            <div class="join">→</div>
+            <div class="node">POI được sync về App</div>
+            <div class="join">→</div>
+            <div class="node">GPS / QR / Manual trigger</div>
+            <div class="join">→</div>
+            <div class="node">GeofenceEngine chọn POI phù hợp</div>
+            <div class="join">→</div>
+            <div class="node">NarrationService phát nội dung</div>
+            <div class="join">→</div>
+            <div class="node">History được ghi lại</div>
+          </div>
+
+          <div class="cards two" style="margin-top: 16px">
+            <div class="box">
+              <h3>Luồng GPS / Geofence</h3>
+              <p>
+                App lấy vị trí hiện tại, đối chiếu với danh sách POI, tính
+                khoảng cách, kiểm tra quán nào đang nằm trong vùng kích hoạt,
+                sau đó xét tiếp priority và cooldown để chọn quán cần phát.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Luồng QR</h3>
+              <p>
+                App quét QR, gọi web lookup để xác định POI tương ứng, nhận dữ
+                liệu quán, mở giao diện liên quan và thực hiện narration mà
+                không cần chờ GPS.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Luồng narration</h3>
+              <p>
+                NarrationService lấy script theo ngôn ngữ hiện hành, dừng
+                narration cũ nếu cần, chờ một khoảng khi đổi quán và chặn phát
+                lại quá nhanh đối với cùng một quán.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Luồng history</h3>
+              <p>
+                Sau khi narration diễn ra, app tạo log với poi, language, mode,
+                trigger source và thời gian phát; log này được gửi ngược lên web
+                để bổ sung dữ liệu thống kê.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="entity-model">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần F</small>
+              <h2>Mô hình thực thể và ý nghĩa của từng nhóm dữ liệu</h2>
+              <p>
+                Phần này nên dùng khi thầy hỏi: “Các bảng này sinh ra để làm
+                gì?”. Trả lời theo nghiệp vụ sẽ thuyết phục hơn trả lời theo
+                kiểu chỉ đọc tên model.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nhóm dữ liệu</th>
+                  <th>Xuất hiện ở đâu</th>
+                  <th>Vai trò</th>
+                  <th>Cách hiểu ngắn gọn</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Poi</strong></td>
+                  <td>Web và App</td>
+                  <td>Dữ liệu trung tâm của hệ thống</td>
+                  <td>
+                    Mỗi quán ăn là một POI. Mọi logic GPS, QR, map và narration
+                    đều xoay quanh nó.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>QrCodeItem</strong></td>
+                  <td>Web</td>
+                  <td>Mở rộng điểm kích hoạt</td>
+                  <td>
+                    Không giới hạn mỗi quán chỉ có một QR, giúp triển khai thực
+                    tế linh hoạt hơn.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>NarrationHistory</strong></td>
+                  <td>Web</td>
+                  <td>Theo dõi hành vi sử dụng</td>
+                  <td>
+                    Là bằng chứng cho thấy hệ thống có dữ liệu vận hành thật,
+                    không chỉ trình diễn giao diện.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>AppUser</strong></td>
+                  <td>App</td>
+                  <td>Duy trì trạng thái người dùng local</td>
+                  <td>
+                    Hỗ trợ luồng đăng nhập demo và tạo cảm giác sản phẩm hoàn
+                    chỉnh hơn.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>NarrationLog / GeofenceEventLog</strong></td>
+                  <td>App</td>
+                  <td>Ghi lại hoạt động phía thiết bị</td>
+                  <td>
+                    Dùng để hiển thị history và hỗ trợ debug hành vi của
+                    geofence / narration.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="completion">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <small>Phần G</small>
+              <h2>Mức độ hoàn thiện và hướng đi tiếp</h2>
+              <p>
+                Đây là phần tổng kết theo tinh thần “hệ thống hiện tại làm được
+                gì, mạnh ở đâu và còn thiếu chỗ nào”, thay vì chỉ chấm phần trăm
+                khô cứng.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Hạng mục</th>
+                  <th>Trạng thái</th>
+                  <th>Nhận xét</th>
+                  <th>Bước nên làm tiếp</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Quản trị POI</td>
+                  <td><span class="tag ok">Tốt</span></td>
+                  <td>Đủ mạnh để làm CMS trung tâm cho đồ án</td>
+                  <td>Tăng validate, filter, và trải nghiệm nhập liệu</td>
+                </tr>
+                <tr>
+                  <td>QR kích hoạt nội dung</td>
+                  <td><span class="tag ok">Tốt</span></td>
+                  <td>Là một điểm cộng rõ rệt của hệ thống</td>
+                  <td>Thêm thống kê số lượt quét và tối ưu UX scan</td>
+                </tr>
+                <tr>
+                  <td>GPS + Geofence</td>
+                  <td><span class="tag mid">Khá</span></td>
+                  <td>
+                    Đã có logic thực tế nhưng cần mượt hơn ở các cạnh biên
+                  </td>
+                  <td>Tối ưu xử lý khi đổi quán hoặc chuyển trang</td>
+                </tr>
+                <tr>
+                  <td>Narration đa ngôn ngữ</td>
+                  <td><span class="tag mid">Khá</span></td>
+                  <td>
+                    Đã có anti-spam, delay và ngôn ngữ nhưng UX âm thanh còn có
+                    thể đẹp hơn
+                  </td>
+                  <td>Chuẩn hóa mode phát và xử lý dở dang khi điều hướng</td>
+                </tr>
+                <tr>
+                  <td>Lịch sử sử dụng</td>
+                  <td><span class="tag ok">Tốt</span></td>
+                  <td>Đã tạo được vòng dữ liệu ngược từ app về web</td>
+                  <td>
+                    Bổ sung dashboard chi tiết hơn theo thời gian và trigger
+                    source
+                  </td>
+                </tr>
+                <tr>
+                  <td>Analytics sâu</td>
+                  <td><span class="tag no">Thiếu</span></td>
+                  <td>Mới dừng ở mức cơ bản</td>
+                  <td>
+                    Top POI, biểu đồ ngôn ngữ, lượt nghe theo ngày, thời lượng
+                    nghe
+                  </td>
+                </tr>
+                <tr>
+                  <td>Quản lý tour / role nâng cao</td>
+                  <td><span class="tag no">Chưa làm</span></td>
+                  <td>Không phải lõi của code hiện tại</td>
+                  <td>
+                    Để ở phần định hướng mở rộng thay vì cố nhồi vào bản hiện
+                    tại
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="cards two" style="margin-top: 16px">
+            <div class="box">
+              <h3>Ưu tiên</h3>
+              <ul>
+                <li>Ổn định narration khi đổi quán và chuyển sang map</li>
+                <li>Làm dashboard dễ nhìn hơn</li>
+                <li>Kiểm tra sync ảnh và sync POI ổn định</li>
+                <li>
+                  Chuẩn bị kịch bản demo: web cập nhật → app sync → qr/gps →
+                  history
+                </li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>Hướng phát triển</h3>
+              <ul>
+                <li>Analytics nâng cao và heatmap</li>
+                <li>Role-based authentication</li>
+                <li>Tour management</li>
+                <li>Offline pack / audio pack / map pack</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 18px">
+            <table>
+              <thead>
+                <tr>
+                  <th>API / Luồng dữ liệu chính</th>
+                  <th>Bên gọi</th>
+                  <th>Bên nhận</th>
+                  <th>Mục đích</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>GET POI list</code></td>
+                  <td>Mobile App</td>
+                  <td>Web API</td>
+                  <td>Lấy danh sách POI active để đồng bộ về local database</td>
+                </tr>
+                <tr>
+                  <td><code>QR lookup</code></td>
+                  <td>Mobile App</td>
+                  <td>Web API</td>
+                  <td>
+                    Tra mã QR để xác định POI tương ứng khi người dùng quét
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>POST narration history</code></td>
+                  <td>Mobile App</td>
+                  <td>Web API</td>
+                  <td>
+                    Đẩy log narration từ app lên web để lưu lịch sử và thống kê
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Static image access</code></td>
+                  <td>Mobile App / Browser</td>
+                  <td>Web Static Content</td>
+                  <td>Hiển thị ảnh POI trên web và app</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout">
+            <strong>Kết luận ngắn :</strong> VKFoodArea hiện là
+            một hệ thống quản trị và trải nghiệm thuyết minh ẩm thực có luồng dữ
+            liệu hai chiều tương đối hoàn chỉnh: web tạo nội dung, app sử dụng
+            nội dung và log hoạt động được gửi trở lại web. Đây là điểm khác
+            biệt lớn nhất của đồ án so với một app demo tĩnh.
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p><strong>VKFoodArea System Specification</strong></p>
+      </footer>
+    </div>
+  </body>
+</html>
