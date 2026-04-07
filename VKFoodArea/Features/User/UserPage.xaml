@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.User.UserPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#FFFFFF"
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False"
+    Title="Người dùng">
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          BackgroundColor="#FFFFFF">
+
+        <VerticalStackLayout Grid.Row="0"
+                             Padding="14,8,14,12"
+                             Spacing="10">
+
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  HeightRequest="42">
+                <Border Grid.Column="0"
+                        WidthRequest="122"
+                        HeightRequest="40"
+                        BackgroundColor="#EDE9FE"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 10">
+
+                    <Label Text="VKFood"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="#6D28D9" />
+                </Border>
+
+                <Button Grid.Column="2"
+                        Text="&#x2699;"
+                        Clicked="OnOpenSettingsClicked"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="10"
+                        BackgroundColor="#F5EBD7"
+                        TextColor="#6B7280"
+                        FontSize="16" />
+            </Grid>
+
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Người dùng"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="#111827" />
+
+                <Label Text="Quản lý tài khoản, ngôn ngữ đang dùng và các tuỳ chọn cá nhân."
+                       FontSize="14"
+                       TextColor="#6B7280" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,0,16,16"
+                                 Spacing="14">
+
+                <Border BackgroundColor="#F5F3FF"
+                        StrokeThickness="0"
+                        Padding="18"
+                        StrokeShape="RoundRectangle 24">
+
+                    <Grid ColumnDefinitions="Auto,*"
+                          ColumnSpacing="14">
+                        <Border WidthRequest="68"
+                                HeightRequest="68"
+                                BackgroundColor="#7C3AED"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 34">
+                            <Label x:Name="AvatarLabel"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   FontSize="24"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="6">
+                            <Label Text="Xin chào"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#7C3AED" />
+
+                            <Label x:Name="FullNameLabel"
+                                   FontSize="23"
+                                   FontAttributes="Bold"
+                                   TextColor="#111827"
+                                   LineBreakMode="TailTruncation" />
+
+                            <Label x:Name="UsernameLabel"
+                                   FontSize="14"
+                                   TextColor="#6B7280"
+                                   LineBreakMode="TailTruncation" />
+
+                            <HorizontalStackLayout Spacing="8">
+                                <Border BackgroundColor="White"
+                                        StrokeThickness="0"
+                                        Padding="10,6"
+                                        StrokeShape="RoundRectangle 12">
+                                    <Label x:Name="RoleBadgeLabel"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="#6D28D9" />
+                                </Border>
+
+                                <Border BackgroundColor="#F5EBD7"
+                                        StrokeThickness="0"
+                                        Padding="10,6"
+                                        StrokeShape="RoundRectangle 12">
+                                    <Label x:Name="StatusBadgeLabel"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="#9A6700" />
+                                </Border>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <Grid ColumnDefinitions="*,*"
+                      ColumnSpacing="12">
+                    <Border Grid.Column="0"
+                            BackgroundColor="White"
+                            Stroke="#EDE9FE"
+                            StrokeThickness="1"
+                            Padding="14"
+                            StrokeShape="RoundRectangle 18">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Ngôn ngữ"
+                                   FontSize="13"
+                                   TextColor="#6B7280" />
+                            <Label x:Name="CurrentLanguageValueLabel"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="#111827" />
+                            <Label x:Name="CurrentLanguageHintLabel"
+                                   FontSize="12"
+                                   TextColor="#7C3AED" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            BackgroundColor="White"
+                            Stroke="#FDE68A"
+                            StrokeThickness="1"
+                            Padding="14"
+                            StrokeShape="RoundRectangle 18">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Loại khách"
+                                   FontSize="13"
+                                   TextColor="#6B7280" />
+                            <Label x:Name="UserTypeValueLabel"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="#111827" />
+                            <Label x:Name="NarrationModeValueLabel"
+                                   FontSize="12"
+                                   TextColor="#9A6700" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border BackgroundColor="White"
+                        Stroke="#E5E7EB"
+                        StrokeThickness="1"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 20">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Thông tin tài khoản"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#111827" />
+
+                        <Grid ColumnDefinitions="*,Auto"
+                              RowDefinitions="Auto,Auto,Auto"
+                              RowSpacing="12">
+                            <Label Text="Tên đăng nhập"
+                                   FontSize="14"
+                                   TextColor="#6B7280" />
+                            <Label Grid.Column="1"
+                                   x:Name="UsernameValueLabel"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#111827" />
+
+                            <Label Grid.Row="1"
+                                   Text="Vai trò"
+                                   FontSize="14"
+                                   TextColor="#6B7280" />
+                            <Label Grid.Row="1"
+                                   Grid.Column="1"
+                                   x:Name="RoleValueLabel"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#111827" />
+
+                            <Label Grid.Row="2"
+                                   Text="Trạng thái"
+                                   FontSize="14"
+                                   TextColor="#6B7280" />
+                            <Label Grid.Row="2"
+                                   Grid.Column="1"
+                                   x:Name="StatusValueLabel"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#111827" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border BackgroundColor="White"
+                        Stroke="#E5E7EB"
+                        StrokeThickness="1"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 20">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Tác vụ nhanh"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#111827" />
+
+                        <Button Text="Cài đặt âm thanh"
+                                Clicked="OnOpenSettingsClicked"
+                                BackgroundColor="#EDE9FE"
+                                TextColor="#6D28D9"
+                                CornerRadius="16"
+                                HeightRequest="48"
+                                FontAttributes="Bold" />
+
+                        <Button Text="Đăng xuất"
+                                Clicked="OnLogoutClicked"
+                                BackgroundColor="#FEF2F2"
+                                TextColor="#DC2626"
+                                CornerRadius="16"
+                                HeightRequest="48"
+                                FontAttributes="Bold" />
+
+                        <Label x:Name="FooterNoteLabel"
+                               FontSize="12"
+                               TextColor="#6B7280" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,*,*,*"
+              Padding="10,8,10,12"
+              ColumnSpacing="8"
+              BackgroundColor="White">
+
+            <Border Grid.Column="0"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="&#x2302;&#10;Trang chủ"
+                        Clicked="OnGoHomeClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+            <Border Grid.Column="1"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="&#x2316;&#10;Bản đồ"
+                        Clicked="OnOpenFullMapClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+            <Border Grid.Column="2"
+                    BackgroundColor="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="&#x1F558;&#10;Lịch sử"
+                        Clicked="OnHistoryClicked"
+                        FontSize="11"
+                        FontAttributes="None"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#6B7280"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+
+            <Border Grid.Column="3"
+                    BackgroundColor="#F3E8FF"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="0">
+                <Button Text="&#x1F464;&#10;Người dùng"
+                        Clicked="OnUserClicked"
+                        FontSize="11"
+                        FontAttributes="Bold"
+                        LineBreakMode="WordWrap"
+                        BackgroundColor="Transparent"
+                        TextColor="#7C3AED"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

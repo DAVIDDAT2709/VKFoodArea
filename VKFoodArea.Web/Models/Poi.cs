@@ -13,6 +13,7 @@ public class Poi
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public double RadiusMeters { get; set; }
+    public int Priority { get; set; } = 1;
 
     public string Description { get; set; } = string.Empty;
 

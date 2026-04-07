@@ -25,6 +25,10 @@ public class HomeViewModel : INotifyPropertyChanged
     private bool _isInitialized;
     private string _syncSummary = "Đang dùng dữ liệu local.";
 
+    // Phục vụ hiển thị trạng thái chống spam trên UI
+    private DateTime _lastPlayRequestUtc = DateTime.MinValue;
+    private int? _lastRequestedPoiId;
+
     public ObservableCollection<Poi> NearbyPois { get; } = new();
 
     public ObservableCollection<LanguageOption> LanguageOptions { get; } = new()
@@ -44,6 +48,7 @@ public class HomeViewModel : INotifyPropertyChanged
     };
 
     public ICommand PlayPoiAudioCommand { get; }
+    public ICommand StopNarrationCommand { get; }
 
     public Location DefaultLocation { get; } = new(10.7618, 106.7022);
 
@@ -128,11 +133,12 @@ public class HomeViewModel : INotifyPropertyChanged
         _narrationService = narrationService;
         _permissionService = permissionService;
         _settingsService = settingsService;
+        _poiSyncService = poiSyncService;
 
         _locationTrackerService.LocationChanged += OnLocationChanged;
 
         PlayPoiAudioCommand = new Command<Poi>(async poi => await PlayPoiAudioAsync(poi));
-        _poiSyncService = poiSyncService;
+        StopNarrationCommand = new Command(async () => await StopNarrationAsync());
     }
 
     public async Task InitializeAsync()
@@ -156,8 +162,8 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             CurrentLocation = DefaultLocation;
-            UpdateNearbyPois(location: DefaultLocation, pois);
-            UpdateNearestPoi(location: DefaultLocation, pois);
+            UpdateNearbyPois(DefaultLocation, pois);
+            UpdateNearestPoi(DefaultLocation, pois);
             StatusText = BuildStatusText($"Đang tải {pois.Count} POI local, tiếp tục đồng bộ web...");
         });
 
@@ -225,13 +231,55 @@ public class HomeViewModel : INotifyPropertyChanged
         if (poi is null)
             return;
 
+        var now = DateTime.UtcNow;
+        var isSamePoiSpam =
+            _lastRequestedPoiId == poi.Id &&
+            now - _lastPlayRequestUtc < TimeSpan.FromSeconds(5);
+
+        _lastRequestedPoiId = poi.Id;
+        _lastPlayRequestUtc = now;
+
+        if (isSamePoiSpam)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                NearestPoi = poi;
+                StatusText = BuildStatusText(
+                    $"Bạn vừa chọn {poi.Name}. Vui lòng chờ 5 giây trước khi phát lại cùng quán.");
+            });
+            return;
+        }
+
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             NearestPoi = poi;
-            StatusText = BuildStatusText($"Đang phát thuyết minh: {poi.Name}");
+            StatusText = BuildStatusText(
+                $"Đã chọn quán: {poi.Name}. Nếu đang phát quán khác, hệ thống sẽ dừng và chuyển sau 3 giây.");
         });
 
-        await _narrationService.PlayPoiAsync(poi);
+        try
+        {
+            await _narrationService.PlayPoiAsync(poi);
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                StatusText = BuildStatusText($"Đang phát thuyết minh: {poi.Name}");
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                StatusText = BuildStatusText("Đã hủy phát để chuyển sang quán khác.");
+            });
+        }
+        catch
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                StatusText = BuildStatusText("Không thể phát thuyết minh. Vui lòng thử lại.");
+            });
+        }
     }
 
     public async Task PreviewNarrationAsync(Poi poi)
@@ -301,10 +349,9 @@ public class HomeViewModel : INotifyPropertyChanged
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            StatusText =
-                BuildStatusText(
-                    $"Vị trí: {location.Latitude:F5}, {location.Longitude:F5} | " +
-                    $"{NearestPoiText} | {decision.Reason}");
+            StatusText = BuildStatusText(
+                $"Vị trí: {location.Latitude:F5}, {location.Longitude:F5} | " +
+                $"{NearestPoiText} | {decision.Reason}");
         });
 
         if (!decision.ShouldTrigger || !decision.PoiId.HasValue)

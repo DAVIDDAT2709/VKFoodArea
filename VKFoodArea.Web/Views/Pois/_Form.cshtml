@@ -1,6 +1,7 @@
 @model VKFoodArea.Web.ViewModels.PoiFormViewModel
 
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+<input asp-for="ImageUrl" type="hidden" />
 
 <div class="editor-layout">
     <section class="card-surface">
@@ -25,10 +26,24 @@
                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
             <div class="col-md-6">
-                <label asp-for="ImageUrl" class="form-label"></label>
-                <input asp-for="ImageUrl" class="form-control" placeholder="Tên ảnh hoặc URL" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <label asp-for="ImageFile" class="form-label"></label>
+                <input asp-for="ImageFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+                <div class="form-text">Ảnh sẽ được tự động copy vào `VKFoodArea/Resources/Images` và đồng thời lưu lên web để app hiển thị ngay.</div>
             </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <div class="col-12">
+                    <div class="border rounded-3 p-3 bg-light">
+                        <div class="fw-semibold mb-2">Ảnh hiện tại</div>
+                        @if (CanPreview(Model.ImageUrl))
+                        {
+                            <img src="@ToPreviewUrl(Model.ImageUrl)" alt="Ảnh POI" style="max-width: 220px; max-height: 160px; border-radius: 12px; object-fit: cover;" />
+                        }
+                        <div class="small text-muted mt-2">@Model.ImageUrl</div>
+                    </div>
+                </div>
+            }
         </div>
     </section>
 
@@ -38,20 +53,25 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label asp-for="Latitude" class="form-label"></label>
                 <input asp-for="Latitude" class="form-control" step="any" placeholder="10.760000" />
                 <span asp-validation-for="Latitude" class="text-danger"></span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label asp-for="Longitude" class="form-label"></label>
                 <input asp-for="Longitude" class="form-control" step="any" placeholder="106.700000" />
                 <span asp-validation-for="Longitude" class="text-danger"></span>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label asp-for="RadiusMeters" class="form-label"></label>
                 <input asp-for="RadiusMeters" class="form-control" step="any" placeholder="30" />
                 <span asp-validation-for="RadiusMeters" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Priority" class="form-label"></label>
+                <input asp-for="Priority" class="form-control" min="1" max="100" placeholder="1" />
+                <span asp-validation-for="Priority" class="text-danger"></span>
             </div>
             <div class="col-md-8">
                 <label asp-for="QrCode" class="form-label"></label>
@@ -106,3 +126,15 @@
         </div>
     </section>
 </div>
+
+@functions {
+    private static bool CanPreview(string imageUrl)
+        => imageUrl.StartsWith("/", StringComparison.Ordinal) ||
+           imageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+           imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
+    private static string ToPreviewUrl(string imageUrl)
+        => imageUrl.StartsWith("/", StringComparison.Ordinal)
+            ? imageUrl
+            : imageUrl;
+}

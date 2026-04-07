@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using VKFoodArea.Web.Dtos;
 using VKFoodArea.Web.Models;
 using VKFoodArea.Web.ViewModels;
@@ -18,4 +19,5 @@ public interface IPoiService
     Task<PoiDto?> GetByQrCodeForApiAsync(string qrCode);
 
     Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string? qrCode);
+    string? ValidateImageFile(IFormFile? imageFile);
 }

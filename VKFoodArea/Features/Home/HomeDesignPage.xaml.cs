@@ -11,8 +11,10 @@ using Mapsui.UI.Maui;
 using Mapsui.UI.Maui.Extensions;
 using Mapsui.Widgets;
 using Mapsui.Widgets.InfoWidgets;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;
 using VKFoodArea.Features.Settings;
+using VKFoodArea.Features.User;
 using VKFoodArea.Models;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
@@ -445,7 +447,8 @@ public partial class HomeDesignPage : ContentPage
 
     private async void OnUserClicked(object sender, EventArgs e)
     {
-        await DisplayAlert("Thong bao", "Chuc nang nguoi dung se lam tiep.", "OK");
+        var page = _serviceProvider.GetRequiredService<UserPage>();
+        await Navigation.PushAsync(page);
     }
 
     private Task OpenPoiDetailAsync(Poi poi)

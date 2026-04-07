@@ -26,10 +26,20 @@ public partial class PoiDetailPage : ContentPage
     }
 
     private async void OnPlayNarrationClicked(object sender, EventArgs e)
+{
+    try
     {
         await _narrationService.PlayPoiAsync(Poi);
     }
-
+    catch
+    {
+        await DisplayAlert("Thông báo", "Không thể phát thuyết minh lúc này.", "OK");
+    }
+}
+private async void OnStopNarrationClicked(object sender, EventArgs e)
+{
+    await _narrationService.StopAsync();
+}
     private async void OnBookClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new BookingPage(Poi, _foodRepository));

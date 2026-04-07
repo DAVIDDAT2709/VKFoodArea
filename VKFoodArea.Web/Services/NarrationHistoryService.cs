@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Web.Data;
+using VKFoodArea.Web.Helpers;
 using VKFoodArea.Web.Models;
 using VKFoodArea.Web.ViewModels;
 
@@ -16,14 +17,25 @@ public class NarrationHistoryService : INarrationHistoryService
 
     public async Task<List<NarrationHistory>> GetAllAsync(string? source)
     {
+        var normalizedSource = NormalizeTriggerSource(source);
+
         var query = _context.NarrationHistories
             .AsNoTracking()
             .OrderByDescending(x => x.PlayedAt)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(source))
+        if (!string.IsNullOrWhiteSpace(normalizedSource))
         {
-            query = query.Where(x => x.TriggerSource == source);
+            if (normalizedSource == "gps")
+            {
+                query = query.Where(x =>
+                    x.TriggerSource == "gps" ||
+                    x.TriggerSource == "auto");
+            }
+            else
+            {
+                query = query.Where(x => x.TriggerSource == normalizedSource);
+            }
         }
 
         return await query.ToListAsync();
@@ -32,19 +44,16 @@ public class NarrationHistoryService : INarrationHistoryService
     public async Task<NarrationHistoryApiViewModel?> CreateFromAppAsync(NarrationHistoryCreateApiViewModel vm)
     {
         var language = (vm.Language ?? "vi").Trim().ToLowerInvariant();
-        var triggerSource = (vm.TriggerSource ?? "manual").Trim().ToLowerInvariant();
+        var triggerSource = NormalizeTriggerSource(vm.TriggerSource);
         var mode = (vm.Mode ?? "tts").Trim().ToLowerInvariant();
-
-        var poi = await _context.Pois
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == vm.PoiId && x.IsActive);
+        var poi = await ResolvePoiAsync(vm);
 
         if (poi is null)
             return null;
 
         var entity = new NarrationHistory
         {
-            PoiId = vm.PoiId,
+            PoiId = poi.Id,
             PoiName = poi.Name,
             Language = language,
             TriggerSource = triggerSource,
@@ -83,5 +92,61 @@ public class NarrationHistoryService : INarrationHistoryService
                 PlayedAt = x.PlayedAt
             })
             .FirstOrDefaultAsync();
+    }
+
+    private async Task<Poi?> ResolvePoiAsync(NarrationHistoryCreateApiViewModel vm)
+{
+    // Id trong app local có thể khác Id thật của web sau khi sync,
+    // nên phải ưu tiên nhận diện bằng QR hoặc tên quán trước.
+    var normalizedQrCode = QrCodeHelper.Normalize(vm.QrCode);
+    if (!string.IsNullOrWhiteSpace(normalizedQrCode))
+    {
+        var poiByQr = await _context.Pois
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.IsActive &&
+                !string.IsNullOrWhiteSpace(x.QrCode) &&
+                x.QrCode.ToLower() == normalizedQrCode);
+
+        if (poiByQr is not null)
+            return poiByQr;
+    }
+
+    var normalizedPoiName = (vm.PoiName ?? string.Empty).Trim();
+    if (!string.IsNullOrWhiteSpace(normalizedPoiName))
+    {
+        var poiByName = await _context.Pois
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .FirstOrDefaultAsync(x => x.Name == normalizedPoiName);
+
+        if (poiByName is not null)
+            return poiByName;
+    }
+
+    if (vm.PoiId > 0)
+    {
+        var poiById = await _context.Pois
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == vm.PoiId && x.IsActive);
+
+        if (poiById is not null)
+            return poiById;
+    }
+
+    return null;
+}
+
+    private static string NormalizeTriggerSource(string? source)
+    {
+        var normalized = (source ?? "manual").Trim().ToLowerInvariant();
+
+        return normalized switch
+        {
+            "auto" => "gps",
+            "gps" => "gps",
+            "qr" => "qr",
+            _ => "manual"
+        };
     }
 }

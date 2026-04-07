@@ -13,7 +13,6 @@
 		<ApplicationId>com.companyname.vkfoodarea</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
-		<AndroidFastDeploymentType>None</AndroidFastDeploymentType>
 		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
@@ -56,6 +55,9 @@
 		</MauiXaml>
 		<MauiXaml Update="Features\Home\QrScannerPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Features\User\UserPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
 

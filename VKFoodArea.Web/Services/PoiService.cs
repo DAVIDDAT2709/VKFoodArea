@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Web.Data;
 using VKFoodArea.Web.Dtos;
@@ -11,11 +12,16 @@ public class PoiService : IPoiService
 {
     private readonly AppDbContext _context;
     private readonly ITtsTranslationService _ttsTranslationService;
+    private readonly IPoiImageStorageService _poiImageStorageService;
 
-    public PoiService(AppDbContext context, ITtsTranslationService ttsTranslationService)
+    public PoiService(
+        AppDbContext context,
+        ITtsTranslationService ttsTranslationService,
+        IPoiImageStorageService poiImageStorageService)
     {
         _context = context;
         _ttsTranslationService = ttsTranslationService;
+        _poiImageStorageService = poiImageStorageService;
     }
 
     public async Task<List<Poi>> GetAllAsync()
@@ -23,6 +29,7 @@ public class PoiService : IPoiService
         return await _context.Pois
             .AsNoTracking()
             .OrderByDescending(x => x.IsActive)
+            .ThenByDescending(x => x.Priority)
             .ThenBy(x => x.Name)
             .ToListAsync();
     }
@@ -46,6 +53,7 @@ public class PoiService : IPoiService
     public async Task<int> CreateAsync(PoiFormViewModel vm)
     {
         await PopulateGeneratedFieldsAsync(vm);
+        await PopulateStoredImageAsync(vm);
 
         var poi = MapToEntity(vm, new Poi());
         _context.Pois.Add(poi);
@@ -61,6 +69,8 @@ public class PoiService : IPoiService
             return false;
 
         await PopulateGeneratedFieldsAsync(vm);
+        await PopulateStoredImageAsync(vm);
+
         MapToEntity(vm, poi);
         await _context.SaveChangesAsync();
 
@@ -107,12 +117,16 @@ public class PoiService : IPoiService
         return null;
     }
 
+    public string? ValidateImageFile(IFormFile? imageFile)
+        => _poiImageStorageService.Validate(imageFile);
+
     public async Task<List<PoiDto>> GetActiveForApiAsync()
     {
         return await _context.Pois
             .AsNoTracking()
             .Where(x => x.IsActive)
-            .OrderBy(x => x.Name)
+            .OrderByDescending(x => x.Priority)
+            .ThenBy(x => x.Name)
             .Select(x => ToDto(x, x.QrCode, "poi-default"))
             .ToListAsync();
     }
@@ -172,6 +186,7 @@ public class PoiService : IPoiService
         Latitude = poi.Latitude,
         Longitude = poi.Longitude,
         RadiusMeters = poi.RadiusMeters,
+        Priority = poi.Priority,
         TtsScriptVi = poi.TtsScriptVi,
         TtsScriptEn = poi.TtsScriptEn,
         TtsScriptZh = poi.TtsScriptZh,
@@ -190,6 +205,7 @@ public class PoiService : IPoiService
         poi.Latitude = vm.Latitude;
         poi.Longitude = vm.Longitude;
         poi.RadiusMeters = vm.RadiusMeters;
+        poi.Priority = vm.Priority;
         poi.Description = BuildShortDescription(vm.TtsScriptVi);
         poi.TtsScriptVi = vm.TtsScriptVi.Trim();
         poi.TtsScriptEn = (vm.TtsScriptEn ?? string.Empty).Trim();
@@ -210,6 +226,17 @@ public class PoiService : IPoiService
         vm.TtsScriptZh = scripts.Zh;
         vm.TtsScriptJa = scripts.Ja;
         vm.TtsScriptDe = scripts.De;
+    }
+
+    private async Task PopulateStoredImageAsync(PoiFormViewModel vm)
+    {
+        if (vm.ImageFile is null)
+        {
+            vm.ImageUrl = (vm.ImageUrl ?? string.Empty).Trim();
+            return;
+        }
+
+        vm.ImageUrl = await _poiImageStorageService.SaveAsync(vm.ImageFile, vm.Name);
     }
 
     private static string BuildShortDescription(string? vietnameseTts)
@@ -252,6 +279,7 @@ public class PoiService : IPoiService
             Latitude = poi.Latitude,
             Longitude = poi.Longitude,
             RadiusMeters = poi.RadiusMeters,
+            Priority = poi.Priority,
             QrCode = poi.QrCode,
             IsActive = poi.IsActive,
             TtsScriptVi = poi.TtsScriptVi,

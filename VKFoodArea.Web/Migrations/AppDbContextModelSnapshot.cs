@@ -98,6 +98,9 @@ namespace VKFoodArea.Web.Migrations
                     b.Property<double>("RadiusMeters")
                         .HasColumnType("REAL");
 
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("TtsScriptDe")
                         .IsRequired()
                         .HasColumnType("TEXT");

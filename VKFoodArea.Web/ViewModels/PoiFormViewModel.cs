@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace VKFoodArea.Web.ViewModels;
 
@@ -21,8 +22,10 @@ public class PoiFormViewModel
     public string? PhoneNumber { get; set; }
 
     [StringLength(500)]
-    [Display(Name = "Ảnh / URL ảnh")]
     public string? ImageUrl { get; set; }
+
+    [Display(Name = "Chọn ảnh từ máy tính")]
+    public IFormFile? ImageFile { get; set; }
 
     [Range(-90, 90, ErrorMessage = "Latitude không hợp lệ.")]
     [Display(Name = "Latitude")]
@@ -35,6 +38,10 @@ public class PoiFormViewModel
     [Range(1, 500, ErrorMessage = "Bán kính nên nằm trong khoảng 1-500m.")]
     [Display(Name = "Bán kính geofence (m)")]
     public double RadiusMeters { get; set; } = 30;
+
+    [Range(1, 100, ErrorMessage = "Ưu tiên nên nằm trong khoảng 1-100.")]
+    [Display(Name = "Ưu tiên geofence")]
+    public int Priority { get; set; } = 1;
 
     [Required(ErrorMessage = "Vui lòng nhập TTS tiếng Việt.")]
     [Display(Name = "TTS tiếng Việt")]

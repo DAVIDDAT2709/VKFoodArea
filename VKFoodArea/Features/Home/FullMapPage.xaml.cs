@@ -9,8 +9,10 @@ using Mapsui.UI.Maui;
 using Mapsui.UI.Maui.Extensions;
 using Mapsui.Widgets;
 using Mapsui.Widgets.InfoWidgets;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
+using VKFoodArea.Features.User;
 using VKFoodArea.Models;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
@@ -110,7 +112,7 @@ public partial class FullMapPage : ContentPage
                 resolvedLocation = current;
 
             if (resolvedLocation is not null)
-                await HandleLocationChangedAsync(resolvedLocation, shouldCenterMap: false, allowAutoNarration: true);
+                await HandleLocationChangedAsync(resolvedLocation, shouldCenterMap: false, allowAutoNarration: false);
         }
         catch (FeatureNotSupportedException)
         {
@@ -469,7 +471,8 @@ public partial class FullMapPage : ContentPage
 
     private async void OnUserClicked(object sender, EventArgs e)
     {
-        await DisplayAlert("Thông báo", "Chức năng người dùng sẽ làm tiếp.", "OK");
+        var page = _serviceProvider.GetRequiredService<UserPage>();
+        await Navigation.PushAsync(page);
     }
 
     private IReadOnlyList<Poi> GetMapPois()

@@ -32,12 +32,16 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(qrError))
             ModelState.AddModelError(nameof(vm.QrCode), qrError);
 
+        var imageError = _poiService.ValidateImageFile(vm.ImageFile);
+        if (!string.IsNullOrWhiteSpace(imageError))
+            ModelState.AddModelError(nameof(vm.ImageFile), imageError);
+
         if (!ModelState.IsValid)
             return View(vm);
 
         var createdId = await _poiService.CreateAsync(vm);
 
-        TempData["SuccessMessage"] = "Đã tạo POI mới và tự sinh 4 ngôn ngữ TTS.";
+        TempData["SuccessMessage"] = "Đã tạo POI mới, ảnh đã được lưu và TTS đã được sinh tự động.";
         return RedirectToAction(nameof(Edit), new { id = createdId });
     }
 
@@ -61,6 +65,10 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(qrError))
             ModelState.AddModelError(nameof(vm.QrCode), qrError);
 
+        var imageError = _poiService.ValidateImageFile(vm.ImageFile);
+        if (!string.IsNullOrWhiteSpace(imageError))
+            ModelState.AddModelError(nameof(vm.ImageFile), imageError);
+
         if (!ModelState.IsValid)
             return View(vm);
 
@@ -68,7 +76,7 @@ public class PoisController : Controller
         if (!updated)
             return NotFound();
 
-        TempData["SuccessMessage"] = "Đã cập nhật POI và làm mới bản dịch TTS.";
+        TempData["SuccessMessage"] = "Đã cập nhật POI, ảnh và bản dịch TTS đã được làm mới.";
         return RedirectToAction(nameof(Edit), new { id });
     }
 

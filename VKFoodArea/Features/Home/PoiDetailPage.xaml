@@ -48,7 +48,11 @@
                     BackgroundColor="#111827"
                     TextColor="White"
                     CornerRadius="14" />
-
+<Button Text="⏹ Dừng phát"
+        Clicked="OnStopNarrationClicked"
+        BackgroundColor="#DC2626"
+        TextColor="White"
+        CornerRadius="14" />
             <Button Text="Book quán"
                     Clicked="OnBookClicked"
                     BackgroundColor="#16A34A"

@@ -21,7 +21,7 @@
                              Spacing="8"
                              BackgroundColor="#FFFFFF">
 
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto"
       HeightRequest="42">
 
                 <Border Grid.Column="0"
@@ -48,7 +48,17 @@
         TextColor="#6D28D9"
         FontSize="14"
         FontAttributes="Bold" />
-                <Button Grid.Column="3"
+        <Button Grid.Column="3"
+        Text="⏹"
+        WidthRequest="42"
+        HeightRequest="42"
+        CornerRadius="10"
+        BackgroundColor="#FEE2E2"
+        TextColor="#DC2626"
+        FontSize="16"
+        FontAttributes="Bold"
+        Command="{Binding StopNarrationCommand}" />
+                <Button Grid.Column="4"
                         Text="⚙"
                         Clicked="OnSettingsClicked"
                         WidthRequest="42"

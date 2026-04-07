@@ -11,6 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IPoiService, PoiService>();
+builder.Services.AddScoped<IPoiImageStorageService, PoiImageStorageService>();
 builder.Services.AddScoped<IQrCodeItemService, QrCodeItemService>();
 builder.Services.AddScoped<INarrationHistoryService, NarrationHistoryService>();
 builder.Services.AddHttpClient<ITtsTranslationService, TtsTranslationService>(client =>
@@ -21,13 +22,19 @@ builder.Services.AddHttpClient<ITtsTranslationService, TtsTranslationService>(cl
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await WebDataInitializer.InitializeAsync(db);
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 

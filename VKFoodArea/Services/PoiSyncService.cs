@@ -42,6 +42,13 @@ public class PoiSyncService
                 return PoiSyncResult.Failed("Web API khong tra ve du lieu POI.");
             }
 
+            if (remotePois.Count == 0)
+            {
+                await WriteDebugTraceAsync("POI sync skipped: Web API returned 0 POIs.");
+                WritePlatformLog("POI sync skipped: Web API returned 0 POIs.");
+                return PoiSyncResult.Failed("Web API dang tra ve 0 POI, bo qua de tranh xoa du lieu local.");
+            }
+
             var localPois = await _db.Pois.ToListAsync(ct);
             var localByQr = localPois
                 .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
@@ -56,6 +63,7 @@ public class PoiSyncService
                 .Where(x => !string.IsNullOrWhiteSpace(x.Key))
                 .GroupBy(x => x.Key, StringComparer.Ordinal)
                 .ToDictionary(x => x.Key, x => x.First().Poi, StringComparer.Ordinal);
+            var syncedLocals = new HashSet<Poi>();
 
             await using var transaction = await _db.Database.BeginTransactionAsync(ct);
 
@@ -69,6 +77,7 @@ public class PoiSyncService
                 }
 
                 ApplyRemotePoi(local, dto);
+                syncedLocals.Add(local);
 
                 var normalizedQr = NormalizeQrCode(local.QrCode);
                 if (!string.IsNullOrWhiteSpace(normalizedQr))
@@ -78,6 +87,13 @@ public class PoiSyncService
                 if (!string.IsNullOrWhiteSpace(identityKey))
                     localByIdentity[identityKey] = local;
             }
+
+            var staleLocals = localPois
+                .Where(x => !syncedLocals.Contains(x))
+                .ToList();
+
+            if (staleLocals.Count > 0)
+                _db.Pois.RemoveRange(staleLocals);
 
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -125,7 +141,7 @@ public class PoiSyncService
         return null;
     }
 
-    private static void ApplyRemotePoi(Poi local, RemotePoiDto dto)
+    private void ApplyRemotePoi(Poi local, RemotePoiDto dto)
     {
         local.Name = dto.Name;
         local.Address = dto.Address;
@@ -133,18 +149,17 @@ public class PoiSyncService
         local.Latitude = dto.Latitude;
         local.Longitude = dto.Longitude;
         local.RadiusMeters = dto.RadiusMeters;
+        local.Priority = dto.Priority;
         local.Description = dto.Description;
         local.TtsScriptVi = dto.TtsScriptVi;
         local.TtsScriptEn = dto.TtsScriptEn;
         local.TtsScriptZh = dto.TtsScriptZh;
         local.TtsScriptJa = dto.TtsScriptJa;
         local.TtsScriptDe = dto.TtsScriptDe;
-        local.ImageUrl = dto.ImageUrl;
+        local.ImageUrl = _apiBaseUrlService.ResolveImageUrl(dto.ImageUrl);
         local.QrCode = dto.QrCode;
         local.IsActive = dto.IsActive;
-
-        if (string.IsNullOrWhiteSpace(local.MapUrl))
-            local.MapUrl = CreateMapUrl(dto.Latitude, dto.Longitude);
+        local.MapUrl = CreateMapUrl(dto.Latitude, dto.Longitude);
     }
 
     private static string BuildIdentityKey(string? name, string? address)

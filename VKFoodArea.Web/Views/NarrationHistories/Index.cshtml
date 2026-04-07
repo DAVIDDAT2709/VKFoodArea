@@ -4,7 +4,9 @@
     var currentSource = (ViewBag.CurrentSource as string ?? string.Empty).Trim().ToLowerInvariant();
     var items = Model.ToList();
     var todayCount = items.Count(x => x.PlayedAt >= DateTime.Today);
-    var gpsCount = items.Count(x => string.Equals(x.TriggerSource, "gps", StringComparison.OrdinalIgnoreCase));
+    var gpsCount = items.Count(x =>
+        string.Equals(x.TriggerSource, "gps", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.TriggerSource, "auto", StringComparison.OrdinalIgnoreCase));
     var qrCount = items.Count(x => string.Equals(x.TriggerSource, "qr", StringComparison.OrdinalIgnoreCase));
     var topPois = items
         .GroupBy(x => x.PoiName)
@@ -139,6 +141,7 @@
         source?.Trim().ToLowerInvariant() switch
         {
             "gps" => "GPS",
+            "auto" => "GPS",
             "qr" => "QR",
             "manual" => "Thủ công",
             _ => "Khác"

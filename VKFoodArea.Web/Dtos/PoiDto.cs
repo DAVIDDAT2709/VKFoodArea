@@ -12,6 +12,7 @@ public class PoiDto
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public double RadiusMeters { get; set; }
+    public int Priority { get; set; }
 
     public string QrCode { get; set; } = string.Empty;
     public bool IsActive { get; set; }

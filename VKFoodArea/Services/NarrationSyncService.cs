@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+using System.Diagnostics;
+using System.Net.Http.Json;
 using VKFoodArea.Models;
 
 namespace VKFoodArea.Services;
@@ -17,6 +18,7 @@ public class NarrationSyncService
     public async Task PushHistoryAsync(
         int poiId,
         string poiName,
+        string qrCode,
         string language,
         string mode,
         string triggerSource = "manual",
@@ -25,21 +27,38 @@ public class NarrationSyncService
         try
         {
             var payload = new NarrationHistoryPushDto
-            {
-                PoiId = poiId,
-                PoiName = poiName,
-                Language = language,
-                TriggerSource = triggerSource,
-                Mode = mode.ToLowerInvariant(),
-                PlayedAt = DateTime.UtcNow
-            };
+{
+    // Không đẩy local PoiId lên web để tránh map nhầm quán khi Id local khác Id web.
+    PoiId = 0,
+    PoiName = poiName,
+    QrCode = qrCode,
+    Language = language,
+    TriggerSource = NormalizeTriggerSource(triggerSource),
+    Mode = mode.ToLowerInvariant(),
+    PlayedAt = DateTime.UtcNow
+};
 
             var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories";
-            await _httpClient.PostAsJsonAsync(url, payload, ct);
+            using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
+            response.EnsureSuccessStatusCode();
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"Narration history sync failed: {ex}");
             // Web lỗi thì bỏ qua, app vẫn dùng local log
         }
+    }
+
+    private static string NormalizeTriggerSource(string? triggerSource)
+    {
+        var normalized = (triggerSource ?? "manual").Trim().ToLowerInvariant();
+
+        return normalized switch
+        {
+            "auto" => "gps",
+            "gps" => "gps",
+            "qr" => "qr",
+            _ => "manual"
+        };
     }
 }

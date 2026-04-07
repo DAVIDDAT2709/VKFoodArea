@@ -3,6 +3,7 @@ using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Media;
 using VKFoodArea.Data;
 using VKFoodArea.Models;
+
 #if ANDROID
 using AndroidApp = Android.App.Application;
 using AndroidBundle = Android.OS.Bundle;
@@ -25,6 +26,17 @@ public class NarrationService
 
     private static readonly SemaphoreSlim _playLock = new(1, 1);
     private static CancellationTokenSource? _ttsCts;
+
+    private static readonly object _requestLock = new();
+    private static CancellationTokenSource? _requestCts;
+    private static int? _currentPoiId;
+
+    // chống spam cùng một quán trong 5 giây
+    private static int? _lastRequestedPoiId;
+    private static DateTime _lastAcceptedTapUtc = DateTime.MinValue;
+
+    private static readonly TimeSpan AntiSpamCooldown = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan SwitchPoiDelay = TimeSpan.FromSeconds(3);
 
 #if ANDROID
     private static readonly SemaphoreSlim _androidTtsLock = new(1, 1);
@@ -57,20 +69,63 @@ public class NarrationService
 
     public async Task PlayPoiAsync(Poi poi, string triggerSource = "manual", CancellationToken ct = default)
     {
-        if (!poi.IsActive)
+        if (poi is null || !poi.IsActive)
             return;
 
-        var language = AppLanguageService.NormalizeLanguage(_settingsService.NarrationLanguage);
-        var mode = (_settingsService.NarrationOutputMode ?? "TTS").Trim();
-
-        _languageService.CurrentLanguage = language;
-
-        var narrationContent = ResolveNarrationContent(poi, language);
-        if (narrationContent is null)
+        // Chỉ chặn spam khi bấm lại cùng một quán trong 5 giây
+        if (IsSpamRequest(poi.Id))
             return;
 
-        await LogNarrationAsync(poi, narrationContent.SpokenLanguage, mode, triggerSource, ct);
-        await SpeakTextAsync(narrationContent.Script, narrationContent.SpokenLanguage, ct);
+        var requestCts = ReplaceRequestToken(ct);
+        var requestToken = requestCts.Token;
+
+        try
+        {
+            // Nếu đang phát quán khác thì dừng ngay và chờ 3 giây trước khi phát quán mới
+            if (_currentPoiId.HasValue && _currentPoiId.Value != poi.Id)
+            {
+                await StopCurrentPlaybackOnlyAsync();
+                await Task.Delay(SwitchPoiDelay, requestToken);
+            }
+            // Nếu đang là chính quán này và không bị chặn spam thì vẫn bỏ qua để không phát chồng
+            else if (_currentPoiId.HasValue && _currentPoiId.Value == poi.Id)
+            {
+                return;
+            }
+
+            requestToken.ThrowIfCancellationRequested();
+
+            var language = AppLanguageService.NormalizeLanguage(_settingsService.NarrationLanguage);
+            var mode = (_settingsService.NarrationOutputMode ?? "TTS").Trim();
+
+            _languageService.CurrentLanguage = language;
+
+            var narrationContent = ResolveNarrationContent(poi, language);
+            if (narrationContent is null)
+                return;
+
+            _currentPoiId = poi.Id;
+
+            await LogNarrationAsync(poi, narrationContent.SpokenLanguage, mode, triggerSource, requestToken);
+            await SpeakTextAsync(narrationContent.Script, narrationContent.SpokenLanguage, requestToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Người dùng chọn quán khác hoặc bấm dừng -> bỏ qua, không crash
+        }
+        finally
+        {
+            lock (_requestLock)
+            {
+                if (ReferenceEquals(_requestCts, requestCts))
+                    _requestCts = null;
+            }
+
+            requestCts.Dispose();
+
+            if (_currentPoiId == poi.Id)
+                _currentPoiId = null;
+        }
     }
 
     public async Task PreviewAsync(string text, string language, CancellationToken ct = default)
@@ -83,21 +138,76 @@ public class NarrationService
 
     public async Task StopAsync()
     {
-        CancellationTokenSource? currentCts;
+        CancellationTokenSource? requestToCancel = null;
 
-        await _playLock.WaitAsync();
-        try
+        lock (_requestLock)
         {
-            currentCts = _ttsCts;
-            _ttsCts = null;
-        }
-        finally
-        {
-            _playLock.Release();
+            requestToCancel = _requestCts;
+            _requestCts = null;
+            _currentPoiId = null;
         }
 
-        CancelPlayback(currentCts);
-        StopPlatformPlayback();
+        if (requestToCancel is not null)
+        {
+            try
+            {
+                requestToCancel.Cancel();
+            }
+            catch
+            {
+            }
+            finally
+            {
+                requestToCancel.Dispose();
+            }
+        }
+
+        await StopCurrentPlaybackOnlyAsync();
+    }
+
+    private static CancellationTokenSource ReplaceRequestToken(CancellationToken externalToken = default)
+    {
+        CancellationTokenSource? oldCts = null;
+        CancellationTokenSource newCts;
+
+        lock (_requestLock)
+        {
+            oldCts = _requestCts;
+            newCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
+            _requestCts = newCts;
+        }
+
+        if (oldCts is not null)
+        {
+            try
+            {
+                oldCts.Cancel();
+            }
+            catch
+            {
+            }
+            finally
+            {
+                oldCts.Dispose();
+            }
+        }
+
+        return newCts;
+    }
+
+    private static bool IsSpamRequest(int poiId)
+    {
+        var now = DateTime.UtcNow;
+
+        if (_lastRequestedPoiId == poiId &&
+            now - _lastAcceptedTapUtc < AntiSpamCooldown)
+        {
+            return true;
+        }
+
+        _lastRequestedPoiId = poiId;
+        _lastAcceptedTapUtc = now;
+        return false;
     }
 
     private async Task LogNarrationAsync(
@@ -119,10 +229,30 @@ public class NarrationService
         await _narrationSyncService.PushHistoryAsync(
             poi.Id,
             poi.Name,
+            poi.QrCode,
             language,
             mode,
             triggerSource,
             ct);
+    }
+
+    private async Task StopCurrentPlaybackOnlyAsync()
+    {
+        CancellationTokenSource? currentCts;
+
+        await _playLock.WaitAsync();
+        try
+        {
+            currentCts = _ttsCts;
+            _ttsCts = null;
+        }
+        finally
+        {
+            _playLock.Release();
+        }
+
+        CancelPlayback(currentCts);
+        StopPlatformPlayback();
     }
 
     private async Task SpeakTextAsync(string text, string language, CancellationToken ct)

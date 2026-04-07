@@ -7,6 +7,7 @@ using VKFoodArea.Data;
 using VKFoodArea.Features.Auth;
 using VKFoodArea.Features.Home;
 using VKFoodArea.Features.Settings;
+using VKFoodArea.Features.User;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -74,6 +75,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PoiDetailPage>();
         builder.Services.AddTransient<QrScannerPage>();
         builder.Services.AddTransient<SettingsPage>();
+        builder.Services.AddTransient<UserPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
@@ -83,7 +85,7 @@ public static class MauiProgram
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        SeedData.InitializeAsync(db).GetAwaiter().GetResult();
+        AppDataInitializer.InitializeAsync(db).GetAwaiter().GetResult();
 
         return app;
     }

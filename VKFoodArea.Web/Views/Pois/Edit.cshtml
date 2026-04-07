@@ -9,7 +9,7 @@
     </div>
 </section>
 
-<form asp-action="Edit" method="post" class="stack-gap page-section">
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="stack-gap page-section">
     <input type="hidden" asp-for="Id" />
     <partial name="_Form" model="Model" />
 

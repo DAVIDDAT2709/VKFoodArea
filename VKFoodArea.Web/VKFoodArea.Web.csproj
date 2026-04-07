@@ -14,4 +14,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\VKFoodArea\Data\SeedData.cs" Link="Shared\SeedData.cs" />
+  </ItemGroup>
+
 </Project>
