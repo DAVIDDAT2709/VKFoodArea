@@ -521,6 +521,6 @@ public partial class FullMapPage : ContentPage
             return;
 
         InfoLabel.Text = $"Tự động phát: {poi.Name} • {decision.DistanceMeters:F0} m";
-        await _narrationService.PlayPoiAsync(poi.Id, "auto");
+        await _narrationService.PlayPoiAsync(poi, "auto");
     }
 }

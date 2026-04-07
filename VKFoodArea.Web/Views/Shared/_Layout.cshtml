@@ -11,26 +11,20 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - VKFoodArea Admin</title>
+    <title>@ViewData["Title"] - Narration CMS</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VKFoodArea.Web.styles.css" asp-append-version="true" />
 </head>
-<body class="app-body">
+<body>
     <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
 
     <div class="app-shell">
         <aside class="app-sidebar">
-            <div class="brand-panel">
-                <a class="brand-mark" asp-controller="Home" asp-action="Index">
-                    <span class="brand-mark__eyebrow">VK Food Area</span>
-                    <span class="brand-mark__title">Narration CMS</span>
-                </a>
-                <p class="brand-mark__copy">
-                    Trung tâm quản trị nội dung thuyết minh tự động cho khu ẩm thực Vĩnh Khánh:
-                    POI, QR, lịch sử nghe và dữ liệu phục vụ app mobile.
-                </p>
-            </div>
+            <a class="brand-mark" asp-controller="Home" asp-action="Index">
+                <strong class="brand-mark__title">VK Food Area</strong>
+                <strong class="brand-mark__meta">Narration CMS</strong>
+            </a>
 
             <nav class="app-nav" aria-label="Điều hướng chính">
                 <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">Tổng quan</a>
@@ -38,29 +32,11 @@
                 <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">QR code</a>
                 <a class="@NavClass("NarrationHistories")" asp-controller="NarrationHistories" asp-action="Index">Lịch sử nghe</a>
             </nav>
-
-            <section class="sidebar-card">
-                <span class="eyebrow">Phạm vi web</span>
-                <h2>CMS sẵn sàng cho demo đồ án</h2>
-                <p>
-                    Giao diện này ưu tiên thao tác nhanh, theo dõi dữ liệu tập trung và trình bày rõ
-                    phần đã có để đối chiếu với yêu cầu của đề tài.
-                </p>
-                <div class="pill-cloud">
-                    <span class="soft-pill">POI & geofence</span>
-                    <span class="soft-pill">QR kích hoạt</span>
-                    <span class="soft-pill">Script đa ngôn ngữ</span>
-                    <span class="soft-pill">API cho mobile</span>
-                </div>
-            </section>
         </aside>
 
         <div class="app-main">
             <header class="topbar">
-                <div>
-                    <p class="topbar__eyebrow">Bảng điều khiển nội dung</p>
-                    <h1 class="topbar__title">@((string?)ViewData["Title"] ?? "VKFoodArea Admin")</h1>
-                </div>
+                <h1 class="topbar__title">@((string?)ViewData["Title"] ?? "Narration CMS")</h1>
 
                 <div class="topbar__actions">
                     <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Thêm POI</a>
@@ -86,7 +62,6 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -7,57 +7,43 @@
     var multilingualCount = pois.Count(x => GetLanguageCodes(x).Count >= 2);
 }
 
-<section class="page-intro page-section">
+<section class="page-header page-section">
     <div>
-        <span class="eyebrow">CMS nội dung</span>
-        <h2>Quản lý điểm POI và vùng kích hoạt thuyết minh</h2>
-        <p>
-            Mỗi POI lưu thông tin địa điểm, tọa độ geofence, mô tả ngắn, QR mặc định và các script phục vụ
-            thuyết minh đa ngôn ngữ cho ứng dụng mobile.
-        </p>
+        <h2>Danh sách POI</h2>
     </div>
-    <div class="page-intro__actions">
+    <div class="page-actions">
         <a asp-action="Create" class="btn btn-primary">Thêm địa điểm</a>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
-    <article class="metric-card">
+    <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng POI</span>
         <strong class="metric-card__value">@pois.Count</strong>
-        <p class="metric-card__hint">Toàn bộ điểm thuyết minh đang có trong hệ thống.</p>
     </article>
-    <article class="metric-card">
+    <article class="metric-card metric-card--green">
         <span class="metric-card__label">POI hoạt động</span>
         <strong class="metric-card__value">@activeCount</strong>
-        <p class="metric-card__hint">Sẵn sàng cho app mobile lấy dữ liệu.</p>
     </article>
-    <article class="metric-card">
-        <span class="metric-card__label">POI có QR mặc định</span>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">POI có QR</span>
         <strong class="metric-card__value">@defaultQrCount</strong>
-        <p class="metric-card__hint">Cho phép mở nội dung nhanh mà không cần geofence.</p>
     </article>
-    <article class="metric-card">
+    <article class="metric-card metric-card--red">
         <span class="metric-card__label">POI đa ngôn ngữ</span>
         <strong class="metric-card__value">@multilingualCount</strong>
-        <p class="metric-card__hint">Có ít nhất 2 script TTS được cấu hình.</p>
     </article>
 </section>
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <div>
-            <span class="eyebrow">Danh sách dữ liệu</span>
-            <h2>POI hiện có</h2>
-        </div>
-        <span class="text-muted small">Ưu tiên hiển thị trạng thái, geofence và mức độ sẵn sàng nội dung.</span>
+        <h2>POI hiện có</h2>
     </div>
 
     @if (!pois.Any())
     {
         <div class="empty-state">
-            <h3>Chưa có điểm POI nào</h3>
-            <p>Hãy tạo địa điểm đầu tiên để bắt đầu cấu hình geofence và script thuyết minh.</p>
+            <p>Chưa có dữ liệu POI.</p>
         </div>
     }
     else
@@ -67,9 +53,9 @@
                 <thead>
                     <tr>
                         <th>POI</th>
-                        <th>Geofence</th>
-                        <th>Nội dung</th>
-                        <th>QR / Media</th>
+                        <th>GPS</th>
+                        <th>TTS tiếng Việt</th>
+                        <th>QR</th>
                         <th>Trạng thái</th>
                         <th class="text-end">Thao tác</th>
                     </tr>
@@ -89,23 +75,19 @@
                         </td>
                         <td>
                             <div class="mono">@poi.Latitude.ToString("0.######"), @poi.Longitude.ToString("0.######")</div>
-                            <div class="table-meta">Bán kính kích hoạt: @poi.RadiusMeters.ToString("0.#") m</div>
+                            <div class="table-meta">Bán kính: @poi.RadiusMeters.ToString("0.#") m</div>
                         </td>
                         <td>
-                            <div class="truncate-text">@(string.IsNullOrWhiteSpace(poi.Description) ? "Chưa có mô tả ngắn." : poi.Description)</div>
-                            <div class="badge-cluster mt-2">
-                                @if (!languages.Any())
-                                {
-                                    <span class="status-pill status-pill--muted">Chưa có script</span>
-                                }
-                                else
-                                {
+                            <div class="truncate-text">@(string.IsNullOrWhiteSpace(poi.TtsScriptVi) ? "Chưa có nội dung." : poi.TtsScriptVi)</div>
+                            @if (languages.Any())
+                            {
+                                <div class="badge-cluster mt-2">
                                     @foreach (var lang in languages)
                                     {
                                         <span class="lang-pill">@lang</span>
                                     }
-                                }
-                            </div>
+                                </div>
+                            }
                         </td>
                         <td>
                             @if (string.IsNullOrWhiteSpace(poi.QrCode))
@@ -115,13 +97,6 @@
                             else
                             {
                                 <div class="mono">@poi.QrCode</div>
-                            }
-
-                            @if (!string.IsNullOrWhiteSpace(poi.ImageUrl))
-                            {
-                                <div class="table-meta mt-2">
-                                    <a href="@poi.ImageUrl" target="_blank" rel="noopener noreferrer" class="text-link">Mở ảnh minh họa</a>
-                                </div>
                             }
                         </td>
                         <td>

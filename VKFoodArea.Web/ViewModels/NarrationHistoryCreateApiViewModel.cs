@@ -8,10 +8,6 @@ public class NarrationHistoryCreateApiViewModel
     [Display(Name = "POI Id")]
     public int PoiId { get; set; }
 
-    [StringLength(200)]
-    [Display(Name = "Tên POI")]
-    public string? PoiName { get; set; }
-
     [Required]
     [StringLength(10)]
     [Display(Name = "Ngôn ngữ")]

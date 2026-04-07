@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maui.ApplicationModel;
 using ZXing.Net.Maui;
+using VKFoodArea.Models;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
 
@@ -82,9 +83,9 @@ public partial class QrScannerPage : ContentPage
 
         try
         {
-            var poi = await _qrLookupService.FindPoiFromWebByQrAsync(value);
-
-            poi ??= await _poiRepository.GetByQrCodeAsync(value);
+            var webPoi = await _qrLookupService.FindPoiFromWebByQrAsync(value);
+            var localPoi = await _poiRepository.GetByQrCodeAsync(value);
+            var poi = MergePoiForDisplay(localPoi, webPoi);
 
             if (poi is null)
             {
@@ -143,5 +144,31 @@ public partial class QrScannerPage : ContentPage
     private async void OnCloseClicked(object sender, EventArgs e)
     {
         await Navigation.PopAsync();
+    }
+
+    private static Poi? MergePoiForDisplay(Poi? localPoi, Poi? webPoi)
+    {
+        if (localPoi is null)
+            return webPoi;
+
+        if (webPoi is null)
+            return localPoi;
+
+        localPoi.Name = webPoi.Name;
+        localPoi.Address = webPoi.Address;
+        localPoi.PhoneNumber = webPoi.PhoneNumber;
+        localPoi.ImageUrl = webPoi.ImageUrl;
+        localPoi.Description = webPoi.Description;
+        localPoi.Latitude = webPoi.Latitude;
+        localPoi.Longitude = webPoi.Longitude;
+        localPoi.RadiusMeters = webPoi.RadiusMeters;
+        localPoi.QrCode = webPoi.QrCode;
+        localPoi.IsActive = webPoi.IsActive;
+        localPoi.TtsScriptVi = webPoi.TtsScriptVi;
+        localPoi.TtsScriptEn = webPoi.TtsScriptEn;
+        localPoi.TtsScriptZh = webPoi.TtsScriptZh;
+        localPoi.TtsScriptJa = webPoi.TtsScriptJa;
+        localPoi.TtsScriptDe = webPoi.TtsScriptDe;
+        return localPoi;
     }
 }

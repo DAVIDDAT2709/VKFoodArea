@@ -11,6 +11,7 @@ using Mapsui.UI.Maui;
 using Mapsui.UI.Maui.Extensions;
 using Mapsui.Widgets;
 using Mapsui.Widgets.InfoWidgets;
+using Microsoft.Maui.ApplicationModel;
 using VKFoodArea.Features.Settings;
 using VKFoodArea.Models;
 using VKFoodArea.Repositories;
@@ -69,10 +70,51 @@ public partial class HomeDesignPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        PoiSyncService.SyncCompleted -= OnSyncCompleted;
+        PoiSyncService.SyncCompleted += OnSyncCompleted;
+        if (Window is not null)
+        {
+            Window.Resumed -= OnWindowResumed;
+            Window.Resumed += OnWindowResumed;
+        }
 
         await _viewModel.InitializeAsync();
         _viewModel.RefreshNarrationSettings();
+        await RefreshPoiDataAsync();
+    }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        PoiSyncService.SyncCompleted -= OnSyncCompleted;
+        if (Window is not null)
+            Window.Resumed -= OnWindowResumed;
+    }
+
+    private void OnSyncCompleted(object? sender, PoiSyncService.PoiSyncCompletedEventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            var detail = e.Result.Success
+                ? $"Đồng bộ xong, hiện có {e.Result.RemoteCount} POI từ web."
+                : "Không kết nối web, đang hiển thị dữ liệu local.";
+
+            await _viewModel.RefreshVisiblePoisAsync(e.Result, detail);
+            await RefreshPoiDataAsync();
+        });
+    }
+
+    private void OnWindowResumed(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            await _viewModel.InitializeAsync();
+            await RefreshPoiDataAsync();
+        });
+    }
+
+    private async Task RefreshPoiDataAsync()
+    {
         _allPois = await _poiRepository.GetActiveAsync();
         _defaultPois = _viewModel.NearbyPois.ToList();
 

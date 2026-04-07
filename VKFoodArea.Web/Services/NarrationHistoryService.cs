@@ -18,7 +18,6 @@ public class NarrationHistoryService : INarrationHistoryService
     {
         var query = _context.NarrationHistories
             .AsNoTracking()
-            .Include(x => x.Poi)
             .OrderByDescending(x => x.PlayedAt)
             .AsQueryable();
 

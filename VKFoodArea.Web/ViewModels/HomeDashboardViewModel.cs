@@ -10,7 +10,6 @@ public class HomeDashboardViewModel
     public int TodayNarrationCount { get; set; }
     public int ConfiguredLanguageCount { get; set; }
     public List<RecentNarrationItemViewModel> RecentNarrations { get; set; } = new();
-    public List<DashboardBreakdownItemViewModel> TriggerBreakdown { get; set; } = new();
     public List<DashboardBreakdownItemViewModel> LanguageBreakdown { get; set; } = new();
     public List<TopPoiPerformanceViewModel> TopPois { get; set; } = new();
 }
@@ -27,12 +26,10 @@ public class DashboardBreakdownItemViewModel
 {
     public string Label { get; set; } = string.Empty;
     public int Count { get; set; }
-    public double Percent { get; set; }
 }
 
 public class TopPoiPerformanceViewModel
 {
     public string PoiName { get; set; } = string.Empty;
     public int Count { get; set; }
-    public DateTime? LastPlayedAt { get; set; }
 }

@@ -39,6 +39,8 @@ public class QrLookupService
             Id = dto.Id,
             Name = dto.Name,
             Address = dto.Address,
+            PhoneNumber = dto.PhoneNumber,
+            ImageUrl = dto.ImageUrl,
             Description = dto.Description,
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
@@ -46,7 +48,10 @@ public class QrLookupService
             QrCode = dto.QrCode,
             IsActive = dto.IsActive,
             TtsScriptVi = dto.TtsScriptVi,
-            TtsScriptEn = dto.TtsScriptEn
+            TtsScriptEn = dto.TtsScriptEn,
+            TtsScriptZh = dto.TtsScriptZh,
+            TtsScriptJa = dto.TtsScriptJa,
+            TtsScriptDe = dto.TtsScriptDe
         };
     }
 }

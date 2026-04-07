@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VKFoodArea.Web.Data;
+using VKFoodArea.Web.Dtos;
+using VKFoodArea.Web.Services;
 
 namespace VKFoodArea.Web.Controllers.Api;
 
@@ -8,153 +8,80 @@ namespace VKFoodArea.Web.Controllers.Api;
 [Route("api/pois")]
 public class PoiApiController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IPoiService _poiService;
 
-    public PoiApiController(AppDbContext context)
+    public PoiApiController(IPoiService poiService)
     {
-        _context = context;
+        _poiService = poiService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var data = await _context.Pois
-            .AsNoTracking()
-            .Where(x => x.IsActive)
-            .OrderBy(x => x.Name)
-            .Select(x => new
-            {
-                x.Id,
-                x.Name,
-                x.Address,
-                x.PhoneNumber,
-                x.ImageUrl,
-                x.Latitude,
-                x.Longitude,
-                x.RadiusMeters,
-                x.Description,
-                x.TtsScriptVi,
-                x.TtsScriptEn,
-                x.TtsScriptZh,
-                x.TtsScriptJa,
-                x.TtsScriptDe,
-                x.QrCode,
-                x.IsActive
-            })
-            .ToListAsync();
-
-        return Ok(data);
+        var data = await _poiService.GetActiveForApiAsync();
+        return Ok(data.Select(MapBaseResponse));
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var poi = await _context.Pois
-            .AsNoTracking()
-            .Where(x => x.Id == id && x.IsActive)
-            .Select(x => new
-            {
-                x.Id,
-                x.Name,
-                x.Address,
-                x.PhoneNumber,
-                x.ImageUrl,
-                x.Latitude,
-                x.Longitude,
-                x.RadiusMeters,
-                x.Description,
-                x.TtsScriptVi,
-                x.TtsScriptEn,
-                x.TtsScriptZh,
-                x.TtsScriptJa,
-                x.TtsScriptDe,
-                x.QrCode,
-                x.IsActive
-            })
-            .FirstOrDefaultAsync();
-
+        var poi = await _poiService.GetByIdForApiAsync(id);
         if (poi is null)
             return NotFound();
 
-        return Ok(poi);
+        return Ok(MapBaseResponse(poi));
     }
 
     [HttpGet("by-qr")]
     public async Task<IActionResult> GetByQr([FromQuery] string code)
     {
-        var normalized = (code ?? string.Empty).Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(normalized))
+        if (string.IsNullOrWhiteSpace(code))
             return BadRequest("Missing code.");
 
-        var qrItemMatch = await _context.QrCodeItems
-            .AsNoTracking()
-            .Include(x => x.Poi)
-            .Where(x =>
-                x.IsActive &&
-                x.Poi != null &&
-                x.Poi.IsActive &&
-                !string.IsNullOrWhiteSpace(x.Code) &&
-                x.Code.ToLower() == normalized)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (qrItemMatch?.Poi is not null)
-        {
-            var poi = qrItemMatch.Poi;
-            return Ok(new
-            {
-                poi.Id,
-                poi.Name,
-                poi.Address,
-                poi.PhoneNumber,
-                poi.ImageUrl,
-                poi.Latitude,
-                poi.Longitude,
-                poi.RadiusMeters,
-                poi.Description,
-                poi.TtsScriptVi,
-                poi.TtsScriptEn,
-                poi.TtsScriptZh,
-                poi.TtsScriptJa,
-                poi.TtsScriptDe,
-                poi.QrCode,
-                poi.IsActive,
-                MatchedQrCode = qrItemMatch.Code,
-                QrSource = "qr-item"
-            });
-        }
-
-        var poiMatch = await _context.Pois
-            .AsNoTracking()
-            .Where(x =>
-                x.IsActive &&
-                !string.IsNullOrWhiteSpace(x.QrCode) &&
-                x.QrCode.ToLower() == normalized)
-            .FirstOrDefaultAsync();
-
-        if (poiMatch is null)
+        var poi = await _poiService.GetByQrCodeForApiAsync(code);
+        if (poi is null)
             return NotFound();
 
         return Ok(new
         {
-            poiMatch.Id,
-            poiMatch.Name,
-            poiMatch.Address,
-            poiMatch.PhoneNumber,
-            poiMatch.ImageUrl,
-            poiMatch.Latitude,
-            poiMatch.Longitude,
-            poiMatch.RadiusMeters,
-            poiMatch.Description,
-            poiMatch.TtsScriptVi,
-            poiMatch.TtsScriptEn,
-            poiMatch.TtsScriptZh,
-            poiMatch.TtsScriptJa,
-            poiMatch.TtsScriptDe,
-            poiMatch.QrCode,
-            poiMatch.IsActive,
-            MatchedQrCode = poiMatch.QrCode,
-            QrSource = "poi-default"
+            poi.Id,
+            poi.Name,
+            poi.Address,
+            poi.PhoneNumber,
+            poi.ImageUrl,
+            poi.Latitude,
+            poi.Longitude,
+            poi.RadiusMeters,
+            poi.Description,
+            poi.TtsScriptVi,
+            poi.TtsScriptEn,
+            poi.TtsScriptZh,
+            poi.TtsScriptJa,
+            poi.TtsScriptDe,
+            poi.QrCode,
+            poi.IsActive,
+            poi.MatchedQrCode,
+            poi.QrSource
         });
     }
+
+    private static object MapBaseResponse(PoiDto poi) => new
+    {
+        poi.Id,
+        poi.Name,
+        poi.Address,
+        poi.PhoneNumber,
+        poi.ImageUrl,
+        poi.Latitude,
+        poi.Longitude,
+        poi.RadiusMeters,
+        poi.Description,
+        poi.TtsScriptVi,
+        poi.TtsScriptEn,
+        poi.TtsScriptZh,
+        poi.TtsScriptJa,
+        poi.TtsScriptDe,
+        poi.QrCode,
+        poi.IsActive
+    };
 }

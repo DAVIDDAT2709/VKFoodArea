@@ -3,142 +3,106 @@
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
 <div class="editor-layout">
-    <div class="stack-gap">
-        <section class="card-surface">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">Thông tin cơ bản</span>
-                    <h2>Mô tả địa điểm</h2>
+    <section class="card-surface">
+        <div class="section-heading">
+            <h2>Thông tin địa điểm</h2>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="Ví dụ: Ốc Vũ" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Address" class="form-label"></label>
+                <input asp-for="Address" class="form-control" placeholder="Địa chỉ hiển thị trong app" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="Số điện thoại" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ImageUrl" class="form-label"></label>
+                <input asp-for="ImageUrl" class="form-control" placeholder="Tên ảnh hoặc URL" />
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card-surface">
+        <div class="section-heading">
+            <h2>GPS và QR</h2>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="Latitude" class="form-label"></label>
+                <input asp-for="Latitude" class="form-control" step="any" placeholder="10.760000" />
+                <span asp-validation-for="Latitude" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Longitude" class="form-label"></label>
+                <input asp-for="Longitude" class="form-control" step="any" placeholder="106.700000" />
+                <span asp-validation-for="Longitude" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="RadiusMeters" class="form-label"></label>
+                <input asp-for="RadiusMeters" class="form-control" step="any" placeholder="30" />
+                <span asp-validation-for="RadiusMeters" class="text-danger"></span>
+            </div>
+            <div class="col-md-8">
+                <label asp-for="QrCode" class="form-label"></label>
+                <input asp-for="QrCode" class="form-control" placeholder="Ví dụ: poi:oc-vu" />
+                <span asp-validation-for="QrCode" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check form-switch field-switch">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" placeholder="Ví dụ: Quán ốc cô Ba" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Address" class="form-label"></label>
-                    <input asp-for="Address" class="form-control" placeholder="Địa chỉ hiển thị cho người dùng" />
-                    <span asp-validation-for="Address" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="PhoneNumber" class="form-label"></label>
-                    <input asp-for="PhoneNumber" class="form-control" placeholder="Số liên hệ nếu có" />
-                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="ImageUrl" class="form-label"></label>
-                    <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
-                    <span asp-validation-for="ImageUrl" class="text-danger"></span>
-                </div>
-                <div class="col-12">
-                    <label asp-for="Description" class="form-label"></label>
-                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả ngắn gọn để hiển thị trong app và dashboard."></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-            </div>
-        </section>
+    <section class="card-surface">
+        <div class="section-heading">
+            <h2>TTS</h2>
+        </div>
 
-        <section class="card-surface">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">Geofence</span>
-                    <h2>Tọa độ kích hoạt</h2>
-                </div>
+        <div class="row g-3">
+            <div class="col-12">
+                <label asp-for="TtsScriptVi" class="form-label"></label>
+                <textarea asp-for="TtsScriptVi" class="form-control" rows="7" placeholder="Nhập TTS tiếng Việt"></textarea>
+                <span asp-validation-for="TtsScriptVi" class="text-danger"></span>
             </div>
 
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label asp-for="Latitude" class="form-label"></label>
-                    <input asp-for="Latitude" class="form-control" step="any" placeholder="10.760000" />
-                    <span asp-validation-for="Latitude" class="text-danger"></span>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="Longitude" class="form-label"></label>
-                    <input asp-for="Longitude" class="form-control" step="any" placeholder="106.700000" />
-                    <span asp-validation-for="Longitude" class="text-danger"></span>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="RadiusMeters" class="form-label"></label>
-                    <input asp-for="RadiusMeters" class="form-control" step="any" placeholder="30" />
-                    <span asp-validation-for="RadiusMeters" class="text-danger"></span>
-                </div>
-            </div>
-        </section>
-
-        <section class="card-surface">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">QR và trạng thái</span>
-                    <h2>Kích hoạt nhanh nội dung</h2>
-                </div>
-            </div>
-
-            <div class="row g-3 align-items-end">
-                <div class="col-md-8">
-                    <label asp-for="QrCode" class="form-label"></label>
-                    <input asp-for="QrCode" class="form-control" placeholder="Mã QR mặc định gắn với POI" />
-                    <span asp-validation-for="QrCode" class="text-danger"></span>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check form-switch field-switch">
-                        <input asp-for="IsActive" class="form-check-input" />
-                        <label asp-for="IsActive" class="form-check-label"></label>
+            <div class="col-12">
+                <div class="readonly-grid">
+                    <div>
+                        <label asp-for="TtsScriptEn" class="form-label"></label>
+                        <textarea asp-for="TtsScriptEn" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <span asp-validation-for="TtsScriptEn" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="TtsScriptZh" class="form-label"></label>
+                        <textarea asp-for="TtsScriptZh" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <span asp-validation-for="TtsScriptZh" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="TtsScriptJa" class="form-label"></label>
+                        <textarea asp-for="TtsScriptJa" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <span asp-validation-for="TtsScriptJa" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="TtsScriptDe" class="form-label"></label>
+                        <textarea asp-for="TtsScriptDe" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <span asp-validation-for="TtsScriptDe" class="text-danger"></span>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <section class="card-surface">
-            <div class="section-heading">
-                <div>
-                    <span class="eyebrow">Đa ngôn ngữ</span>
-                    <h2>Script thuyết minh</h2>
-                </div>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label asp-for="TtsScriptVi" class="form-label"></label>
-                    <textarea asp-for="TtsScriptVi" class="form-control" rows="5" placeholder="Nội dung tiếng Việt"></textarea>
-                    <span asp-validation-for="TtsScriptVi" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="TtsScriptEn" class="form-label"></label>
-                    <textarea asp-for="TtsScriptEn" class="form-control" rows="5" placeholder="English narration"></textarea>
-                    <span asp-validation-for="TtsScriptEn" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="TtsScriptZh" class="form-label"></label>
-                    <textarea asp-for="TtsScriptZh" class="form-control" rows="5" placeholder="中文讲解内容"></textarea>
-                    <span asp-validation-for="TtsScriptZh" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="TtsScriptJa" class="form-label"></label>
-                    <textarea asp-for="TtsScriptJa" class="form-control" rows="5" placeholder="日本語のナレーション"></textarea>
-                    <span asp-validation-for="TtsScriptJa" class="text-danger"></span>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="TtsScriptDe" class="form-label"></label>
-                    <textarea asp-for="TtsScriptDe" class="form-control" rows="5" placeholder="Deutscher Beschreibungstext"></textarea>
-                    <span asp-validation-for="TtsScriptDe" class="text-danger"></span>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <aside class="stack-gap">
-        <section class="card-surface side-note">
-            <span class="eyebrow">Mẹo nhập liệu</span>
-            <h3>Làm POI dễ hiểu cho người quản trị</h3>
-            <ul class="check-list">
-                <li>Tên POI nên ngắn, rõ ràng và trùng cách gọi ngoài thực tế.</li>
-                <li>Bán kính 20-50m thường phù hợp để demo geofence trong khu ẩm thực.</li>
-                <li>Nên nhập ít nhất tiếng Việt và tiếng Anh để thể hiện rõ phần đa ngôn ngữ.</li>
-                <li>QR mặc định nên khác toàn bộ QR phụ đã tạo trong module QR code.</li>
-            </ul>
-        </section>
-    </aside>
+        </div>
+    </section>
 </div>

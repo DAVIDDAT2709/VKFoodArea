@@ -20,8 +20,10 @@ public class HomeViewModel : INotifyPropertyChanged
     private readonly PermissionService _permissionService;
     private readonly AppSettingsService _settingsService;
     private readonly PoiSyncService _poiSyncService;
+    private readonly SemaphoreSlim _syncLock = new(1, 1);
 
     private bool _isInitialized;
+    private string _syncSummary = "Đang dùng dữ liệu local.";
 
     public ObservableCollection<Poi> NearbyPois { get; } = new();
 
@@ -135,20 +137,28 @@ public class HomeViewModel : INotifyPropertyChanged
 
     public async Task InitializeAsync()
     {
-        if (_isInitialized)
-            return;
-
         LoadNarrationSettings();
-
-        await _poiSyncService.SyncPoisAsync();
         var pois = await _poiRepository.GetActiveAsync();
+
+        if (_isInitialized)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                UpdateNearbyPois(CurrentLocation, pois);
+                UpdateNearestPoi(CurrentLocation, pois);
+                StatusText = BuildStatusText($"Đang hiển thị {pois.Count} POI hiện có.");
+            });
+
+            _ = RefreshPoisFromWebAsync();
+            return;
+        }
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             CurrentLocation = DefaultLocation;
             UpdateNearbyPois(location: DefaultLocation, pois);
             UpdateNearestPoi(location: DefaultLocation, pois);
-            StatusText = $"Đang tải dữ liệu vị trí | {NarrationSummary}";
+            StatusText = BuildStatusText($"Đang tải {pois.Count} POI local, tiếp tục đồng bộ web...");
         });
 
         var hasPermission = await _permissionService.EnsureLocationPermissionAsync();
@@ -160,10 +170,11 @@ public class HomeViewModel : INotifyPropertyChanged
                 CurrentLocation = DefaultLocation;
                 UpdateNearbyPois(DefaultLocation, pois);
                 UpdateNearestPoi(DefaultLocation, pois);
-                StatusText = "Chưa cấp quyền vị trí. App đang dùng vị trí mặc định.";
+                StatusText = BuildStatusText($"Chưa cấp quyền vị trí, đang hiển thị {pois.Count} POI local.");
             });
 
             _isInitialized = true;
+            _ = RefreshPoisFromWebAsync();
             return;
         }
 
@@ -183,11 +194,30 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             StatusText = started
-                ? $"GPS đang hoạt động | {NarrationSummary}"
-                : "Không thể bật theo dõi GPS, app đang dùng vị trí hiện tại gần nhất.";
+                ? BuildStatusText($"GPS đang hoạt động với {pois.Count} POI hiện tại.")
+                : BuildStatusText($"Không thể bật theo dõi GPS. Đang hiển thị {pois.Count} POI hiện tại.");
         });
 
         _isInitialized = true;
+        _ = RefreshPoisFromWebAsync();
+    }
+
+    public async Task RefreshVisiblePoisAsync(
+        PoiSyncService.PoiSyncResult? syncResult = null,
+        string? detail = null)
+    {
+        var pois = await _poiRepository.GetActiveAsync();
+
+        if (syncResult is not null)
+            _syncSummary = BuildSyncSummary(syncResult, pois.Count);
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            var currentLocation = CurrentLocation;
+            UpdateNearbyPois(currentLocation, pois);
+            UpdateNearestPoi(currentLocation, pois);
+            StatusText = BuildStatusText(detail ?? $"Đang hiển thị {pois.Count} POI.");
+        });
     }
 
     public async Task PlayPoiAudioAsync(Poi? poi)
@@ -198,10 +228,10 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             NearestPoi = poi;
-            StatusText = $"Đang phát thuyết minh: {poi.Name}";
+            StatusText = BuildStatusText($"Đang phát thuyết minh: {poi.Name}");
         });
 
-        await _narrationService.PlayPoiAsync(poi.Id);
+        await _narrationService.PlayPoiAsync(poi);
     }
 
     public async Task PreviewNarrationAsync(Poi poi)
@@ -212,10 +242,10 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             NearestPoi = poi;
-            StatusText = $"Đang phát thử: {poi.Name} | {NarrationSummary}";
+            StatusText = BuildStatusText($"Đang phát thử: {poi.Name}");
         });
 
-        await _narrationService.PlayPoiAsync(poi.Id);
+        await _narrationService.PlayPoiAsync(poi);
     }
 
     public async Task StopNarrationAsync()
@@ -224,7 +254,7 @@ public class HomeViewModel : INotifyPropertyChanged
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            StatusText = "Đã dừng phát thuyết minh.";
+            StatusText = BuildStatusText("Đã dừng phát thuyết minh.");
         });
     }
 
@@ -233,7 +263,7 @@ public class HomeViewModel : INotifyPropertyChanged
         _settingsService.NarrationLanguage = SelectedLanguage?.Code ?? "vi";
         _settingsService.NarrationOutputMode = SelectedOutputMode;
 
-        StatusText = $"Đã lưu cài đặt. {NarrationSummary}";
+        StatusText = BuildStatusText("Đã lưu cài đặt.");
         OnPropertyChanged(nameof(NarrationSummary));
     }
 
@@ -272,8 +302,9 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             StatusText =
-                $"Vị trí: {location.Latitude:F5}, {location.Longitude:F5} | " +
-                $"{NearestPoiText} | {decision.Reason}";
+                BuildStatusText(
+                    $"Vị trí: {location.Latitude:F5}, {location.Longitude:F5} | " +
+                    $"{NearestPoiText} | {decision.Reason}");
         });
 
         if (!decision.ShouldTrigger || !decision.PoiId.HasValue)
@@ -288,10 +319,10 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             NearestPoi = poi;
-            StatusText = $"Đang phát thuyết minh: {poi.Name} | {NarrationSummary}";
+            StatusText = BuildStatusText($"Đang phát thuyết minh: {poi.Name}");
         });
 
-        await _narrationService.PlayPoiAsync(poi.Id, "auto");
+        await _narrationService.PlayPoiAsync(poi, "auto");
     }
 
     private void UpdateNearbyPois(Location location, IEnumerable<Poi> pois)
@@ -329,6 +360,55 @@ public class HomeViewModel : INotifyPropertyChanged
             .FirstOrDefault();
 
         NearestPoi = nearest?.Poi;
+    }
+
+    private async Task RefreshPoisFromWebAsync()
+    {
+        if (!await _syncLock.WaitAsync(0))
+            return;
+
+        try
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                StatusText = BuildStatusText("Đang đồng bộ dữ liệu web...");
+            });
+
+            var syncResult = await _poiSyncService.SyncPoisAsync();
+            var pois = await _poiRepository.GetActiveAsync();
+            _syncSummary = BuildSyncSummary(syncResult, pois.Count);
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                var currentLocation = CurrentLocation;
+                UpdateNearbyPois(currentLocation, pois);
+                UpdateNearestPoi(currentLocation, pois);
+                StatusText = BuildStatusText(
+                    syncResult.Success
+                        ? $"Đồng bộ xong, hiện có {pois.Count} POI."
+                        : $"Đồng bộ web lỗi, đang dùng {pois.Count} POI local.");
+            });
+        }
+        finally
+        {
+            _syncLock.Release();
+        }
+    }
+
+    private string BuildSyncSummary(PoiSyncService.PoiSyncResult syncResult, int activePoiCount)
+    {
+        if (syncResult.Success)
+            return $"Web: đã đồng bộ {syncResult.RemoteCount} POI";
+
+        if (string.IsNullOrWhiteSpace(syncResult.ErrorMessage))
+            return $"Web lỗi, đang dùng {activePoiCount} POI local";
+
+        return $"Web lỗi, đang dùng {activePoiCount} POI local ({syncResult.ErrorMessage})";
+    }
+
+    private string BuildStatusText(string detail)
+    {
+        return $"{_syncSummary} | {detail} | {NarrationSummary}";
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

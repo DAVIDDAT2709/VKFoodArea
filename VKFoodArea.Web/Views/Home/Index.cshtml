@@ -1,144 +1,111 @@
 @model VKFoodArea.Web.ViewModels.HomeDashboardViewModel
-@using System.Globalization
 @{
     ViewData["Title"] = "Tổng quan";
 }
 
-<section class="hero-panel page-section">
-    <div class="hero-panel__content">
-        <span class="eyebrow">Web quản trị cho đồ án</span>
-        <h2>Theo dõi nội dung thuyết minh, QR và dữ liệu nghe trên một màn hình rõ ràng</h2>
-        <p>
-            Giao diện mới tập trung vào thông tin quan trọng nhất cho buổi demo: số lượng POI đang hoạt động,
-            mức phủ QR, ngôn ngữ đã cấu hình và dòng sự kiện nghe gần đây từ app mobile.
-        </p>
-        <div class="hero-panel__actions">
-            <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Tạo POI mới</a>
-            <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Xem lịch sử nghe</a>
-        </div>
+<section class="page-header page-section">
+    <div>
+        <h2>Dashboard</h2>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Thêm POI</a>
+        <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Xem log</a>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
-    <article class="metric-card">
-        <span class="metric-card__label">POI đang hoạt động</span>
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">POI hoạt động</span>
         <strong class="metric-card__value">@Model.ActivePoiCount / @Model.PoiCount</strong>
-        <p class="metric-card__hint">Các địa điểm sẵn sàng cho geofence và thuyết minh.</p>
     </article>
-    <article class="metric-card">
-        <span class="metric-card__label">QR mặc định + QR phụ</span>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">QR đang dùng</span>
         <strong class="metric-card__value">@(Model.DefaultQrCount + Model.ActiveQrCount)</strong>
-        <p class="metric-card__hint">Bao gồm QR mặc định trong POI và QR bổ sung trong module riêng.</p>
     </article>
-    <article class="metric-card">
-        <span class="metric-card__label">Ngôn ngữ đã cấu hình</span>
-        <strong class="metric-card__value">@Model.ConfiguredLanguageCount</strong>
-        <p class="metric-card__hint">Đếm theo script thuyết minh đã có dữ liệu trong hệ thống.</p>
-    </article>
-    <article class="metric-card">
+    <article class="metric-card metric-card--orange">
         <span class="metric-card__label">Lượt nghe hôm nay</span>
         <strong class="metric-card__value">@Model.TodayNarrationCount</strong>
-        <p class="metric-card__hint">Tổng log ghi nhận trong ngày hiện tại.</p>
+    </article>
+    <article class="metric-card metric-card--red">
+        <span class="metric-card__label">Ngôn ngữ</span>
+        <strong class="metric-card__value">@Model.ConfiguredLanguageCount</strong>
+    </article>
+</section>
+
+<section class="dashboard-grid page-section">
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Tổng hợp</h2>
+        </div>
+        <div class="summary-list">
+            <div class="summary-row">
+                <span>Tổng POI</span>
+                <strong>@Model.PoiCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>QR mặc định</span>
+                <strong>@Model.DefaultQrCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>QR phụ hoạt động</span>
+                <strong>@Model.ActiveQrCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>Tổng log</span>
+                <strong>@Model.NarrationHistoryCount</strong>
+            </div>
+        </div>
+    </article>
+
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Top POI</h2>
+        </div>
+        @if (!Model.TopPois.Any())
+        {
+            <div class="empty-state">
+                <p>Chưa có dữ liệu.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-stack">
+                @foreach (var item in Model.TopPois.Take(5))
+                {
+                    <div class="list-row">
+                        <div class="list-row__content">
+                            <strong>@item.PoiName</strong>
+                        </div>
+                        <span class="status-pill status-pill--info">@item.Count lượt</span>
+                    </div>
+                }
+            </div>
+        }
     </article>
 </section>
 
 <section class="page-grid page-section">
     <article class="card-surface">
         <div class="section-heading">
-            <div>
-                <span class="eyebrow">Analytics</span>
-                <h2>POI được nghe nhiều nhất</h2>
-            </div>
-            <span class="status-pill status-pill--info">@Model.NarrationHistoryCount lượt nghe</span>
+            <h2>Lịch sử nghe gần đây</h2>
         </div>
-
-        @if (!Model.TopPois.Any())
-        {
-            <div class="empty-state">
-                <h3>Chưa có dữ liệu nghe</h3>
-                <p>Khi app mobile gửi log phát thuyết minh, bảng xếp hạng POI sẽ xuất hiện ở đây.</p>
-            </div>
-        }
-        else
-        {
-            <div class="list-stack">
-                @foreach (var item in Model.TopPois)
-                {
-                    <div class="list-row">
-                        <div class="list-row__content">
-                            <strong>@item.PoiName</strong>
-                            <p>Nghe gần nhất: @(item.LastPlayedAt?.ToString("dd/MM/yyyy HH:mm") ?? "chưa có")</p>
-                        </div>
-                        <span class="soft-pill">@item.Count lượt</span>
-                    </div>
-                }
-            </div>
-        }
-    </article>
-
-    <article class="card-surface">
-        <div class="section-heading">
-            <div>
-                <span class="eyebrow">Realtime feed</span>
-                <h2>Lịch sử nghe gần đây</h2>
-            </div>
-            <a asp-controller="NarrationHistories" asp-action="Index" class="text-link">Xem tất cả</a>
-        </div>
-
         @if (!Model.RecentNarrations.Any())
         {
             <div class="empty-state">
-                <h3>Chưa có log phát nào</h3>
-                <p>Module này sẽ hiển thị ngay các sự kiện GPS, QR hoặc thao tác thủ công từ ứng dụng người dùng.</p>
+                <p>Chưa có dữ liệu.</p>
             </div>
         }
         else
         {
             <div class="list-stack">
-                @foreach (var item in Model.RecentNarrations)
+                @foreach (var item in Model.RecentNarrations.Take(6))
                 {
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
                             <p>@item.Language.ToUpperInvariant() • @item.TriggerSource.ToUpperInvariant()</p>
                         </div>
-                        <span class="list-row__time">@item.PlayedAt.ToString("dd/MM HH:mm")</span>
-                    </div>
-                }
-            </div>
-        }
-    </article>
-</section>
-
-<section class="page-grid page-grid--narrow page-section">
-    <article class="card-surface">
-        <div class="section-heading">
-            <div>
-                <span class="eyebrow">Nguồn kích hoạt</span>
-                <h2>Phân bố trigger</h2>
-            </div>
-        </div>
-
-        @if (!Model.TriggerBreakdown.Any())
-        {
-            <div class="empty-state compact">
-                <p>Chưa có log để thống kê nguồn kích hoạt.</p>
-            </div>
-        }
-        else
-        {
-            <div class="progress-list">
-                @foreach (var item in Model.TriggerBreakdown)
-                {
-                    <div class="progress-row">
-                        <div class="progress-row__meta">
-                            <strong>@item.Label</strong>
-                            <span>@item.Count lượt</span>
-                        </div>
-                        <div class="progress-track" aria-hidden="true">
-                            <span class="progress-bar" style="width:@item.Percent.ToString(CultureInfo.InvariantCulture)%"></span>
-                        </div>
-                        <div class="progress-row__percent">@item.Percent.ToString("0.#", CultureInfo.InvariantCulture)%</div>
+                        <span class="status-pill status-pill--muted">@item.PlayedAt.ToString("dd/MM HH:mm")</span>
                     </div>
                 }
             </div>
@@ -147,16 +114,12 @@
 
     <article class="card-surface">
         <div class="section-heading">
-            <div>
-                <span class="eyebrow">Ngôn ngữ</span>
-                <h2>Phân bố lượt nghe theo ngôn ngữ</h2>
-            </div>
+            <h2>Ngôn ngữ phát</h2>
         </div>
-
         @if (!Model.LanguageBreakdown.Any())
         {
-            <div class="empty-state compact">
-                <p>Chưa có dữ liệu về ngôn ngữ phát.</p>
+            <div class="empty-state">
+                <p>Chưa có dữ liệu.</p>
             </div>
         }
         else
@@ -168,21 +131,5 @@
                 }
             </div>
         }
-    </article>
-
-    <article class="card-surface">
-        <div class="section-heading">
-            <div>
-                <span class="eyebrow">Sẵn sàng cho demo</span>
-                <h2>Những nhóm tính năng web hiện có</h2>
-            </div>
-        </div>
-        <div class="pill-cloud">
-            <span class="soft-pill">Quản lý POI và geofence</span>
-            <span class="soft-pill">Script TTS đa ngôn ngữ</span>
-            <span class="soft-pill">Quản lý QR kích hoạt nội dung</span>
-            <span class="soft-pill">Ghi nhận lịch sử nghe</span>
-            <span class="soft-pill">API tra cứu cho app mobile</span>
-        </div>
     </article>
 </section>

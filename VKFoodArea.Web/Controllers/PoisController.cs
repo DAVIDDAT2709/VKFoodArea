@@ -33,34 +33,19 @@ public class PoisController : Controller
             ModelState.AddModelError(nameof(vm.QrCode), qrError);
 
         if (!ModelState.IsValid)
-        {
-            foreach (var entry in ModelState)
-            {
-                var key = entry.Key;
-                var errors = entry.Value?.Errors;
-
-                if (errors is null)
-                    continue;
-
-                foreach (var error in errors)
-                {
-                    Console.WriteLine($"[POI CREATE ERROR] Field: {key} | Error: {error.ErrorMessage}");
-                }
-            }
-
             return View(vm);
-        }
 
-        await _poiService.CreateAsync(vm);
+        var createdId = await _poiService.CreateAsync(vm);
 
-        TempData["SuccessMessage"] = "Đã tạo POI mới.";
-        return RedirectToAction(nameof(Index));
+        TempData["SuccessMessage"] = "Đã tạo POI mới và tự sinh 4 ngôn ngữ TTS.";
+        return RedirectToAction(nameof(Edit), new { id = createdId });
     }
 
     public async Task<IActionResult> Edit(int id)
     {
         var vm = await _poiService.GetEditFormAsync(id);
-        if (vm is null) return NotFound();
+        if (vm is null)
+            return NotFound();
 
         return View(vm);
     }
@@ -69,7 +54,8 @@ public class PoisController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, PoiFormViewModel vm)
     {
-        if (id != vm.Id) return NotFound();
+        if (id != vm.Id)
+            return NotFound();
 
         var qrError = await _poiService.ValidateDefaultQrCodeAsync(id, vm.QrCode);
         if (!string.IsNullOrWhiteSpace(qrError))
@@ -79,16 +65,18 @@ public class PoisController : Controller
             return View(vm);
 
         var updated = await _poiService.UpdateAsync(id, vm);
-        if (!updated) return NotFound();
+        if (!updated)
+            return NotFound();
 
-        TempData["SuccessMessage"] = "Đã cập nhật POI.";
-        return RedirectToAction(nameof(Index));
+        TempData["SuccessMessage"] = "Đã cập nhật POI và làm mới bản dịch TTS.";
+        return RedirectToAction(nameof(Edit), new { id });
     }
 
     public async Task<IActionResult> Delete(int id)
     {
         var poi = await _poiService.GetDeleteModelAsync(id);
-        if (poi is null) return NotFound();
+        if (poi is null)
+            return NotFound();
 
         return View(poi);
     }

@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C#: VKFoodArea [pixel_5_-_api_35_0 - API 35]",
+      "type": "dotnet",
+      "request": "launch"
+    },
+    {
+      "name": "C#: VKFoodArea [Pixel 5 - API 35.0 (Android 15.0 - API 35)]",
+      "type": "dotnet",
+      "request": "launch"
+    }
+  ]
+}

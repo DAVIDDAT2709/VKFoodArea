@@ -10,10 +10,12 @@ namespace VKFoodArea.Web.Services;
 public class PoiService : IPoiService
 {
     private readonly AppDbContext _context;
+    private readonly ITtsTranslationService _ttsTranslationService;
 
-    public PoiService(AppDbContext context)
+    public PoiService(AppDbContext context, ITtsTranslationService ttsTranslationService)
     {
         _context = context;
+        _ttsTranslationService = ttsTranslationService;
     }
 
     public async Task<List<Poi>> GetAllAsync()
@@ -28,7 +30,8 @@ public class PoiService : IPoiService
     public async Task<PoiFormViewModel?> GetEditFormAsync(int id)
     {
         var poi = await _context.Pois.FindAsync(id);
-        if (poi is null) return null;
+        if (poi is null)
+            return null;
 
         return MapToViewModel(poi);
     }
@@ -40,35 +43,42 @@ public class PoiService : IPoiService
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task CreateAsync(PoiFormViewModel vm)
+    public async Task<int> CreateAsync(PoiFormViewModel vm)
     {
-        var poi = MapToEntity(vm, new Poi());
+        await PopulateGeneratedFieldsAsync(vm);
 
+        var poi = MapToEntity(vm, new Poi());
         _context.Pois.Add(poi);
         await _context.SaveChangesAsync();
+
+        return poi.Id;
     }
 
     public async Task<bool> UpdateAsync(int id, PoiFormViewModel vm)
     {
         var poi = await _context.Pois.FindAsync(id);
-        if (poi is null) return false;
+        if (poi is null)
+            return false;
 
+        await PopulateGeneratedFieldsAsync(vm);
         MapToEntity(vm, poi);
         await _context.SaveChangesAsync();
+
         return true;
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
         var poi = await _context.Pois.FindAsync(id);
-        if (poi is null) return false;
+        if (poi is null)
+            return false;
 
         _context.Pois.Remove(poi);
         await _context.SaveChangesAsync();
         return true;
     }
 
-    public async Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string qrCode)
+    public async Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string? qrCode)
     {
         var normalized = QrCodeHelper.Normalize(qrCode);
 
@@ -136,9 +146,7 @@ public class PoiService : IPoiService
             .FirstOrDefaultAsync();
 
         if (qrItemMatch?.Poi is not null)
-        {
             return ToDto(qrItemMatch.Poi, qrItemMatch.Code, "qr-item");
-        }
 
         var poiMatch = await _context.Pois
             .AsNoTracking()
@@ -155,66 +163,104 @@ public class PoiService : IPoiService
     }
 
     private static PoiFormViewModel MapToViewModel(Poi poi) => new()
-{
-    Id = poi.Id,
-    Name = poi.Name,
-    Address = poi.Address,
-    PhoneNumber = poi.PhoneNumber,
-    ImageUrl = poi.ImageUrl,
-    Latitude = poi.Latitude,
-    Longitude = poi.Longitude,
-    RadiusMeters = poi.RadiusMeters,
-    Description = poi.Description,
-    TtsScriptVi = poi.TtsScriptVi,
-    TtsScriptEn = poi.TtsScriptEn,
-    TtsScriptZh = poi.TtsScriptZh,
-    TtsScriptJa = poi.TtsScriptJa,
-    TtsScriptDe = poi.TtsScriptDe,
-    QrCode = poi.QrCode,
-    IsActive = poi.IsActive
-};
-    private static Poi MapToEntity(PoiFormViewModel vm, Poi poi)
-{
-    poi.Name = vm.Name.Trim();
-    poi.Address = vm.Address.Trim();
-    poi.PhoneNumber = (vm.PhoneNumber ?? string.Empty).Trim();
-    poi.ImageUrl = (vm.ImageUrl ?? string.Empty).Trim();
-    poi.Latitude = vm.Latitude;
-    poi.Longitude = vm.Longitude;
-    poi.RadiusMeters = vm.RadiusMeters;
-    poi.Description = vm.Description.Trim();
-    poi.TtsScriptVi = vm.TtsScriptVi.Trim();
-    poi.TtsScriptEn = vm.TtsScriptEn.Trim();
-    poi.TtsScriptZh = vm.TtsScriptZh.Trim();
-    poi.TtsScriptJa = vm.TtsScriptJa.Trim();
-    poi.TtsScriptDe = vm.TtsScriptDe.Trim();
-    poi.QrCode = QrCodeHelper.Normalize(vm.QrCode);
-    poi.IsActive = vm.IsActive;
-    return poi;
-}
-
-    private static PoiDto ToDto(Poi poi, string matchedQrCode, string qrSource)
-{
-    return new PoiDto
     {
         Id = poi.Id,
         Name = poi.Name,
         Address = poi.Address,
         PhoneNumber = poi.PhoneNumber,
         ImageUrl = poi.ImageUrl,
-        Description = poi.Description,
         Latitude = poi.Latitude,
         Longitude = poi.Longitude,
         RadiusMeters = poi.RadiusMeters,
-        QrCode = poi.QrCode,
-        IsActive = poi.IsActive,
         TtsScriptVi = poi.TtsScriptVi,
         TtsScriptEn = poi.TtsScriptEn,
         TtsScriptZh = poi.TtsScriptZh,
         TtsScriptJa = poi.TtsScriptJa,
         TtsScriptDe = poi.TtsScriptDe,
-        MatchedQrCode = matchedQrCode,
-        QrSource = qrSource
+        QrCode = poi.QrCode,
+        IsActive = poi.IsActive
     };
+
+    private static Poi MapToEntity(PoiFormViewModel vm, Poi poi)
+    {
+        poi.Name = vm.Name.Trim();
+        poi.Address = vm.Address.Trim();
+        poi.PhoneNumber = (vm.PhoneNumber ?? string.Empty).Trim();
+        poi.ImageUrl = (vm.ImageUrl ?? string.Empty).Trim();
+        poi.Latitude = vm.Latitude;
+        poi.Longitude = vm.Longitude;
+        poi.RadiusMeters = vm.RadiusMeters;
+        poi.Description = BuildShortDescription(vm.TtsScriptVi);
+        poi.TtsScriptVi = vm.TtsScriptVi.Trim();
+        poi.TtsScriptEn = (vm.TtsScriptEn ?? string.Empty).Trim();
+        poi.TtsScriptZh = (vm.TtsScriptZh ?? string.Empty).Trim();
+        poi.TtsScriptJa = (vm.TtsScriptJa ?? string.Empty).Trim();
+        poi.TtsScriptDe = (vm.TtsScriptDe ?? string.Empty).Trim();
+        poi.QrCode = QrCodeHelper.Normalize(vm.QrCode);
+        poi.IsActive = vm.IsActive;
+        return poi;
+    }
+
+    private async Task PopulateGeneratedFieldsAsync(PoiFormViewModel vm)
+    {
+        var scripts = await _ttsTranslationService.GenerateFromVietnameseAsync(vm.TtsScriptVi);
+
+        vm.TtsScriptVi = scripts.Vi;
+        vm.TtsScriptEn = scripts.En;
+        vm.TtsScriptZh = scripts.Zh;
+        vm.TtsScriptJa = scripts.Ja;
+        vm.TtsScriptDe = scripts.De;
+    }
+
+    private static string BuildShortDescription(string? vietnameseTts)
+    {
+        var normalized = (vietnameseTts ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return string.Empty;
+
+        var sentenceEnd = normalized.IndexOfAny(['.', '!', '?']);
+        if (sentenceEnd >= 0)
+        {
+            var firstSentence = normalized[..(sentenceEnd + 1)].Trim();
+            if (firstSentence.Length <= 180)
+                return firstSentence;
+        }
+
+        const int maxLength = 180;
+        if (normalized.Length <= maxLength)
+            return normalized;
+
+        var shortened = normalized[..maxLength].TrimEnd();
+        var lastSpace = shortened.LastIndexOf(' ');
+
+        if (lastSpace > 80)
+            shortened = shortened[..lastSpace];
+
+        return $"{shortened}...";
+    }
+
+    private static PoiDto ToDto(Poi poi, string matchedQrCode, string qrSource)
+    {
+        return new PoiDto
+        {
+            Id = poi.Id,
+            Name = poi.Name,
+            Address = poi.Address,
+            PhoneNumber = poi.PhoneNumber,
+            ImageUrl = poi.ImageUrl,
+            Description = poi.Description,
+            Latitude = poi.Latitude,
+            Longitude = poi.Longitude,
+            RadiusMeters = poi.RadiusMeters,
+            QrCode = poi.QrCode,
+            IsActive = poi.IsActive,
+            TtsScriptVi = poi.TtsScriptVi,
+            TtsScriptEn = poi.TtsScriptEn,
+            TtsScriptZh = poi.TtsScriptZh,
+            TtsScriptJa = poi.TtsScriptJa,
+            TtsScriptDe = poi.TtsScriptDe,
+            MatchedQrCode = matchedQrCode,
+            QrSource = qrSource
+        };
     }
 }

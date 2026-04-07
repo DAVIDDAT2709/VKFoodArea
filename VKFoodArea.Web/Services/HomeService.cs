@@ -46,19 +46,8 @@ public class HomeService : IHomeService
                     PlayedAt = x.PlayedAt
                 })
                 .ToListAsync(),
-            TriggerBreakdown = await GetBreakdownAsync(
-                x => x.TriggerSource,
-                narrationHistoryCount,
-                value => value switch
-                {
-                    "gps" => "GPS",
-                    "qr" => "QR",
-                    "manual" => "Thủ công",
-                    _ => value.ToUpperInvariant()
-                }),
             LanguageBreakdown = await GetBreakdownAsync(
                 x => x.Language,
-                narrationHistoryCount,
                 value => value.ToUpperInvariant()),
             TopPois = await _context.NarrationHistories
                 .AsNoTracking()
@@ -66,8 +55,7 @@ public class HomeService : IHomeService
                 .Select(x => new TopPoiPerformanceViewModel
                 {
                     PoiName = x.Key,
-                    Count = x.Count(),
-                    LastPlayedAt = x.Max(item => item.PlayedAt)
+                    Count = x.Count()
                 })
                 .OrderByDescending(x => x.Count)
                 .ThenBy(x => x.PoiName)
@@ -78,7 +66,6 @@ public class HomeService : IHomeService
 
     private async Task<List<DashboardBreakdownItemViewModel>> GetBreakdownAsync(
         Expression<Func<NarrationHistory, string>> selector,
-        int total,
         Func<string, string> labelMapper)
     {
         var items = await _context.NarrationHistories
@@ -87,7 +74,7 @@ public class HomeService : IHomeService
             .Select(x => new
             {
                 Key = x.Key,
-                Count = x.Count(),
+                Count = x.Count()
             })
             .ToListAsync();
 
@@ -95,8 +82,7 @@ public class HomeService : IHomeService
             .Select(x => new DashboardBreakdownItemViewModel
             {
                 Label = labelMapper(x.Key),
-                Count = x.Count,
-                Percent = total == 0 ? 0 : Math.Round((double)x.Count * 100 / total, 1)
+                Count = x.Count
             })
             .OrderByDescending(x => x.Count)
             .ThenBy(x => x.Label)

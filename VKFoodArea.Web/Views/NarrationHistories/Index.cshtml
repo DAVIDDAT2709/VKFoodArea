@@ -15,47 +15,38 @@
         .ToList();
 }
 
-<section class="page-intro page-section">
+<section class="page-header page-section">
     <div>
-        <span class="eyebrow">Theo dõi sử dụng</span>
-        <h2>Giám sát lịch sử phát thuyết minh từ ứng dụng</h2>
-        <p>Dữ liệu tại đây giúp kiểm tra luồng GPS, QR và thống kê nhanh POI nào đang được nghe nhiều nhất.</p>
+        <h2>Lịch sử nghe</h2>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
-    <article class="metric-card">
+    <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng lượt nghe</span>
         <strong class="metric-card__value">@items.Count</strong>
-        <p class="metric-card__hint">Số log phát đã ghi nhận trong cơ sở dữ liệu.</p>
     </article>
-    <article class="metric-card">
-        <span class="metric-card__label">Lượt nghe hôm nay</span>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Hôm nay</span>
         <strong class="metric-card__value">@todayCount</strong>
-        <p class="metric-card__hint">Theo ngày hiện tại của máy chủ web.</p>
     </article>
-    <article class="metric-card">
-        <span class="metric-card__label">Kích hoạt bằng GPS</span>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">GPS</span>
         <strong class="metric-card__value">@gpsCount</strong>
-        <p class="metric-card__hint">Giúp kiểm tra luồng geofence tự động.</p>
     </article>
-    <article class="metric-card">
-        <span class="metric-card__label">Kích hoạt bằng QR</span>
+    <article class="metric-card metric-card--red">
+        <span class="metric-card__label">QR</span>
         <strong class="metric-card__value">@qrCount</strong>
-        <p class="metric-card__hint">Hữu ích cho kịch bản quét mã tại điểm dừng.</p>
     </article>
 </section>
 
-<section class="page-grid page-grid--narrow page-section">
+<section class="page-grid page-section">
     <article class="card-surface">
         <div class="section-heading">
-            <div>
-                <span class="eyebrow">Bộ lọc</span>
-                <h2>Lọc theo nguồn kích hoạt</h2>
-            </div>
+            <h2>Bộ lọc</h2>
         </div>
 
-        <form method="get" class="filter-form">
+        <form method="get" class="stack-gap">
             <div>
                 <label class="form-label" for="source">Nguồn phát</label>
                 <select id="source" name="source" class="form-select">
@@ -74,16 +65,13 @@
 
     <article class="card-surface">
         <div class="section-heading">
-            <div>
-                <span class="eyebrow">Top POI</span>
-                <h2>Điểm được nghe nhiều trong bộ lọc hiện tại</h2>
-            </div>
+            <h2>Top POI</h2>
         </div>
 
         @if (!topPois.Any())
         {
-            <div class="empty-state compact">
-                <p>Chưa có dữ liệu để xếp hạng.</p>
+            <div class="empty-state">
+                <p>Chưa có dữ liệu.</p>
             </div>
         }
         else
@@ -105,17 +93,13 @@
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <div>
-            <span class="eyebrow">Nhật ký phát</span>
-            <h2>Chi tiết từng lượt nghe</h2>
-        </div>
+        <h2>Chi tiết lượt nghe</h2>
     </div>
 
     @if (!items.Any())
     {
         <div class="empty-state">
-            <h3>Không có dữ liệu phù hợp</h3>
-            <p>Hãy thử đổi bộ lọc hoặc chạy app mobile để gửi thêm log.</p>
+            <p>Không có dữ liệu.</p>
         </div>
     }
     else

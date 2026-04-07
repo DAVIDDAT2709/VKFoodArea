@@ -27,7 +27,7 @@ public partial class PoiDetailPage : ContentPage
 
     private async void OnPlayNarrationClicked(object sender, EventArgs e)
     {
-        await _narrationService.PlayPoiAsync(Poi.Id);
+        await _narrationService.PlayPoiAsync(Poi);
     }
 
     private async void OnBookClicked(object sender, EventArgs e)

@@ -13,6 +13,8 @@
 		<ApplicationId>com.companyname.vkfoodarea</ApplicationId>
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
+		<AndroidFastDeploymentType>None</AndroidFastDeploymentType>
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
 	<ItemGroup>

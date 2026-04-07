@@ -52,17 +52,25 @@ public class NarrationService
         if (poi is null)
             return;
 
+        await PlayPoiAsync(poi, triggerSource, ct);
+    }
+
+    public async Task PlayPoiAsync(Poi poi, string triggerSource = "manual", CancellationToken ct = default)
+    {
+        if (!poi.IsActive)
+            return;
+
         var language = AppLanguageService.NormalizeLanguage(_settingsService.NarrationLanguage);
         var mode = (_settingsService.NarrationOutputMode ?? "TTS").Trim();
 
         _languageService.CurrentLanguage = language;
 
-        var script = GetScriptByLanguage(poi, language);
-        if (string.IsNullOrWhiteSpace(script))
+        var narrationContent = ResolveNarrationContent(poi, language);
+        if (narrationContent is null)
             return;
 
-        await LogNarrationAsync(poi, language, mode, triggerSource, ct);
-        await SpeakTextAsync(script, language, ct);
+        await LogNarrationAsync(poi, narrationContent.SpokenLanguage, mode, triggerSource, ct);
+        await SpeakTextAsync(narrationContent.Script, narrationContent.SpokenLanguage, ct);
     }
 
     public async Task PreviewAsync(string text, string language, CancellationToken ct = default)
@@ -214,19 +222,43 @@ public class NarrationService
 #endif
     }
 
-    private static string GetScriptByLanguage(Poi poi, string language)
+    private static ResolvedNarrationContent? ResolveNarrationContent(Poi poi, string language)
     {
         var normalized = AppLanguageService.NormalizeLanguage(language);
+        var vietnameseScript = NormalizeScript(poi.TtsScriptVi);
 
-        return normalized switch
+        if (normalized == "vi")
         {
-            "en" when !string.IsNullOrWhiteSpace(poi.TtsScriptEn) => poi.TtsScriptEn,
-            "zh" when !string.IsNullOrWhiteSpace(poi.TtsScriptZh) => poi.TtsScriptZh,
-            "ja" when !string.IsNullOrWhiteSpace(poi.TtsScriptJa) => poi.TtsScriptJa,
-            "de" when !string.IsNullOrWhiteSpace(poi.TtsScriptDe) => poi.TtsScriptDe,
-            _ => poi.TtsScriptVi
+            return string.IsNullOrWhiteSpace(vietnameseScript)
+                ? null
+                : new ResolvedNarrationContent(vietnameseScript, "vi");
+        }
+
+        var translatedScript = normalized switch
+        {
+            "en" => NormalizeScript(poi.TtsScriptEn),
+            "zh" => NormalizeScript(poi.TtsScriptZh),
+            "ja" => NormalizeScript(poi.TtsScriptJa),
+            "de" => NormalizeScript(poi.TtsScriptDe),
+            _ => string.Empty
         };
+
+        if (!string.IsNullOrWhiteSpace(translatedScript) &&
+            !string.Equals(translatedScript, vietnameseScript, StringComparison.Ordinal))
+        {
+            return new ResolvedNarrationContent(translatedScript, normalized);
+        }
+
+        if (!string.IsNullOrWhiteSpace(vietnameseScript))
+            return new ResolvedNarrationContent(vietnameseScript, "vi");
+
+        return string.IsNullOrWhiteSpace(translatedScript)
+            ? null
+            : new ResolvedNarrationContent(translatedScript, normalized);
     }
+
+    private static string NormalizeScript(string? script)
+        => (script ?? string.Empty).Trim();
 
 #if ANDROID
     private static async Task SpeakWithAndroidTtsAsync(string text, string language, CancellationToken ct)
@@ -531,4 +563,6 @@ public class NarrationService
             return null;
         }
     }
+
+    private sealed record ResolvedNarrationContent(string Script, string SpokenLanguage);
 }

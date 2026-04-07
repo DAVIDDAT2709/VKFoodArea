@@ -13,6 +13,11 @@ builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IPoiService, PoiService>();
 builder.Services.AddScoped<IQrCodeItemService, QrCodeItemService>();
 builder.Services.AddScoped<INarrationHistoryService, NarrationHistoryService>();
+builder.Services.AddHttpClient<ITtsTranslationService, TtsTranslationService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(12);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("VKFoodArea.Web/1.0");
+});
 
 var app = builder.Build();
 
