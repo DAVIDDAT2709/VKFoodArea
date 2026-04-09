@@ -1,6 +1,6 @@
 param(
     [string]$AvdName = "pixel_5_-_api_35_0",
-    [string]$SdkRoot = "D:\Android\Sdk",
+    [string]$SdkRoot = "",
     [switch]$SkipBuild,
     [switch]$LaunchOnly
 )
@@ -9,8 +9,6 @@ $ErrorActionPreference = "Stop"
 
 $projectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectFile = Join-Path $projectDir "VKFoodArea.csproj"
-$adbPath = Join-Path $SdkRoot "platform-tools\adb.exe"
-$emulatorPath = Join-Path $SdkRoot "emulator\emulator.exe"
 $packageName = "com.companyname.vkfoodarea"
 $apkOutputDir = Join-Path $projectDir "bin\Debug\net10.0-android"
 
@@ -26,6 +24,29 @@ function Assert-PathExists {
     if (-not (Test-Path -LiteralPath $PathValue)) {
         throw "$Label not found: $PathValue"
     }
+}
+
+function Resolve-SdkRoot {
+    param([string]$RequestedSdkRoot)
+
+    $candidates = @(
+        $RequestedSdkRoot,
+        $env:ANDROID_SDK_ROOT,
+        $env:ANDROID_HOME,
+        (Join-Path $env:LOCALAPPDATA "Android\Sdk"),
+        "D:\Android\Sdk"
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    foreach ($candidate in $candidates) {
+        $adbCandidate = Join-Path $candidate "platform-tools\adb.exe"
+        $emulatorCandidate = Join-Path $candidate "emulator\emulator.exe"
+
+        if ((Test-Path -LiteralPath $adbCandidate) -and (Test-Path -LiteralPath $emulatorCandidate)) {
+            return $candidate
+        }
+    }
+
+    throw "Android SDK not found. Pass -SdkRoot or set ANDROID_SDK_ROOT."
 }
 
 function Get-RunningEmulatorId {
@@ -120,16 +141,46 @@ function Install-Apk {
     }
 }
 
+function Resolve-LauncherActivity {
+    param([string]$DeviceId)
+
+    $resolved = & $adbPath -s $DeviceId shell cmd package resolve-activity --brief $packageName
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not resolve launcher activity for $packageName."
+    }
+
+    $component = $resolved |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -match "^[^=]+/.+$" } |
+        Select-Object -Last 1
+
+    if ([string]::IsNullOrWhiteSpace($component)) {
+        throw "No launchable activity found for $packageName."
+    }
+
+    return $component
+}
+
 function Launch-App {
     param([string]$DeviceId)
 
-    Write-Host "Launching $packageName on $DeviceId..."
-    & $adbPath -s $DeviceId shell monkey -p $packageName -c android.intent.category.LAUNCHER 1 | Out-Null
+    $component = Resolve-LauncherActivity -DeviceId $DeviceId
+
+    Write-Host "Launching $component on $DeviceId..."
+    & $adbPath -s $DeviceId shell am start -W -n $component | Out-Null
 
     if ($LASTEXITCODE -ne 0) {
         throw "App launch failed."
     }
 }
+
+if ([string]::IsNullOrWhiteSpace($SdkRoot)) {
+    $SdkRoot = Resolve-SdkRoot -RequestedSdkRoot $SdkRoot
+}
+
+$adbPath = Join-Path $SdkRoot "platform-tools\adb.exe"
+$emulatorPath = Join-Path $SdkRoot "emulator\emulator.exe"
 
 Assert-PathExists -PathValue $projectFile -Label "Project file"
 Assert-PathExists -PathValue $adbPath -Label "adb"

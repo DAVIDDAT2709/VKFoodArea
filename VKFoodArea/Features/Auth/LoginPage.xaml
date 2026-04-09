@@ -1,62 +1,354 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="VKFoodArea.Features.Auth.LoginPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    BackgroundColor="#FFFFFF"
-    Title="Đăng nhập">
+    BackgroundColor="#EEF4F1"
+    NavigationPage.HasNavigationBar="False"
+    Title="">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24,90,24,24" Spacing="18">
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0,1">
+                <GradientStop Color="#D7F4EB"
+                        Offset="0.0"/>
+                <GradientStop Color="#F7F5EE"
+                        Offset="1.0"/>
+            </LinearGradientBrush>
+        </Grid.Background>
 
-            <Label Text="VKFoodArea"
-                   FontSize="32"
-                   FontAttributes="Bold"
-                   TextColor="#16A34A" />
+        <Border Margin="-90,-40,110,0"
+                BackgroundColor="#60A6E6D8"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                WidthRequest="220"
+                HeightRequest="220"
+                Rotation="-18"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 110"/>
 
-            <Label Text="Đăng nhập để sử dụng ứng dụng"
-                   FontSize="16"
-                   TextColor="#374151" />
+        <Border Margin="150,120,-70,0"
+                BackgroundColor="#55F5D8A4"
+                HorizontalOptions="End"
+                VerticalOptions="Start"
+                WidthRequest="180"
+                HeightRequest="180"
+                Rotation="16"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 90"/>
 
-            <Border StrokeThickness="0"
-                    BackgroundColor="#F3F4F6"
-                    Padding="14"
-                    StrokeShape="RoundRectangle 18">
-                <Entry x:Name="UsernameEntry"
-                       Placeholder="Tên đăng nhập" />
-            </Border>
+        <Border Margin="20,240,140,-80"
+                BackgroundColor="#40FFFFFF"
+                HorizontalOptions="Start"
+                VerticalOptions="End"
+                WidthRequest="160"
+                HeightRequest="160"
+                Rotation="24"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 54"/>
 
-            <Border StrokeThickness="0"
-                    BackgroundColor="#F3F4F6"
-                    Padding="14"
-                    StrokeShape="RoundRectangle 18">
-                <Entry x:Name="PasswordEntry"
-                       Placeholder="Mật khẩu"
-                       IsPassword="True" />
-            </Border>
+        <Border Margin="-50,110,180,0"
+                BackgroundColor="#24FFFFFF"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                WidthRequest="240"
+                HeightRequest="120"
+                Rotation="12"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 42"/>
 
-            <Button Text="Đăng nhập"
-                    Clicked="OnLoginClicked"
-                    BackgroundColor="#16A34A"
-                    TextColor="White"
-                    CornerRadius="16"
-                    HeightRequest="50" />
+        <Border Margin="140,340,-40,-70"
+                BackgroundColor="#30A7E8DA"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                WidthRequest="170"
+                HeightRequest="170"
+                Rotation="-20"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 54"/>
 
-            <Label x:Name="MessageLabel"
-                   TextColor="Red" />
+        <ScrollView>
+            <VerticalStackLayout Padding="20,44,20,28"
+                                 Spacing="18">
+                <Border Padding="22"
+                        StrokeThickness="0">
+                    <Border.Background>
+                        <LinearGradientBrush EndPoint="1,1">
+                            <GradientStop Color="#129488"
+                                    Offset="0.0"/>
+                            <GradientStop Color="#4BC7B7"
+                                    Offset="1.0"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="28"/>
+                    </Border.StrokeShape>
 
-            <Border StrokeThickness="0"
-                    BackgroundColor="#F9FAFB"
-                    Padding="14"
-                    StrokeShape="RoundRectangle 18">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="Tài khoản demo"
-                           FontAttributes="Bold"
-                           TextColor="#111111" />
-                    
-                </VerticalStackLayout>
-            </Border>
+                    <VerticalStackLayout Spacing="16">
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="12">
+                            <Border WidthRequest="52"
+                                    HeightRequest="52"
+                                    BackgroundColor="#2BFFFFFF"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 18">
+                                <Label Text="VK"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="White"/>
+                            </Border>
 
-        </VerticalStackLayout>
-    </ScrollView>
+                            <VerticalStackLayout Grid.Column="1"
+                                                 VerticalOptions="Center"
+                                                 Spacing="2">
+                                <Label Text="VKFoodArea"
+                                       FontSize="22"
+                                       FontAttributes="Bold"
+                                       FontFamily="OpenSansSemibold"
+                                       TextColor="White"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border BackgroundColor="White"
+                        Stroke="#D7E4DF"
+                        StrokeThickness="1"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 28">
+                    <Border.Shadow>
+                        <Shadow Brush="#799E98"
+                                Offset="0,12"
+                                Radius="24"
+                                Opacity="0.12"/>
+                    </Border.Shadow>
+
+                    <VerticalStackLayout Spacing="16">
+                        <VerticalStackLayout Spacing="2">
+                            <Label x:Name="LoginTitleLabel"
+                                   FontSize="24"
+                                   FontAttributes="Bold"
+                                   FontFamily="OpenSansSemibold"
+                                   TextColor="#163632"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label x:Name="UsernameLabel"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#4F6B66"/>
+                            <Border BackgroundColor="#F7FBF9"
+                                    Stroke="#D7E4DF"
+                                    StrokeThickness="1"
+                                    Padding="14,6"
+                                    StrokeShape="RoundRectangle 18">
+                                <Entry x:Name="UsernameEntry"
+                                       Placeholder="Nhập tài khoản"
+                                       ReturnType="Next"
+                                       Completed="OnUsernameCompleted"
+                                       TextColor="#163632"
+                                       PlaceholderColor="#90AAA4"
+                                       ClearButtonVisibility="WhileEditing"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label x:Name="PasswordLabel"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#4F6B66"/>
+                            <Border BackgroundColor="#F7FBF9"
+                                    Stroke="#D7E4DF"
+                                    StrokeThickness="1"
+                                    Padding="14,6"
+                                    StrokeShape="RoundRectangle 18">
+                                <Entry x:Name="PasswordEntry"
+                                       Placeholder="Nhập mật khẩu"
+                                       IsPassword="True"
+                                       ReturnType="Go"
+                                       Completed="OnPasswordCompleted"
+                                       TextColor="#163632"
+                                       PlaceholderColor="#90AAA4"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button x:Name="LoginButton"
+                                Clicked="OnLoginClicked"
+                                BackgroundColor="#129488"
+                                TextColor="White"
+                                CornerRadius="18"
+                                HeightRequest="56"
+                                FontAttributes="Bold"
+                                FontSize="15"/>
+
+                        <Label x:Name="MessageLabel"
+                               TextColor="#C23546"
+                               FontSize="13"
+                               LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid x:Name="SelectionOverlay"
+              IsVisible="False"
+              BackgroundColor="#7A102321">
+            <Grid Padding="20"
+                  VerticalOptions="Center">
+                <Border BackgroundColor="White"
+                        Stroke="#D7E4DF"
+                        StrokeThickness="1"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 30">
+                    <Border.Shadow>
+                        <Shadow Brush="#12342F"
+                                Offset="0,16"
+                                Radius="28"
+                                Opacity="0.16"/>
+                    </Border.Shadow>
+
+                        <VerticalStackLayout Spacing="16">
+                        <Border BackgroundColor="#F4FBF8"
+                                Padding="14"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 22">
+                            <VerticalStackLayout Spacing="4">
+                                <Label x:Name="SelectionTitleLabel"
+                                       FontSize="22"
+                                       FontAttributes="Bold"
+                                       FontFamily="OpenSansSemibold"
+                                       TextColor="#163632"/>
+                                <Label x:Name="SelectionSubtitleLabel"
+                                       FontSize="13"
+                                       TextColor="#607973"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="12">
+                            <Border x:Name="DomesticOptionBorder"
+                                    BackgroundColor="#F3FAF7"
+                                    Stroke="#CFE3DD"
+                                    StrokeThickness="1"
+                                    Padding="16"
+                                    StrokeShape="RoundRectangle 22">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="10">
+                                        <Border WidthRequest="40"
+                                                HeightRequest="40"
+                                                BackgroundColor="#DDF7F0"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 16">
+                                            <Label Text="VN"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"
+                                                   FontAttributes="Bold"
+                                                   FontSize="12"
+                                                   TextColor="#129488"/>
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="4"
+                                                             VerticalOptions="Center">
+                                            <Label x:Name="DomesticTitleLabel"
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#163632"/>
+                                            <Label x:Name="DomesticDescriptionLabel"
+                                                   FontSize="12"
+                                                   TextColor="#607973"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnDomesticSelected"/>
+                                </Border.GestureRecognizers>
+                            </Border>
+
+                            <Border x:Name="TouristOptionBorder"
+                                    Grid.Column="1"
+                                    BackgroundColor="#F8F6EC"
+                                    Stroke="#E4DAC2"
+                                    StrokeThickness="1"
+                                    Padding="16"
+                                    StrokeShape="RoundRectangle 22">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="10">
+                                        <Border WidthRequest="40"
+                                                HeightRequest="40"
+                                                BackgroundColor="#FFF0D5"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 16">
+                                            <Label Text="INTL"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"
+                                                   FontAttributes="Bold"
+                                                   FontSize="10"
+                                                   TextColor="#B9790C"/>
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="4"
+                                                             VerticalOptions="Center">
+                                            <Label x:Name="TouristTitleLabel"
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#163632"/>
+                                            <Label x:Name="TouristDescriptionLabel"
+                                                   FontSize="12"
+                                                   TextColor="#607973"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnTouristSelected"/>
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </Grid>
+
+                        <Border x:Name="LanguageSelectionContainer"
+                                IsVisible="False"
+                                BackgroundColor="#F6FAF8"
+                                Padding="14"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 20">
+                            <VerticalStackLayout Spacing="10">
+                                <Label x:Name="LanguageTitleLabel"
+                                       FontSize="14"
+                                       FontAttributes="Bold"
+                                       TextColor="#375550"/>
+
+                                <FlexLayout x:Name="LanguageOptionsLayout"
+                                            Wrap="Wrap"
+                                            Direction="Row"
+                                            JustifyContent="Start"
+                                            AlignItems="Start"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="10">
+                            <Button x:Name="SelectionBackButton"
+                                    Clicked="OnSelectionBackClicked"
+                                    BackgroundColor="#F3F6F5"
+                                    TextColor="#35534D"
+                                    CornerRadius="18"
+                                    HeightRequest="52"
+                                    FontAttributes="Bold"/>
+                            <Button x:Name="SelectionConfirmButton"
+                                    Grid.Column="1"
+                                    Clicked="OnSelectionConfirmClicked"
+                                    BackgroundColor="#129488"
+                                    TextColor="White"
+                                    CornerRadius="18"
+                                    HeightRequest="52"
+                                    FontAttributes="Bold"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>

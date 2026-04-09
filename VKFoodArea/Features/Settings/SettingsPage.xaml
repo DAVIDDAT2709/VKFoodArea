@@ -1,164 +1,106 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="VKFoodArea.Features.Settings.SettingsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Cài đặt âm thanh"
-    BackgroundColor="#F6F8FB">
+    Title=""
+    BackgroundColor="#EEF4F1">
 
-	<ScrollView>
-		<VerticalStackLayout Padding="20,24" Spacing="18">
-
-			<!-- Header -->
-			<VerticalStackLayout Spacing="6">
-				<Label Text="Cài đặt âm thanh"
-                       FontSize="26"
-                       FontAttributes="Bold"
-                       TextColor="#111827" />
-
-				<Label Text="Tùy chỉnh ngôn ngữ và chế độ phát cho thuyết minh và radio."
-                       FontSize="14"
-                       TextColor="#6B7280" />
-			</VerticalStackLayout>
-
-			<!-- Nhóm ngôn ngữ -->
-			<Border BackgroundColor="White"
-                    Stroke="#E5E7EB"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 18">
-				<VerticalStackLayout Spacing="12">
-
-					<HorizontalStackLayout Spacing="8">
-						<Label Text="🌐"
-                               FontSize="18" />
-						<Label Text="Ngôn ngữ phát"
-                               FontSize="16"
-                               FontAttributes="Bold"
-                               TextColor="#111827" />
-					</HorizontalStackLayout>
-
-					<Label Text="Chọn ngôn ngữ sẽ được dùng khi phát thuyết minh hoặc radio."
-                           FontSize="13"
-                           TextColor="#6B7280" />
-
-					<Border BackgroundColor="#F9FAFB"
-                            Stroke="#D1D5DB"
-                            StrokeThickness="1"
-                            Padding="10,4"
-                            StrokeShape="RoundRectangle 12">
-						<Picker x:Name="LanguagePicker"
-                                Title="Chọn ngôn ngữ"
-                                ItemDisplayBinding="{Binding DisplayName}"
-                                TextColor="#111827"
-                                TitleColor="#9CA3AF" />
-					</Border>
-				</VerticalStackLayout>
-			</Border>
-
-			<!-- Nhóm chế độ phát -->
-			<Border BackgroundColor="White"
-                    Stroke="#E5E7EB"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 18">
-				<VerticalStackLayout Spacing="12">
-
-					<HorizontalStackLayout Spacing="8">
-						<Label Text="🔊"
-                               FontSize="18" />
-						<Label Text="Chế độ âm thanh"
-                               FontSize="16"
-                               FontAttributes="Bold"
-                               TextColor="#111827" />
-					</HorizontalStackLayout>
-
-					<Label Text="Thiết lập cách ứng dụng phát nội dung âm thanh."
-                           FontSize="13"
-                           TextColor="#6B7280" />
-
-					<Border BackgroundColor="#F9FAFB"
-                            Stroke="#D1D5DB"
-                            StrokeThickness="1"
-                            Padding="10,4"
-                            StrokeShape="RoundRectangle 12">
-						<Picker x:Name="ModePicker"
-                                Title="Chọn chế độ phát"
-                                TextColor="#111827"
-                                TitleColor="#9CA3AF">
-							<Picker.Items>
-								<x:String>TTS</x:String>
-								<x:String>Audio</x:String>
-								<x:String>Auto</x:String>
-							</Picker.Items>
-						</Picker>
-					</Border>
-
-					<Label Text="Áp dụng cho cả thuyết minh và radio."
-                           FontSize="13"
-                           TextColor="#2563EB" />
-				</VerticalStackLayout>
-			</Border>
-
-			<!-- Nhóm nghe thử -->
-			<Border BackgroundColor="White"
-                    Stroke="#E5E7EB"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 18">
-				<VerticalStackLayout Spacing="12">
-
-					<HorizontalStackLayout Spacing="8">
-						<Label Text="🎧"
-                               FontSize="18" />
-						<Label Text="Nghe thử"
-                               FontSize="16"
-                               FontAttributes="Bold"
-                               TextColor="#111827" />
-					</HorizontalStackLayout>
-
-					<Label Text="Bạn có thể nghe thử giọng đọc theo ngôn ngữ đang chọn trước khi lưu."
-                           FontSize="13"
-                           TextColor="#6B7280" />
-
-					<Button Text="Nghe thử"
-                            Clicked="OnPreviewClicked"
-                            BackgroundColor="#EEF4FF"
-                            TextColor="#1D4ED8"
-                            CornerRadius="14"
-                            HeightRequest="48"
-                            FontAttributes="Bold" />
-				</VerticalStackLayout>
-			</Border>
-
-			<!-- Tóm tắt -->
-			<Border BackgroundColor="#ECFDF5"
-                    Stroke="#A7F3D0"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 18">
-				<VerticalStackLayout Spacing="8">
-					<Label Text="Tóm tắt cài đặt"
-                           FontSize="15"
+    <ScrollView>
+        <VerticalStackLayout Padding="16,12,16,24" Spacing="16">
+            <Border Padding="18,18,18,20" StrokeThickness="0">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="1,1">
+                        <GradientStop Color="#0E9A91" Offset="0.0" />
+                        <GradientStop Color="#38C3B4" Offset="0.58" />
+                        <GradientStop Color="#7BE8D1" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="30" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Label x:Name="HeaderTitleLabel"
+                           FontSize="27"
                            FontAttributes="Bold"
-                           TextColor="#065F46" />
+                           FontFamily="OpenSansSemibold"
+                           TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
 
-					<Label x:Name="SummaryLabel"
-                           Text="Hiện tại: Tiếng Việt | TTS"
-                           FontSize="14"
-                           TextColor="#047857" />
-				</VerticalStackLayout>
-			</Border>
+            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="LanguageSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
+                    <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="8,2" StrokeShape="RoundRectangle 16">
+                        <Picker x:Name="LanguagePicker" TitleColor="#86A29B" TextColor="#163632" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
-			<!-- Nút lưu -->
-			<Button Text="Lưu thay đổi"
+            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="ModeSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
+                    <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="8,2" StrokeShape="RoundRectangle 16">
+                        <Picker x:Name="ModePicker" TitleColor="#86A29B" TextColor="#163632" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="#0B1011" StrokeThickness="0" Padding="16" StrokeShape="RoundRectangle 24">
+                <Border.Shadow>
+                    <Shadow Brush="#000000"
+                            Offset="0,10"
+                            Radius="18"
+                            Opacity="0.20" />
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="PreviewTitleLabel" FontSize="14" FontAttributes="Bold" TextColor="#F6D45C" />
+                    <Grid ColumnDefinitions="Auto,*"
+                          ColumnSpacing="12">
+                        <Border WidthRequest="50"
+                                HeightRequest="50"
+                                BackgroundColor="#161E20"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16">
+                            <Label Text="TTS"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   FontAttributes="Bold"
+                                   FontSize="12"
+                                   TextColor="White" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="4"
+                                             VerticalOptions="Center">
+                            <Label x:Name="PreviewMetaLabel"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label x:Name="SummaryLabel" FontSize="13" TextColor="#B8C0C3" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <ProgressBar Progress="0.72"
+                                 HeightRequest="4"
+                                 BackgroundColor="#273235"
+                                 ProgressColor="#F1C95D" />
+                    <Button x:Name="PreviewButton"
+                            Clicked="OnPreviewClicked"
+                            BackgroundColor="#129488"
+                            TextColor="White"
+                            CornerRadius="16"
+                            HeightRequest="50"
+                            FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button x:Name="SaveButton"
                     Clicked="OnSaveClicked"
-                    BackgroundColor="#16A34A"
+                    BackgroundColor="#129488"
                     TextColor="White"
-                    CornerRadius="16"
-                    HeightRequest="52"
+                    CornerRadius="18"
+                    HeightRequest="54"
                     FontAttributes="Bold" />
-
-		</VerticalStackLayout>
-	</ScrollView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
+

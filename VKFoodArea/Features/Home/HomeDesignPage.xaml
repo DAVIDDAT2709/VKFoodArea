@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="VKFoodArea.Features.Home.HomeDesignPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -7,120 +7,105 @@
     xmlns:viewModels="clr-namespace:VKFoodArea.Features.Home"
     xmlns:models="clr-namespace:VKFoodArea.Models"
     x:DataType="viewModels:HomeViewModel"
-    BackgroundColor="#FFFFFF"
+    BackgroundColor="#F5F7F6"
     Padding="0"
     NavigationPage.HasNavigationBar="False"
     Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="Auto,250,Auto,*,Auto"
-          BackgroundColor="#FFFFFF">
+    <Grid RowDefinitions="Auto,208,*,Auto,Auto"
+          BackgroundColor="#F5F7F6">
 
-        <!-- HEADER -->
         <VerticalStackLayout Grid.Row="0"
-                             Padding="14,6,14,6"
-                             Spacing="8"
-                             BackgroundColor="#FFFFFF">
-
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto"
-      HeightRequest="42">
-
-                <Border Grid.Column="0"
-                        WidthRequest="122"
-                        HeightRequest="40"
-                        BackgroundColor="#EDE9FE"
-                        StrokeThickness="0"
-                        StrokeShape="RoundRectangle 10">
-
-                    <Label Text="VKFood"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"
-                           FontSize="17"
+                             Padding="16,14,16,10"
+                             Spacing="10">
+            <Grid ColumnDefinitions="*,Auto,Auto"
+                  ColumnSpacing="8">
+                <VerticalStackLayout Spacing="2"
+                                     VerticalOptions="Center">
+                    <Label Text="VKFoodArea"
+                           FontSize="20"
                            FontAttributes="Bold"
-                           TextColor="#6D28D9" />
-                </Border>
+                           TextColor="#1F6F64" />
+                    <Label x:Name="NearestPoiLabel"
+                           Text="{Binding NearestPoiText}"
+                           FontSize="12"
+                           TextColor="#617A74"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1" />
+                </VerticalStackLayout>
+
+                <Button x:Name="QrButton"
+                        Grid.Column="1"
+                        Clicked="OnQrClicked"
+                        WidthRequest="44"
+                        HeightRequest="40"
+                        CornerRadius="12"
+                        BackgroundColor="#E6F3EF"
+                        TextColor="#1F6F64"
+                        FontSize="12"
+                        FontAttributes="Bold" />
+
                 <Button Grid.Column="2"
-        Text="QR"
-        Clicked="OnQrClicked"
-        WidthRequest="52"
-        HeightRequest="42"
-        CornerRadius="10"
-        BackgroundColor="#EDE9FE"
-        TextColor="#6D28D9"
-        FontSize="14"
-        FontAttributes="Bold" />
-        <Button Grid.Column="3"
-        Text="⏹"
-        WidthRequest="42"
-        HeightRequest="42"
-        CornerRadius="10"
-        BackgroundColor="#FEE2E2"
-        TextColor="#DC2626"
-        FontSize="16"
-        FontAttributes="Bold"
-        Command="{Binding StopNarrationCommand}" />
-                <Button Grid.Column="4"
                         Text="⚙"
                         Clicked="OnSettingsClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="10"
-                        BackgroundColor="#F5EBD7"
-                        TextColor="#6B7280"
-                        FontSize="16" />
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        CornerRadius="12"
+                        BackgroundColor="White"
+                        TextColor="#48635F"
+                        BorderColor="#D8E2DE"
+                        BorderWidth="1"
+                        FontSize="15" />
             </Grid>
 
-            <!-- SEARCH THẬT -->
-            <Border BackgroundColor="#F3F4F6"
-                    StrokeThickness="0"
-                    Padding="8,2"
-                    StrokeShape="RoundRectangle 14">
-
+            <Border BackgroundColor="White"
+                    Stroke="#D8E2DE"
+                    StrokeThickness="1"
+                    Padding="8,0"
+                    StrokeShape="RoundRectangle 16">
                 <SearchBar x:Name="PoiSearchBar"
-                           Placeholder="Tìm quán ăn..."
-                           PlaceholderColor="#9CA3AF"
-                           TextColor="#111827"
+                           PlaceholderColor="#8AA09A"
+                           TextColor="#173330"
                            BackgroundColor="Transparent"
-                           CancelButtonColor="#7C3AED"
-                           FontSize="14"
+                           CancelButtonColor="#1F6F64"
+                           HeightRequest="40"
+                           FontSize="13"
                            SearchButtonPressed="OnSearchButtonPressed"
                            TextChanged="OnSearchTextChanged" />
             </Border>
 
             <Border x:Name="SearchSuggestionContainer"
                     IsVisible="False"
-                    BackgroundColor="#FFFFFF"
-                    Stroke="#E5E7EB"
+                    BackgroundColor="White"
+                    Stroke="#D8E2DE"
                     StrokeThickness="1"
-                    Padding="6"
-                    StrokeShape="RoundRectangle 16">
-
+                    Padding="8"
+                    StrokeShape="RoundRectangle 18">
                 <CollectionView x:Name="SearchSuggestionCollectionView"
                                 SelectionMode="Single"
                                 SelectionChanged="OnSuggestionSelected">
-
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Vertical"
-                                           ItemSpacing="4" />
+                                           ItemSpacing="6" />
                     </CollectionView.ItemsLayout>
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="home:HomePoiSuggestion">
-                            <Border BackgroundColor="#FFFFFF"
+                            <Border BackgroundColor="#F7FAF9"
                                     StrokeThickness="0"
-                                    Padding="8,10"
-                                    StrokeShape="RoundRectangle 12">
-
-                                <VerticalStackLayout Spacing="2">
+                                    Padding="12"
+                                    StrokeShape="RoundRectangle 14">
+                                <VerticalStackLayout Spacing="3">
                                     <Label Text="{Binding Name}"
                                            FontSize="14"
                                            FontAttributes="Bold"
-                                           TextColor="#111827"
+                                           TextColor="#173330"
                                            LineBreakMode="TailTruncation"
                                            MaxLines="1" />
 
                                     <Label Text="{Binding Address}"
                                            FontSize="12"
-                                           TextColor="#6B7280"
+                                           TextColor="#617A74"
                                            LineBreakMode="TailTruncation"
                                            MaxLines="1" />
                                 </VerticalStackLayout>
@@ -131,231 +116,434 @@
             </Border>
         </VerticalStackLayout>
 
-        <!-- MAP -->
         <Grid Grid.Row="1"
-              Margin="14,0,14,10">
+              Margin="16,0,16,12">
+            <Border BackgroundColor="White"
+                    Stroke="#D8E2DE"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 22">
+                <Border.Shadow>
+                    <Shadow Brush="#122F2A"
+                            Offset="0,10"
+                            Radius="18"
+                            Opacity="0.08" />
+                </Border.Shadow>
 
-            <ContentView x:Name="MapHost"
-                         HorizontalOptions="Fill"
-                         VerticalOptions="Fill" />
+                <Grid>
+                    <ContentView x:Name="MapHost"
+                                 HorizontalOptions="Fill"
+                                 VerticalOptions="Fill" />
 
-            <VerticalStackLayout HorizontalOptions="End"
-                                 VerticalOptions="Start"
-                                 Spacing="10"
-                                 Margin="0,12,12,0">
+                    <Grid Padding="10"
+                          RowDefinitions="*,Auto"
+                          ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="8">
+                            <Button Text="+"
+                                    Clicked="OnZoomInClicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    CornerRadius="18"
+                                    BackgroundColor="White"
+                                    TextColor="#173330"
+                                    BorderColor="#D8E2DE"
+                                    BorderWidth="1"
+                                    FontSize="18"
+                                    FontAttributes="Bold" />
 
-                <Button Text="+"
-                        Clicked="OnZoomInClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="21"
-                        BackgroundColor="White"
-                        TextColor="#111827"
-                        FontSize="22"
-                        FontAttributes="Bold" />
+                            <Button Text="−"
+                                    Clicked="OnZoomOutClicked"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    CornerRadius="18"
+                                    BackgroundColor="White"
+                                    TextColor="#173330"
+                                    BorderColor="#D8E2DE"
+                                    BorderWidth="1"
+                                    FontSize="18"
+                                    FontAttributes="Bold" />
+                        </VerticalStackLayout>
 
-                <Button Text="-"
-                        Clicked="OnZoomOutClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="21"
-                        BackgroundColor="White"
-                        TextColor="#111827"
-                        FontSize="22"
-                        FontAttributes="Bold" />
+                        <Button Grid.Row="0"
+                                Grid.Column="1"
+                                Text="⌖"
+                                Clicked="OnOpenFullMapClicked"
+                                WidthRequest="36"
+                                HeightRequest="36"
+                                CornerRadius="18"
+                                HorizontalOptions="End"
+                                VerticalOptions="End"
+                                BackgroundColor="#EAF4F1"
+                                TextColor="#1F6F64"
+                                FontSize="15" />
 
-                <Button Text="◎"
-                        Clicked="OnMyLocationClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="21"
-                        BackgroundColor="White"
-                        TextColor="#111827"
-                        FontSize="18" />
-            </VerticalStackLayout>
+                        <Border Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                BackgroundColor="#183A35"
+                                StrokeThickness="0"
+                                Padding="12,8"
+                                StrokeShape="RoundRectangle 16">
+                            <Label Text="{Binding StatusText}"
+                                   FontSize="10.5"
+                                   TextColor="#F2F8F6"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1" />
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
 
-        <!-- TITLE -->
-        <HorizontalStackLayout Grid.Row="2"
-                               Padding="16,4,16,10"
-                               Spacing="6">
-            <Border Margin="16,0,16,8"
-                BackgroundColor="#F5F3FF"
-                StrokeThickness="0"
-                Padding="10"
-                StrokeShape="RoundRectangle 12">
-                <Label Text="{Binding NearestPoiText}"
-                   TextColor="#6D28D9"
-                   FontSize="13"
-                   FontAttributes="Bold" /> 
-            </Border>
-            <Label Text="Quán nổi bật"
-                   FontSize="19"
-                   FontAttributes="Bold"
-                   TextColor="#111827" />
+        <CollectionView x:Name="PoiCollectionView"
+                        Grid.Row="2"
+                        Margin="16,0,16,8"
+                        SelectionMode="None">
+            <CollectionView.Header>
+                <VerticalStackLayout Margin="0,0,0,16"
+                                     Spacing="16">
+                    <VerticalStackLayout Spacing="10">
+                        <Label x:Name="FeaturedFoodsTitleLabel"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               FontFamily="OpenSansSemibold"
+                               TextColor="#173330" />
 
-            <Label Text="›"
-                   FontSize="18"
-                   FontAttributes="Bold"
-                   TextColor="#9CA3AF"
-                   VerticalTextAlignment="Center" />
-        </HorizontalStackLayout>
+                        <CollectionView x:Name="FeaturedFoodCollectionView"
+                                        HeightRequest="246"
+                                        SelectionMode="None">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Horizontal"
+                                                   ItemSpacing="10"
+                                                   SnapPointsType="MandatorySingle"
+                                                   SnapPointsAlignment="Start" />
+                            </CollectionView.ItemsLayout>
 
-        <!-- LIST -->
-        <ScrollView Grid.Row="3">
-            <VerticalStackLayout Spacing="10">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="home:FeaturedFoodCardViewModel">
+                                    <Border WidthRequest="220"
+                                            BackgroundColor="White"
+                                            Stroke="#DDE6E2"
+                                            StrokeThickness="1"
+                                            Padding="0"
+                                            StrokeShape="RoundRectangle 24">
+                                        <Border.Shadow>
+                                            <Shadow Brush="#12312B"
+                                                    Offset="0,8"
+                                                    Radius="14"
+                                                    Opacity="0.06" />
+                                        </Border.Shadow>
 
-                <CollectionView x:Name="PoiCollectionView"
-                                SelectionMode="None"
-                                Margin="16,0,16,0">
+                                        <Grid RowDefinitions="136,Auto">
+                                            <Border StrokeThickness="0">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="24,24,0,0" />
+                                                </Border.StrokeShape>
+                                                <Image Source="{Binding ImageUrl}"
+                                                       Aspect="AspectFill" />
+                                            </Border>
 
-                    <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical"
-                                         Span="2"
-                                         HorizontalItemSpacing="12"
-                                         VerticalItemSpacing="12" />
-                    </CollectionView.ItemsLayout>
+                                            <VerticalStackLayout Grid.Row="1"
+                                                                 Padding="14,14,14,16"
+                                                                 Spacing="10">
+                                                <Border BackgroundColor="#EEF7F3"
+                                                        Padding="10,6"
+                                                        HorizontalOptions="Start"
+                                                        StrokeThickness="0"
+                                                        StrokeShape="RoundRectangle 14">
+                                                    <Label Text="{Binding RestaurantName}"
+                                                           FontSize="11.5"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#176B61"
+                                                           LineBreakMode="TailTruncation"
+                                                           MaxLines="1" />
+                                                </Border>
 
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:Poi">
+                                                <Label Text="{Binding Name}"
+                                                       FontSize="16"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#173330"
+                                                       LineBreakMode="WordWrap"
+                                                       MaxLines="2" />
 
-                            <Border BackgroundColor="White"
-                                    Stroke="#E5E7EB"
-                                    StrokeThickness="1"
-                                    StrokeShape="RoundRectangle 16">
+                                                <Border BackgroundColor="#F0F7F4"
+                                                        Padding="10,6"
+                                                        HorizontalOptions="Start"
+                                                        StrokeThickness="0"
+                                                        StrokeShape="RoundRectangle 14">
+                                                    <Label Text="{Binding PriceText}"
+                                                           FontSize="11.5"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#1F6F64" />
+                                                </Border>
+                                            </VerticalStackLayout>
+                                        </Grid>
 
-                                <Grid RowDefinitions="118,Auto">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFeaturedFoodTapped" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
 
-                                    <Grid>
-                                        <Image Source="{Binding ImageUrl}"
-                                               Aspect="AspectFill"
-                                               HeightRequest="118" />
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="10">
+                        <Label x:Name="FeaturedPoisTitleLabel"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               FontFamily="OpenSansSemibold"
+                               TextColor="#173330" />
 
-                                        <Button Text="🔊"
-                                                WidthRequest="34"
-                                                HeightRequest="34"
-                                                CornerRadius="17"
-                                                FontSize="14"
-                                                BackgroundColor="White"
-                                                HorizontalOptions="End"
-                                                VerticalOptions="End"
-                                                Margin="0,0,8,8"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PlayPoiAudioCommand}"
-                                                CommandParameter="{Binding}" />
-                                    </Grid>
+                        <Button x:Name="HistoryActionButton"
+                                Grid.Column="1"
+                                Clicked="OnHistoryClicked"
+                                BackgroundColor="#EAF4F1"
+                                TextColor="#1F6F64"
+                                FontSize="12"
+                                FontAttributes="Bold"
+                                Padding="14,8"
+                                CornerRadius="16"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </CollectionView.Header>
 
-                                    <VerticalStackLayout Grid.Row="1"
-                                                         Padding="10,10,10,12"
-                                                         Spacing="3">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="2"
+                                 HorizontalItemSpacing="12"
+                                 VerticalItemSpacing="12" />
+            </CollectionView.ItemsLayout>
 
-                                        <Label Text="{Binding Name}"
-                                               FontSize="14"
-                                               FontAttributes="Bold"
-                                               TextColor="#111827"
-                                               LineBreakMode="TailTruncation"
-                                               MaxLines="1" />
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Poi">
+                    <Border BackgroundColor="White"
+                            Stroke="#DDE6E2"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 18">
+                        <Border.Shadow>
+                            <Shadow Brush="#12312B"
+                                    Offset="0,8"
+                                    Radius="14"
+                                    Opacity="0.06" />
+                        </Border.Shadow>
 
-                                        <Label Text="{Binding Address}"
-                                               FontSize="11.5"
-                                               TextColor="#6B7280"
-                                               LineBreakMode="TailTruncation"
-                                               MaxLines="2" />
-                                    </VerticalStackLayout>
+                        <Grid RowDefinitions="112,Auto">
+                            <Grid>
+                                <Image Source="{Binding ImageUrl}"
+                                       Aspect="AspectFill"
+                                       HeightRequest="112" />
 
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnPoiCardTapped" />
-                                    </Grid.GestureRecognizers>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                                <Button Text="🔊"
+                                        WidthRequest="34"
+                                        HeightRequest="34"
+                                        CornerRadius="17"
+                                        FontSize="13"
+                                        BackgroundColor="White"
+                                        TextColor="#1F6F64"
+                                        HorizontalOptions="End"
+                                        VerticalOptions="End"
+                                        Margin="0,0,8,8"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PlayPoiAudioCommand}"
+                                        CommandParameter="{Binding}" />
+                            </Grid>
 
-                <Border Margin="16,4,16,8"
-                        BackgroundColor="#F5F3FF"
+                            <VerticalStackLayout Grid.Row="1"
+                                                 Padding="10,10,10,12"
+                                                 Spacing="3">
+                                <Label Text="{Binding Name}"
+                                       FontSize="14"
+                                       FontAttributes="Bold"
+                                       TextColor="#173330"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1" />
+
+                                <Label Text="{Binding Address}"
+                                       FontSize="11.5"
+                                       TextColor="#617A74"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2" />
+                            </VerticalStackLayout>
+
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPoiCardTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Border x:Name="MiniPlayerContainer"
+                Grid.Row="3"
+                Margin="16,6,16,10"
+                IsVisible="{Binding ShowMiniPlayer}"
+                BackgroundColor="White"
+                Stroke="#CFE0DA"
+                StrokeThickness="1"
+                Padding="14"
+                StrokeShape="RoundRectangle 22">
+            <Border.Shadow>
+                <Shadow Brush="#12312B"
+                        Offset="0,8"
+                        Radius="16"
+                        Opacity="0.08" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="4">
+                <Border Grid.RowSpan="3"
+                        WidthRequest="58"
+                        HeightRequest="58"
+                        BackgroundColor="#EAF4F1"
                         StrokeThickness="0"
-                        Padding="12"
-                        StrokeShape="RoundRectangle 12">
-
-                    <Label Text="{Binding StatusText}"
-                           TextColor="#6D28D9"
-                           FontSize="13" />
+                        StrokeShape="RoundRectangle 18">
+                    <Grid>
+                        <Image Source="{Binding CurrentNarrationImageUrl}"
+                               Aspect="AspectFill" />
+                        <Border BackgroundColor="#DDEFE9"
+                                Opacity="0.35"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 18" />
+                        <Label Text="TTS"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#1F6F64" />
+                    </Grid>
                 </Border>
 
-            </VerticalStackLayout>
-        </ScrollView>
+                <HorizontalStackLayout Grid.Column="1"
+                                       Grid.ColumnSpan="2"
+                                       Spacing="8">
+                    <Border BackgroundColor="#EAF4F1"
+                            Padding="8,4"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 10">
+                        <Label Text="{Binding MiniPlayerStateTag}"
+                               FontSize="10"
+                               FontAttributes="Bold"
+                               TextColor="#1F6F64" />
+                    </Border>
 
-        <!-- BOTTOM NAV -->
-        <Grid Grid.Row="4"
-              ColumnDefinitions="*,*,*,*"
-              Padding="10,8,10,12"
-              ColumnSpacing="8"
-              BackgroundColor="White">
+                    <Label Text="{Binding MiniPlayerStatusText}"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           TextColor="#48635F"
+                           VerticalTextAlignment="Center" />
+                </HorizontalStackLayout>
 
-            <Border Grid.Column="0"
-                    BackgroundColor="#F3E8FF"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-                <Button Text="⌂&#10;Trang chủ"
-                        Clicked="OnGoHomeClicked"
+                <VerticalStackLayout Grid.Row="1"
+                                     Grid.Column="1"
+                                     Spacing="2">
+                    <Label Text="{Binding CurrentNarrationTitle}"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           TextColor="#173330"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1" />
+                    <Label Text="{Binding CurrentNarrationSubtitle}"
+                           FontSize="11"
+                           TextColor="#617A74"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1" />
+                </VerticalStackLayout>
+
+                <Button x:Name="MiniPlayerStopButton"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Command="{Binding StopNarrationCommand}"
+                        WidthRequest="64"
+                        HeightRequest="34"
+                        CornerRadius="12"
+                        BackgroundColor="#173330"
+                        TextColor="White"
                         FontSize="11"
                         FontAttributes="Bold"
-                        LineBreakMode="WordWrap"
-                        BackgroundColor="Transparent"
-                        TextColor="#7C3AED"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-            </Border>
+                        IsEnabled="{Binding IsNarrationPlaying}" />
 
-            <Border Grid.Column="1"
-                    BackgroundColor="Transparent"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-                <Button Text="⌖&#10;Bản đồ"
+                <VerticalStackLayout Grid.Row="2"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="2"
+                                     Spacing="6">
+                    <ProgressBar Progress="{Binding MiniPlayerProgress}"
+                                 HeightRequest="4"
+                                 BackgroundColor="#DCE6E2"
+                                 ProgressColor="#1F6F64" />
+                    <Label Text="{Binding MiniPlayerHintText}"
+                           FontSize="10"
+                           TextColor="#617A74" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="4"
+                Margin="12,0,12,12"
+                BackgroundColor="White"
+                Stroke="#D8E2DE"
+                StrokeThickness="1"
+                Padding="8"
+                StrokeShape="RoundRectangle 22">
+            <Grid ColumnDefinitions="*,*,*,*"
+                  ColumnSpacing="6">
+                <Border Grid.Column="0"
+                        BackgroundColor="#EAF4F1"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16"
+                        Padding="0">
+                    <Button x:Name="NavHomeButton"
+                            Clicked="OnGoHomeClicked"
+                            FontSize="11"
+                            FontAttributes="Bold"
+                            BackgroundColor="Transparent"
+                            TextColor="#1F6F64"
+                            Padding="4,8"
+                            ImageSource="nav_home.svg"
+                            ContentLayout="Top,4"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+                </Border>
+
+                <Button x:Name="NavMapButton"
+                        Grid.Column="1"
                         Clicked="OnOpenFullMapClicked"
                         FontSize="11"
-                        FontAttributes="None"
-                        LineBreakMode="WordWrap"
                         BackgroundColor="Transparent"
-                        TextColor="#6B7280"
+                        TextColor="#617A74"
+                        Padding="4,8"
+                        ImageSource="nav_map.svg"
+                        ContentLayout="Top,4"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill" />
-            </Border>
 
-            <Border Grid.Column="2"
-                    BackgroundColor="Transparent"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-                <Button Text="🕘&#10;Lịch sử"
+                <Button x:Name="NavHistoryButton"
+                        Grid.Column="2"
                         Clicked="OnHistoryClicked"
                         FontSize="11"
-                        FontAttributes="None"
-                        LineBreakMode="WordWrap"
                         BackgroundColor="Transparent"
-                        TextColor="#6B7280"
+                        TextColor="#617A74"
+                        Padding="4,8"
+                        ImageSource="nav_history.svg"
+                        ContentLayout="Top,4"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill" />
-            </Border>
 
-            <Border Grid.Column="3"
-                    BackgroundColor="Transparent"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-                <Button Text="👤&#10;Người dùng"
+                <Button x:Name="NavAccountButton"
+                        Grid.Column="3"
                         Clicked="OnUserClicked"
                         FontSize="11"
-                        FontAttributes="None"
-                        LineBreakMode="WordWrap"
                         BackgroundColor="Transparent"
-                        TextColor="#6B7280"
+                        TextColor="#617A74"
+                        Padding="4,8"
+                        ImageSource="nav_account.svg"
+                        ContentLayout="Top,4"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill" />
-            </Border>
-
-        </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </ContentPage>
+

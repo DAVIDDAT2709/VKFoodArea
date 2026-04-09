@@ -4,24 +4,24 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <!-- Brand -->
-    <Color x:Key="ColorPrimary">#16A34A</Color>
-    <Color x:Key="ColorPrimaryDark">#15803D</Color>
-    <Color x:Key="ColorPrimaryLight">#DCFCE7</Color>
+    <Color x:Key="ColorPrimary">#11998E</Color>
+    <Color x:Key="ColorPrimaryDark">#0A6E68</Color>
+    <Color x:Key="ColorPrimaryLight">#DDF7F1</Color>
 
     <!-- Background / Surface -->
-    <Color x:Key="ColorBackground">#F5F7FA</Color>
+    <Color x:Key="ColorBackground">#EEF4F1</Color>
     <Color x:Key="ColorSurface">#FFFFFF</Color>
-    <Color x:Key="ColorSurfaceSoft">#F9FAFB</Color>
-    <Color x:Key="ColorBorder">#E5E7EB</Color>
+    <Color x:Key="ColorSurfaceSoft">#F7FBF9</Color>
+    <Color x:Key="ColorBorder">#D7E4DF</Color>
 
     <!-- Text -->
-    <Color x:Key="ColorTextPrimary">#111827</Color>
-    <Color x:Key="ColorTextSecondary">#6B7280</Color>
+    <Color x:Key="ColorTextPrimary">#163632</Color>
+    <Color x:Key="ColorTextSecondary">#6C8781</Color>
     <Color x:Key="ColorTextLight">#FFFFFF</Color>
 
     <!-- Accent -->
-    <Color x:Key="ColorWarning">#F59E0B</Color>
-    <Color x:Key="ColorDanger">#EF4444</Color>
-    <Color x:Key="ColorInfo">#0EA5E9</Color>
+    <Color x:Key="ColorWarning">#E7BC55</Color>
+    <Color x:Key="ColorDanger">#D65762</Color>
+    <Color x:Key="ColorInfo">#54A7D8</Color>
 
 </ResourceDictionary>

@@ -14,6 +14,7 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		<DefaultItemExcludes>$(DefaultItemExcludes);obj_codex\**;obj_loginfix\**;.codexbuild\**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,9 +42,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<MauiXaml Update="Features\Home\BookingPage.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
 		<MauiXaml Update="Features\Home\FullMapPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

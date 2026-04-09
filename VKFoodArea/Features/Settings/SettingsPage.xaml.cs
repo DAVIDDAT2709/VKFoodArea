@@ -11,6 +11,7 @@ public partial class SettingsPage : ContentPage
     private readonly AppSettingsService _settings;
     private readonly AppLanguageService _languageService;
     private readonly NarrationService _narrationService;
+    private readonly AppTextService _text;
 
     private readonly List<LanguageItem> _languages = new()
     {
@@ -31,12 +32,14 @@ public partial class SettingsPage : ContentPage
     public SettingsPage(
         AppSettingsService settings,
         AppLanguageService languageService,
-        NarrationService narrationService)
+        NarrationService narrationService,
+        AppTextService text)
     {
         InitializeComponent();
         _settings = settings;
         _languageService = languageService;
         _narrationService = narrationService;
+        _text = text;
 
         LanguagePicker.ItemsSource = _languages;
         LanguagePicker.ItemDisplayBinding = new Binding(nameof(LanguageItem.DisplayName));
@@ -50,6 +53,7 @@ public partial class SettingsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        ApplyLocalizedText();
 
         var lang = string.IsNullOrWhiteSpace(_settings.NarrationLanguage)
             ? "vi"
@@ -77,9 +81,11 @@ public partial class SettingsPage : ContentPage
         _settings.NarrationOutputMode = selectedMode;
 
         _languageService.CurrentLanguage = languageCode;
+        _text.SetLanguage(languageCode);
 
-        SummaryLabel.Text = $"Đã lưu: {languageName} | {selectedMode}";
-        await DisplayAlert("Thành công", "Đã lưu cài đặt âm thanh.", "OK");
+        ApplyLocalizedText();
+        SummaryLabel.Text = _text.Format("Settings.SaveSummary", languageName, _text.GetModeDisplay(selectedMode));
+        await DisplayAlert(_text["Settings.SaveAlertTitle"], _text["Settings.SaveAlertMessage"], _text["Common.Ok"]);
     }
 
     private async void OnPreviewClicked(object sender, EventArgs e)
@@ -89,20 +95,14 @@ public partial class SettingsPage : ContentPage
             var selectedLanguage = LanguagePicker.SelectedItem as LanguageItem ?? _languages[0];
             var languageCode = selectedLanguage.Code;
 
-            string previewText = languageCode switch
-            {
-                "en" => "Hello, this is a preview of the selected voice.",
-                "zh" => "你好，这是所选语音的试听。",
-                "ja" => "こんにちは。これは選択した音声の試聴です。",
-                "de" => "Hallo, dies ist eine Vorschau der ausgewählten Stimme.",
-                _ => "Xin chào, đây là phần nghe thử giọng đọc đã chọn."
-            };
-
-            await _narrationService.PreviewAsync(previewText, languageCode);
+            await _narrationService.PreviewAsync(_text.GetPreviewText(languageCode), languageCode);
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi", $"Không thể nghe thử: {ex.Message}", "OK");
+            await DisplayAlert(
+                _text["Settings.PreviewErrorTitle"],
+                _text.Format("Settings.PreviewErrorMessage", ex.Message),
+                _text["Common.Ok"]);
         }
     }
 
@@ -117,8 +117,22 @@ public partial class SettingsPage : ContentPage
         var selectedMode = ModePicker.SelectedItem?.ToString() ?? "TTS";
 
         SummaryLabel.Text = saved
-            ? $"Đã lưu: {selectedLanguage.DisplayName} | {selectedMode}"
-            : $"Hiện tại: {selectedLanguage.DisplayName} | {selectedMode}";
+            ? _text.Format("Settings.SaveSummary", selectedLanguage.DisplayName, _text.GetModeDisplay(selectedMode))
+            : _text.Format("Settings.CurrentSummary", selectedLanguage.DisplayName, _text.GetModeDisplay(selectedMode));
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["Settings.PageTitle"];
+        HeaderTitleLabel.Text = _text["Settings.HeaderTitle"];
+        LanguageSectionLabel.Text = _text["Settings.LanguageSection"];
+        ModeSectionLabel.Text = _text["Settings.ModeSection"];
+        PreviewTitleLabel.Text = _text["Settings.PreviewTitle"];
+        PreviewMetaLabel.Text = _text["PoiDetail.AudioGuide"];
+        PreviewButton.Text = _text["Settings.PreviewButton"];
+        SaveButton.Text = _text["Common.Save"];
+        LanguagePicker.Title = _text["Settings.LanguagePickerTitle"];
+        ModePicker.Title = _text["Settings.ModePickerTitle"];
     }
 
     private sealed class LanguageItem

@@ -30,6 +30,8 @@ public partial class HomeDesignPage : ContentPage
     private readonly IServiceProvider _serviceProvider;
     private readonly PoiRepository _poiRepository;
     private readonly FoodRepository _foodRepository;
+    private readonly AppTextService _text;
+    private readonly NarrationUiStateService _narrationUiState;
     private readonly Dictionary<int, PoiSearchDescriptor> _poiSearchCache = new();
 
     private DateTime _lastMapTapTime = DateTime.MinValue;
@@ -43,6 +45,7 @@ public partial class HomeDesignPage : ContentPage
     private List<Poi> _allPois = new();
     private List<Poi> _defaultPois = new();
     private List<Poi> _displayedPois = new();
+    private List<FeaturedFoodCardViewModel> _featuredFoodCards = new();
 
     private const string PoiPinSvg =
         "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 64 64'>" +
@@ -57,7 +60,9 @@ public partial class HomeDesignPage : ContentPage
         FullMapPage fullMapPage,
         PoiRepository poiRepository,
         FoodRepository foodRepository,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        AppTextService text,
+        NarrationUiStateService narrationUiState)
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
@@ -67,19 +72,24 @@ public partial class HomeDesignPage : ContentPage
         _poiRepository = poiRepository;
         _foodRepository = foodRepository;
         _serviceProvider = serviceProvider;
+        _text = text;
+        _narrationUiState = narrationUiState;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        PoiSyncService.SyncCompleted -= OnSyncCompleted;
-        PoiSyncService.SyncCompleted += OnSyncCompleted;
+        PoiSyncService.SyncCompleted -= OnSyncCompletedEscaped;
+        PoiSyncService.SyncCompleted += OnSyncCompletedEscaped;
+        _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
+        _narrationUiState.StateChanged += OnNarrationUiStateChanged;
         if (Window is not null)
         {
             Window.Resumed -= OnWindowResumed;
             Window.Resumed += OnWindowResumed;
         }
 
+        ApplyLocalizedTextClean();
         await _viewModel.InitializeAsync();
         _viewModel.RefreshNarrationSettings();
         await RefreshPoiDataAsync();
@@ -88,18 +98,19 @@ public partial class HomeDesignPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        PoiSyncService.SyncCompleted -= OnSyncCompleted;
+        PoiSyncService.SyncCompleted -= OnSyncCompletedEscaped;
+        _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         if (Window is not null)
             Window.Resumed -= OnWindowResumed;
     }
 
-    private void OnSyncCompleted(object? sender, PoiSyncService.PoiSyncCompletedEventArgs e)
+    private void OnSyncCompletedEscaped(object? sender, PoiSyncService.PoiSyncCompletedEventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             var detail = e.Result.Success
-                ? $"Đồng bộ xong, hiện có {e.Result.RemoteCount} POI từ web."
-                : "Không kết nối web, đang hiển thị dữ liệu local.";
+                ? _text.Format("Status.SyncCompleted", e.Result.RemoteCount)
+                : _text["Status.UsingLocalData"];
 
             await _viewModel.RefreshVisiblePoisAsync(e.Result, detail);
             await RefreshPoiDataAsync();
@@ -110,6 +121,7 @@ public partial class HomeDesignPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
+            ApplyLocalizedTextClean();
             await _viewModel.InitializeAsync();
             await RefreshPoiDataAsync();
         });
@@ -119,6 +131,7 @@ public partial class HomeDesignPage : ContentPage
     {
         _allPois = await _poiRepository.GetActiveAsync();
         _defaultPois = _viewModel.NearbyPois.ToList();
+        await LoadFeaturedFoodsAsync();
 
         if (_allPois.Count == 0)
             _allPois = _defaultPois.ToList();
@@ -129,6 +142,20 @@ public partial class HomeDesignPage : ContentPage
         RebuildPoiSearchCache();
         ApplySearch(PoiSearchBar.Text, closeSuggestions: true);
         InitializeMap();
+    }
+
+    private async Task LoadFeaturedFoodsAsync()
+    {
+        _featuredFoodCards = (await _foodRepository.GetByCategoryAsync("Recommended"))
+            .Take(5)
+            .Select(food => new FeaturedFoodCardViewModel
+            {
+                Food = food,
+                PriceText = _text.Format("Home.PriceFrom", food.Price)
+            })
+            .ToList();
+
+        FeaturedFoodCollectionView.ItemsSource = _featuredFoodCards;
     }
 
     private void InitializeMap()
@@ -265,12 +292,14 @@ public partial class HomeDesignPage : ContentPage
         if (mapInfo?.Feature is null)
             return;
 
-        var name = mapInfo.Feature["Name"]?.ToString();
-
-        if (string.IsNullOrWhiteSpace(name))
+        if (!int.TryParse(mapInfo.Feature["PoiId"]?.ToString(), out var poiId))
             return;
 
-        await DisplayAlert("Quan an", name, "OK");
+        var poi = _allPois.FirstOrDefault(x => x.Id == poiId);
+        if (poi is null)
+            return;
+
+        await OpenPoiDetailAsync(poi);
     }
 
     private void OnZoomInClicked(object sender, EventArgs e)
@@ -428,6 +457,32 @@ public partial class HomeDesignPage : ContentPage
         await OpenPoiDetailAsync(poi);
     }
 
+    private async void OnFeaturedFoodTapped(object sender, TappedEventArgs e)
+    {
+        if (sender is not Border border || border.BindingContext is not FeaturedFoodCardViewModel card)
+            return;
+
+        var food = card.Food;
+        var restaurantKey = NormalizeSearchText(food.RestaurantName);
+
+        var poi = _allPois.FirstOrDefault(x =>
+                      NormalizeSearchText(x.Name) == restaurantKey)
+                  ?? _allPois.FirstOrDefault(x =>
+                      NormalizeSearchText(x.Name).Contains(restaurantKey, StringComparison.Ordinal) ||
+                      restaurantKey.Contains(NormalizeSearchText(x.Name), StringComparison.Ordinal));
+
+        if (poi is not null)
+        {
+            await OpenPoiDetailAsync(poi);
+            return;
+        }
+
+        await DisplayAlert(
+            _text["Home.FeaturedFoodAlertTitle"],
+            $"{food.Name}\n{food.RestaurantName}",
+            _text["Common.Ok"]);
+    }
+
     private async void OnGoHomeClicked(object sender, EventArgs e)
     {
         await Task.CompletedTask;
@@ -453,7 +508,33 @@ public partial class HomeDesignPage : ContentPage
 
     private Task OpenPoiDetailAsync(Poi poi)
     {
-        return Navigation.PushAsync(new PoiDetailPage(poi, _narrationService, _foodRepository));
+        return Navigation.PushAsync(new PoiDetailPage(
+            poi,
+            _narrationService,
+            _foodRepository,
+            _text,
+            _narrationUiState));
+    }
+
+    private void OnNarrationUiStateChanged(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(_viewModel.RefreshNarrationState);
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["Nav.Home"];
+        PoiSearchBar.Placeholder = _text["Home.SearchPlaceholder"];
+        QrButton.Text = _text["Home.QrButton"];
+        FeaturedFoodsTitleLabel.Text = _text["Home.FeaturedFoods"];
+        FeaturedPoisTitleLabel.Text = _text["Home.FeaturedPois"];
+        HistoryActionButton.Text = _text["Common.History"];
+        MiniPlayerStopButton.Text = _text["Common.Stop"];
+        NavHomeButton.Text = $"🏠\n{_text["Nav.Home"]}";
+        NavMapButton.Text = $"🗺\n{_text["Nav.Map"]}";
+        NavHistoryButton.Text = $"🕘\n{_text["Nav.History"]}";
+        NavAccountButton.Text = $"👤\n{_text["Nav.Account"]}";
+        _viewModel.RefreshLocalizedText();
     }
 
     private void RebuildPoiSearchCache()
@@ -535,4 +616,13 @@ public partial class HomeDesignPage : ContentPage
     }
 
     private sealed record PoiSearchDescriptor(string NameKey, string AddressKey);
+
+    private void ApplyLocalizedTextClean()
+    {
+        ApplyLocalizedText();
+        NavHomeButton.Text = _text["Nav.Home"];
+        NavMapButton.Text = _text["Nav.Map"];
+        NavHistoryButton.Text = _text["Nav.History"];
+        NavAccountButton.Text = _text["Nav.Account"];
+    }
 }

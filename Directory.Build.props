@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="Exists('C:\Program Files\Android\Android Studio\jbr')">
+    <JavaSdkDirectory>C:\Program Files\Android\Android Studio\jbr</JavaSdkDirectory>
+  </PropertyGroup>
+</Project>

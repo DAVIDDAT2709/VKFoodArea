@@ -1,141 +1,306 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="VKFoodArea.Features.Home.FullMapPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    BackgroundColor="#FFFFFF"
+    BackgroundColor="#F5F7F6"
     NavigationPage.HasNavigationBar="False"
     Shell.NavBarIsVisible="False"
-    Title="Bản đồ">
+    Title="">
 
-	<Grid RowDefinitions="*,Auto,Auto"
-          BackgroundColor="#FFFFFF">
-
-		<!-- MAP -->
-		<Grid Grid.Row="0">
-			<ContentView x:Name="MapHost"
-                         HorizontalOptions="Fill"
-                         VerticalOptions="Fill" />
-
-			<VerticalStackLayout HorizontalOptions="End"
-                                 VerticalOptions="Start"
-                                 Margin="0,20,16,0"
-                                 Spacing="10">
-
-				<Button Text="+"
-                        Clicked="OnZoomInClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="21"
-                        BackgroundColor="White"
-                        TextColor="#111827"
-                        FontSize="22"
-                        FontAttributes="Bold" />
-
-				<Button Text="-"
-                        Clicked="OnZoomOutClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="21"
-                        BackgroundColor="White"
-                        TextColor="#111827"
-                        FontSize="22"
-                        FontAttributes="Bold" />
-
-				<Button Text="◎"
-                        Clicked="OnMyLocationClicked"
-                        WidthRequest="42"
-                        HeightRequest="42"
-                        CornerRadius="21"
-                        BackgroundColor="White"
-                        TextColor="#111827"
-                        FontSize="18" />
-			</VerticalStackLayout>
-		</Grid>
-
-		<!-- INFO -->
-		<Border Grid.Row="1"
-                BackgroundColor="#F5F3FF"
-                StrokeThickness="0"
-                Padding="12"
-                StrokeShape="RoundRectangle 0">
-			<Label x:Name="InfoLabel"
-                   Text="Chạm marker để xem tên quán"
-                   FontSize="13"
-                   TextColor="#6D28D9" />
-		</Border>
-
-		<!-- BOTTOM NAV -->
-		<Grid Grid.Row="2"
-              ColumnDefinitions="*,*,*,*"
-              Padding="10,8,10,12"
-              ColumnSpacing="8"
-              BackgroundColor="White">
-
-			<Border Grid.Column="0"
-                    BackgroundColor="Transparent"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-				<Button Text="⌂&#10;Trang chủ"
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto"
+          BackgroundColor="#F5F7F6">
+        <Border Grid.Row="0"
+                Margin="16,14,16,10"
+                BackgroundColor="White"
+                Stroke="#D8E2DE"
+                StrokeThickness="1"
+                Padding="14"
+                StrokeShape="RoundRectangle 22">
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  ColumnSpacing="12">
+                <Button Text="←"
                         Clicked="OnGoHomeClicked"
-                        FontSize="11"
-                        FontAttributes="None"
-                        LineBreakMode="WordWrap"
-                        BackgroundColor="Transparent"
-                        TextColor="#6B7280"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-			</Border>
+                        WidthRequest="44"
+                        HeightRequest="44"
+                        CornerRadius="14"
+                        BackgroundColor="#EAF4F1"
+                        TextColor="#1F6F64"
+                        FontSize="18" />
 
-			<Border Grid.Column="1"
-                    BackgroundColor="#F3E8FF"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-				<Button Text="⌖&#10;Bản đồ"
-                        Clicked="OnMapCurrentClicked"
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="3"
+                                     VerticalOptions="Center">
+                    <Label x:Name="PageTitleLabel"
+                           FontSize="22"
+                           FontFamily="OpenSansSemibold"
+                           FontAttributes="Bold"
+                           TextColor="#173330" />
+                    <Label Text="{Binding NearestPoiText}"
+                           FontSize="13"
+                           TextColor="#617A74" />
+                </VerticalStackLayout>
+
+                <Border Grid.Column="2"
+                        BackgroundColor="#EAF4F1"
+                        Padding="12,8"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14"
+                        VerticalOptions="Center">
+                    <Label x:Name="MapBadgeLabel"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           TextColor="#1F6F64" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              Margin="16,0,16,10">
+            <Border BackgroundColor="White"
+                    Stroke="#D8E2DE"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 24">
+                <Border.Shadow>
+                    <Shadow Brush="#122F2A"
+                            Offset="0,10"
+                            Radius="18"
+                            Opacity="0.08" />
+                </Border.Shadow>
+
+                <Grid>
+                    <ContentView x:Name="MapHost"
+                                 HorizontalOptions="Fill"
+                                 VerticalOptions="Fill" />
+
+                    <Grid Padding="12"
+                          RowDefinitions="*,Auto"
+                          ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="10">
+                            <Button Text="+"
+                                    Clicked="OnZoomInClicked"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="21"
+                                    BackgroundColor="White"
+                                    TextColor="#173330"
+                                    BorderColor="#D8E2DE"
+                                    BorderWidth="1"
+                                    FontSize="20"
+                                    FontAttributes="Bold" />
+                            <Button Text="−"
+                                    Clicked="OnZoomOutClicked"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="21"
+                                    BackgroundColor="White"
+                                    TextColor="#173330"
+                                    BorderColor="#D8E2DE"
+                                    BorderWidth="1"
+                                    FontSize="20"
+                                    FontAttributes="Bold" />
+                        </VerticalStackLayout>
+
+                        <HorizontalStackLayout Grid.Row="0"
+                                               Grid.Column="1"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="End"
+                                               Spacing="10">
+                            <Button Text="◎"
+                                    Clicked="OnMyLocationClicked"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="21"
+                                    BackgroundColor="White"
+                                    TextColor="#173330"
+                                    BorderColor="#D8E2DE"
+                                    BorderWidth="1"
+                                    FontSize="16" />
+                            <Button Text="↺"
+                                    Clicked="OnHistoryClicked"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="21"
+                                    BackgroundColor="#EAF4F1"
+                                    TextColor="#1F6F64"
+                                    FontSize="16" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Margin="16,0,16,10"
+                BackgroundColor="White"
+                Stroke="#D8E2DE"
+                StrokeThickness="1"
+                Padding="16,14"
+                StrokeShape="RoundRectangle 20">
+            <Label x:Name="InfoLabel"
+                   FontSize="13"
+                   TextColor="#35534D"
+                   LineBreakMode="TailTruncation"
+                   MaxLines="2" />
+        </Border>
+
+        <Border x:Name="MiniPlayerContainer"
+                Grid.Row="3"
+                Margin="16,0,16,10"
+                IsVisible="{Binding ShowMiniPlayer}"
+                BackgroundColor="White"
+                Stroke="#CFE0DA"
+                StrokeThickness="1"
+                Padding="14"
+                StrokeShape="RoundRectangle 22">
+            <Border.Shadow>
+                <Shadow Brush="#12312B"
+                        Offset="0,8"
+                        Radius="16"
+                        Opacity="0.08" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="4">
+                <Border Grid.RowSpan="3"
+                        WidthRequest="58"
+                        HeightRequest="58"
+                        BackgroundColor="#EAF4F1"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18">
+                    <Grid>
+                        <Image Source="{Binding CurrentNarrationImageUrl}"
+                               Aspect="AspectFill" />
+                        <Border BackgroundColor="#DDEFE9"
+                                Opacity="0.35"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 18" />
+                        <Label Text="TTS"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#1F6F64" />
+                    </Grid>
+                </Border>
+
+                <HorizontalStackLayout Grid.Column="1"
+                                       Grid.ColumnSpan="2"
+                                       Spacing="8">
+                    <Border BackgroundColor="#EAF4F1"
+                            Padding="8,4"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 10">
+                        <Label Text="{Binding MiniPlayerStateTag}"
+                               FontSize="10"
+                               FontAttributes="Bold"
+                               TextColor="#1F6F64" />
+                    </Border>
+                    <Label Text="{Binding MiniPlayerStatusText}"
+                           FontSize="11"
+                           FontAttributes="Bold"
+                           TextColor="#48635F"
+                           VerticalTextAlignment="Center" />
+                </HorizontalStackLayout>
+
+                <VerticalStackLayout Grid.Row="1"
+                                     Grid.Column="1"
+                                     Spacing="2">
+                    <Label Text="{Binding CurrentNarrationTitle}"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           TextColor="#173330"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1" />
+                    <Label Text="{Binding CurrentNarrationSubtitle}"
+                           FontSize="11"
+                           TextColor="#617A74"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1" />
+                </VerticalStackLayout>
+
+                <Button x:Name="MiniPlayerStopButton"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Command="{Binding StopNarrationCommand}"
+                        WidthRequest="64"
+                        HeightRequest="34"
+                        CornerRadius="12"
+                        BackgroundColor="#173330"
+                        TextColor="White"
                         FontSize="11"
                         FontAttributes="Bold"
-                        LineBreakMode="WordWrap"
-                        BackgroundColor="Transparent"
-                        TextColor="#7C3AED"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-			</Border>
+                        IsEnabled="{Binding IsNarrationPlaying}" />
 
-			<Border Grid.Column="2"
-                    BackgroundColor="Transparent"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-				<Button Text="🕘&#10;Lịch sử"
+                <VerticalStackLayout Grid.Row="2"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="2"
+                                     Spacing="6">
+                    <ProgressBar Progress="{Binding MiniPlayerProgress}"
+                                 HeightRequest="4"
+                                 BackgroundColor="#DCE6E2"
+                                 ProgressColor="#1F6F64" />
+                    <Label Text="{Binding MiniPlayerHintText}"
+                           FontSize="10"
+                           TextColor="#617A74" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="4"
+                Margin="12,0,12,12"
+                BackgroundColor="White"
+                Stroke="#D8E2DE"
+                StrokeThickness="1"
+                Padding="8"
+                StrokeShape="RoundRectangle 22">
+            <Grid ColumnDefinitions="*,*,*,*"
+                  ColumnSpacing="6">
+                <Button x:Name="NavHomeButton"
+                        Grid.Column="0"
+                        Clicked="OnGoHomeClicked"
+                        BackgroundColor="Transparent"
+                        TextColor="#617A74"
+                        FontSize="11"
+                        Padding="4,8"
+                        ImageSource="nav_home.svg"
+                        ContentLayout="Top,4" />
+                <Border Grid.Column="1"
+                        BackgroundColor="#EAF4F1"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16">
+                    <Button x:Name="NavMapButton"
+                            Clicked="OnMapCurrentClicked"
+                            BackgroundColor="Transparent"
+                            TextColor="#1F6F64"
+                            FontSize="11"
+                            FontAttributes="Bold"
+                            Padding="4,8"
+                            ImageSource="nav_map.svg"
+                            ContentLayout="Top,4" />
+                </Border>
+                <Button x:Name="NavHistoryButton"
+                        Grid.Column="2"
                         Clicked="OnHistoryClicked"
-                        FontSize="11"
-                        FontAttributes="None"
-                        LineBreakMode="WordWrap"
                         BackgroundColor="Transparent"
-                        TextColor="#6B7280"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-			</Border>
-
-			<Border Grid.Column="3"
-                    BackgroundColor="Transparent"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16"
-                    Padding="0">
-				<Button Text="👤&#10;Người dùng"
+                        TextColor="#617A74"
+                        FontSize="11"
+                        Padding="4,8"
+                        ImageSource="nav_history.svg"
+                        ContentLayout="Top,4" />
+                <Button x:Name="NavAccountButton"
+                        Grid.Column="3"
                         Clicked="OnUserClicked"
-                        FontSize="11"
-                        FontAttributes="None"
-                        LineBreakMode="WordWrap"
                         BackgroundColor="Transparent"
-                        TextColor="#6B7280"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-			</Border>
-
-		</Grid>
-	</Grid>
+                        TextColor="#617A74"
+                        FontSize="11"
+                        Padding="4,8"
+                        ImageSource="nav_account.svg"
+                        ContentLayout="Top,4" />
+            </Grid>
+        </Border>
+    </Grid>
 </ContentPage>
+

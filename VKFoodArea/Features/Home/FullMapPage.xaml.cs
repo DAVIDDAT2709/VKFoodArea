@@ -26,6 +26,8 @@ public partial class FullMapPage : ContentPage
     private readonly GeofenceEngine _geofenceEngine;
     private readonly PoiRepository _poiRepository;
     private readonly IServiceProvider _serviceProvider;
+    private readonly AppTextService _text;
+    private readonly NarrationUiStateService _narrationUiState;
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
     private MemoryLayer? _currentLocationLayer;
@@ -51,7 +53,9 @@ public partial class FullMapPage : ContentPage
     NarrationService narrationService,
     GeofenceEngine geofenceEngine,
     PoiRepository poiRepository,
-    IServiceProvider serviceProvider)
+    IServiceProvider serviceProvider,
+    AppTextService text,
+    NarrationUiStateService narrationUiState)
     {
         InitializeComponent();
         _viewModel = viewModel;
@@ -59,13 +63,18 @@ public partial class FullMapPage : ContentPage
         _geofenceEngine = geofenceEngine;
         _poiRepository = poiRepository;
         _serviceProvider = serviceProvider;
+        _text = text;
+        _narrationUiState = narrationUiState;
         BindingContext = _viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
+        _narrationUiState.StateChanged += OnNarrationUiStateChanged;
 
+        ApplyLocalizedTextClean();
         await _viewModel.InitializeAsync();
         _allPois = (await _poiRepository.GetActiveAsync()).ToList();
         await InitializeGpsAsync();
@@ -76,6 +85,7 @@ public partial class FullMapPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         StopListeningLocation();
     }
 
@@ -88,7 +98,7 @@ public partial class FullMapPage : ContentPage
 
         if (permission != PermissionStatus.Granted)
         {
-            InfoLabel.Text = "Chưa được cấp quyền vị trí.";
+            InfoLabel.Text = _text["Map.InfoNoPermission"];
             return;
         }
 
@@ -116,19 +126,19 @@ public partial class FullMapPage : ContentPage
         }
         catch (FeatureNotSupportedException)
         {
-            InfoLabel.Text = "Thiết bị không hỗ trợ GPS.";
+            InfoLabel.Text = _text["Map.InfoGpsUnsupported"];
         }
         catch (FeatureNotEnabledException)
         {
-            InfoLabel.Text = "GPS đang tắt. Hãy bật vị trí trên thiết bị.";
+            InfoLabel.Text = _text["Map.InfoGpsDisabled"];
         }
         catch (PermissionException)
         {
-            InfoLabel.Text = "Ứng dụng chưa có quyền vị trí.";
+            InfoLabel.Text = _text["Map.InfoGpsPermission"];
         }
         catch
         {
-            InfoLabel.Text = "Không lấy được vị trí hiện tại.";
+            InfoLabel.Text = _text["Map.InfoGpsError"];
         }
     }
 
@@ -147,11 +157,11 @@ public partial class FullMapPage : ContentPage
             _isListeningLocation = success;
 
             if (!success)
-                InfoLabel.Text = "Không thể bắt đầu theo dõi GPS.";
+                InfoLabel.Text = _text["Map.InfoGpsTrackingFailed"];
         }
         catch
         {
-            InfoLabel.Text = "Lỗi khi bật theo dõi GPS.";
+            InfoLabel.Text = _text["Map.InfoGpsTrackingError"];
         }
     }
 
@@ -286,7 +296,7 @@ public partial class FullMapPage : ContentPage
     {
         if (_currentGpsLocation is null)
         {
-            InfoLabel.Text = "Chưa lấy được vị trí GPS.";
+            InfoLabel.Text = _text["Map.InfoLocationUnavailable"];
             return;
         }
 
@@ -294,7 +304,10 @@ public partial class FullMapPage : ContentPage
 
         if (!pois.Any())
         {
-            InfoLabel.Text = $"GPS đang hoạt động • {_currentGpsLocation.Latitude:F4}, {_currentGpsLocation.Longitude:F4}";
+            InfoLabel.Text = _text.Format(
+                "Map.InfoGpsActiveCoords",
+                _currentGpsLocation.Latitude,
+                _currentGpsLocation.Longitude);
             return;
         }
 
@@ -319,11 +332,14 @@ public partial class FullMapPage : ContentPage
 
         if (nearestPoi is null)
         {
-            InfoLabel.Text = $"GPS đang hoạt động • {_currentGpsLocation.Latitude:F4}, {_currentGpsLocation.Longitude:F4}";
+            InfoLabel.Text = _text.Format(
+                "Map.InfoGpsActiveCoords",
+                _currentGpsLocation.Latitude,
+                _currentGpsLocation.Longitude);
             return;
         }
 
-        InfoLabel.Text = $"Gần nhất: {nearestPoi.Name} • {nearestDistanceMeters:F0} m";
+        InfoLabel.Text = _text.Format("Map.InfoNearestDistance", nearestPoi.Name, nearestDistanceMeters);
     }
 
     private static PointFeature CreatePoiFeature(Poi poi)
@@ -420,7 +436,7 @@ public partial class FullMapPage : ContentPage
                 var poiIdObj = mapInfo.Feature["PoiId"];
 
                 if (!string.IsNullOrWhiteSpace(name))
-                    InfoLabel.Text = $"Quán: {name}";
+                    InfoLabel.Text = _text.Format("Map.InfoRestaurant", name);
 
                 if (poiIdObj is not null && int.TryParse(poiIdObj.ToString(), out var poiId))
                 {
@@ -436,7 +452,7 @@ public partial class FullMapPage : ContentPage
                         await _narrationService.StopAsync();
 
                         if (!string.IsNullOrWhiteSpace(name))
-                            InfoLabel.Text = $"Đã dừng thuyết minh: {name}";
+                            InfoLabel.Text = _text.Format("Map.InfoStoppedNarration", name);
 
                         return;
                     }
@@ -523,7 +539,37 @@ public partial class FullMapPage : ContentPage
         if (poi is null)
             return;
 
-        InfoLabel.Text = $"Tự động phát: {poi.Name} • {decision.DistanceMeters:F0} m";
+        InfoLabel.Text = _text.Format("Map.InfoAutoNarration", poi.Name, decision.DistanceMeters);
         await _narrationService.PlayPoiAsync(poi, "auto");
+    }
+
+    private void OnNarrationUiStateChanged(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(_viewModel.RefreshNarrationState);
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["Map.PageTitle"];
+        PageTitleLabel.Text = _text["Map.PageTitle"];
+        MapBadgeLabel.Text = _text["Nav.Map"];
+        MiniPlayerStopButton.Text = _text["Common.Stop"];
+        NavHomeButton.Text = $"🏠\n{_text["Nav.Home"]}";
+        NavMapButton.Text = $"🗺\n{_text["Nav.Map"]}";
+        NavHistoryButton.Text = $"🕘\n{_text["Nav.History"]}";
+        NavAccountButton.Text = $"👤\n{_text["Nav.Account"]}";
+        _viewModel.RefreshLocalizedText();
+
+        if (_currentGpsLocation is null)
+            InfoLabel.Text = _text["Map.InfoLocationUnavailable"];
+    }
+
+    private void ApplyLocalizedTextClean()
+    {
+        ApplyLocalizedText();
+        NavHomeButton.Text = _text["Nav.Home"];
+        NavMapButton.Text = _text["Nav.Map"];
+        NavHistoryButton.Text = _text["Nav.History"];
+        NavAccountButton.Text = _text["Nav.Account"];
     }
 }

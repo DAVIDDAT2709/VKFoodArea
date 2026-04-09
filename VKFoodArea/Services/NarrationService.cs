@@ -23,6 +23,7 @@ public class NarrationService
     private readonly AppLanguageService _languageService;
     private readonly AppSettingsService _settingsService;
     private readonly NarrationSyncService _narrationSyncService;
+    private readonly NarrationUiStateService _uiState;
 
     private static readonly SemaphoreSlim _playLock = new(1, 1);
     private static CancellationTokenSource? _ttsCts;
@@ -46,16 +47,20 @@ public class NarrationService
     private static string? _activeUtteranceId;
 #endif
 
+    public static event EventHandler<NarrationPlaybackStateChangedEventArgs>? PlaybackStateChanged;
+
     public NarrationService(
         AppDbContext db,
         AppLanguageService languageService,
         AppSettingsService settingsService,
-        NarrationSyncService narrationSyncService)
+        NarrationSyncService narrationSyncService,
+        NarrationUiStateService uiState)
     {
         _db = db;
         _languageService = languageService;
         _settingsService = settingsService;
         _narrationSyncService = narrationSyncService;
+        _uiState = uiState;
     }
 
     public async Task PlayPoiAsync(int poiId, string triggerSource = "manual", CancellationToken ct = default)
@@ -105,6 +110,8 @@ public class NarrationService
                 return;
 
             _currentPoiId = poi.Id;
+            _uiState.SetPlayback(true, poi, mode, narrationContent.SpokenLanguage);
+            PublishPlaybackState(true, poi.Name, mode, narrationContent.SpokenLanguage);
 
             await LogNarrationAsync(poi, narrationContent.SpokenLanguage, mode, triggerSource, requestToken);
             await SpeakTextAsync(narrationContent.Script, narrationContent.SpokenLanguage, requestToken);
@@ -125,6 +132,9 @@ public class NarrationService
 
             if (_currentPoiId == poi.Id)
                 _currentPoiId = null;
+
+            _uiState.SetPlayback(false, poi, mode: null, language: null);
+            PublishPlaybackState(false, poi.Name, null, null);
         }
     }
 
@@ -163,6 +173,8 @@ public class NarrationService
         }
 
         await StopCurrentPlaybackOnlyAsync();
+        _uiState.SetPlayback(false, poi: null, mode: null, language: null);
+        PublishPlaybackState(false, null, null, null);
     }
 
     private static CancellationTokenSource ReplaceRequestToken(CancellationToken externalToken = default)
@@ -694,5 +706,31 @@ public class NarrationService
         }
     }
 
+    private static void PublishPlaybackState(bool isPlaying, string? poiName, string? mode, string? language)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            PlaybackStateChanged?.Invoke(
+                null,
+                new NarrationPlaybackStateChangedEventArgs(isPlaying, poiName, mode, language));
+        });
+    }
+
     private sealed record ResolvedNarrationContent(string Script, string SpokenLanguage);
+}
+
+public sealed class NarrationPlaybackStateChangedEventArgs : EventArgs
+{
+    public NarrationPlaybackStateChangedEventArgs(bool isPlaying, string? poiName, string? mode, string? language)
+    {
+        IsPlaying = isPlaying;
+        PoiName = poiName;
+        Mode = mode;
+        Language = language;
+    }
+
+    public bool IsPlaying { get; }
+    public string? PoiName { get; }
+    public string? Mode { get; }
+    public string? Language { get; }
 }

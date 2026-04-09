@@ -1,43 +1,82 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="VKFoodArea.Features.Home.QrScannerPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
     BackgroundColor="Black"
-    Title="Quét QR">
+    NavigationPage.HasNavigationBar="False"
+    Title="">
 
-	<Grid RowDefinitions="*,Auto">
-
-		<zxing:CameraBarcodeReaderView
+    <Grid RowDefinitions="Auto,*,Auto">
+        <zxing:CameraBarcodeReaderView
             x:Name="QrReader"
+            Grid.RowSpan="3"
             BarcodesDetected="OnBarcodesDetected" />
 
-		<Grid Grid.Row="1"
+        <Border Margin="16,18,16,0"
+                Padding="16"
+                BackgroundColor="#8A071112"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 24">
+            <VerticalStackLayout Spacing="4">
+                <Label x:Name="ScannerTitleLabel"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       FontFamily="OpenSansSemibold"
+                       TextColor="White" />
+                <Label x:Name="ScannerSupportLabel"
+                       FontSize="13"
+                       TextColor="#E5F5F2" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Grid Grid.Row="1"
+              Padding="36">
+            <Border Stroke="#DDFFFFFF"
+                    StrokeThickness="3"
+                    BackgroundColor="#14FFFFFF"
+                    StrokeShape="RoundRectangle 26" />
+            <Border WidthRequest="84"
+                    HeightRequest="36"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    BackgroundColor="#E8FFFA"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 18">
+                <Label Text="MÃ QR"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       FontAttributes="Bold"
+                       FontSize="12"
+                       TextColor="#129488" />
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              Margin="16,0,16,22"
               Padding="16"
               BackgroundColor="#AA000000"
               ColumnDefinitions="*,Auto,Auto"
               ColumnSpacing="10">
-
-			<Label Text="Đưa mã QR của quán vào giữa khung hình"
+            <Label x:Name="ScannerHintLabel"
                    TextColor="White"
                    VerticalOptions="Center"
                    FontSize="14" />
 
-			<Button Grid.Column="1"
-                    Text="Đèn"
+            <Button x:Name="TorchButton"
+                    Grid.Column="1"
                     Clicked="OnTorchClicked"
                     BackgroundColor="#111827"
                     TextColor="White"
                     CornerRadius="12" />
 
-			<Button Grid.Column="2"
-                    Text="Đóng"
+            <Button x:Name="CloseButton"
+                    Grid.Column="2"
                     Clicked="OnCloseClicked"
                     BackgroundColor="#DC2626"
                     TextColor="White"
                     CornerRadius="12" />
-		</Grid>
-
-	</Grid>
+        </Grid>
+    </Grid>
 </ContentPage>

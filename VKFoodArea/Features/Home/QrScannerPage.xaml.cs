@@ -12,6 +12,8 @@ public partial class QrScannerPage : ContentPage
     private readonly PoiRepository _poiRepository;
     private readonly NarrationService _narrationService;
     private readonly FoodRepository _foodRepository;
+    private readonly AppTextService _text;
+    private readonly NarrationUiStateService _narrationUiState;
 
     private bool _isHandlingResult;
     private bool _isTorchOn;
@@ -20,7 +22,9 @@ public partial class QrScannerPage : ContentPage
         QrLookupService qrLookupService,
         PoiRepository poiRepository,
         NarrationService narrationService,
-        FoodRepository foodRepository)
+        FoodRepository foodRepository,
+        AppTextService text,
+        NarrationUiStateService narrationUiState)
     {
         InitializeComponent();
 
@@ -28,6 +32,8 @@ public partial class QrScannerPage : ContentPage
         _poiRepository = poiRepository;
         _narrationService = narrationService;
         _foodRepository = foodRepository;
+        _text = text;
+        _narrationUiState = narrationUiState;
 
         QrReader.Options = new BarcodeReaderOptions
         {
@@ -40,10 +46,11 @@ public partial class QrScannerPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        ApplyLocalizedText();
 
         if (!BarcodeScanning.IsSupported)
         {
-            await DisplayAlert("Không hỗ trợ", "Thiết bị này không có camera để quét QR.", "OK");
+            await DisplayAlert(_text["Qr.NotSupportedTitle"], _text["Qr.NotSupportedMessage"], _text["Common.Ok"]);
             await Navigation.PopAsync();
             return;
         }
@@ -54,13 +61,14 @@ public partial class QrScannerPage : ContentPage
 
         if (status != PermissionStatus.Granted)
         {
-            await DisplayAlert("Thiếu quyền", "Ứng dụng cần quyền camera để quét QR.", "OK");
+            await DisplayAlert(_text["Qr.PermissionTitle"], _text["Qr.PermissionMessage"], _text["Common.Ok"]);
             await Navigation.PopAsync();
             return;
         }
 
         _isHandlingResult = false;
         QrReader.IsDetecting = true;
+        TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
     }
 
     protected override void OnDisappearing()
@@ -91,10 +99,10 @@ public partial class QrScannerPage : ContentPage
             {
                 var retry = await MainThread.InvokeOnMainThreadAsync(() =>
                     DisplayAlert(
-                        "Không tìm thấy quán",
-                        $"QR không khớp dữ liệu web hoặc local: {value}",
-                        "Quét lại",
-                        "Đóng"));
+                        _text["Qr.NotFoundTitle"],
+                        _text.Format("Qr.NotFoundMessage", value),
+                        _text["Common.Again"],
+                        _text["Common.Close"]));
 
                 if (retry)
                 {
@@ -110,7 +118,12 @@ public partial class QrScannerPage : ContentPage
             }
 
             await MainThread.InvokeOnMainThreadAsync(() =>
-                Navigation.PushAsync(new PoiDetailPage(poi, _narrationService, _foodRepository)));
+                Navigation.PushAsync(new PoiDetailPage(
+                    poi,
+                    _narrationService,
+                    _foodRepository,
+                    _text,
+                    _narrationUiState)));
 
             _isHandlingResult = false;
         }
@@ -118,10 +131,10 @@ public partial class QrScannerPage : ContentPage
         {
             var retry = await MainThread.InvokeOnMainThreadAsync(() =>
                 DisplayAlert(
-                    "Lỗi kết nối QR",
+                    _text["Qr.ConnectionErrorTitle"],
                     ex.Message,
-                    "Quét lại",
-                    "Đóng"));
+                    _text["Common.Again"],
+                    _text["Common.Close"]));
 
             if (retry)
             {
@@ -139,6 +152,7 @@ public partial class QrScannerPage : ContentPage
     {
         _isTorchOn = !_isTorchOn;
         QrReader.IsTorchOn = _isTorchOn;
+        TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
     }
 
     private async void OnCloseClicked(object sender, EventArgs e)
@@ -170,5 +184,15 @@ public partial class QrScannerPage : ContentPage
         localPoi.TtsScriptJa = webPoi.TtsScriptJa;
         localPoi.TtsScriptDe = webPoi.TtsScriptDe;
         return localPoi;
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["Qr.PageTitle"];
+        ScannerTitleLabel.Text = _text["Qr.HeaderTitle"];
+        ScannerSupportLabel.Text = _text["Qr.SupportText"];
+        ScannerHintLabel.Text = _text["Qr.Hint"];
+        TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
+        CloseButton.Text = _text["Common.Close"];
     }
 }

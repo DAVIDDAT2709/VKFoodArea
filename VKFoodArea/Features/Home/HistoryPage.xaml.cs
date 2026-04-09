@@ -1,30 +1,37 @@
 ﻿using System.Collections.ObjectModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using VKFoodArea.Data;
+using VKFoodArea.Services;
 
 namespace VKFoodArea.Features.Home;
 
 public partial class HistoryPage : ContentPage
 {
     private readonly AppDbContext _db;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly AppTextService _text;
 
     public ObservableCollection<HistoryItemViewModel> Items { get; } = new();
 
     public string SummaryText =>
         Items.Count == 0
-            ? "Chưa có lượt nghe nào."
-            : $"{Items.Count} lượt nghe gần nhất";
+            ? _text["History.NoneSummary"]
+            : _text.Format("History.CountSummary", Items.Count);
 
-    public HistoryPage(AppDbContext db)
+    public HistoryPage(AppDbContext db, IServiceProvider serviceProvider, AppTextService text)
     {
         InitializeComponent();
         _db = db;
+        _serviceProvider = serviceProvider;
+        _text = text;
         BindingContext = this;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        ApplyLocalizedTextClean();
 
         try
         {
@@ -32,7 +39,7 @@ public partial class HistoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi lịch sử nghe", ex.Message, "OK");
+            await DisplayAlert(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
         }
     }
 
@@ -80,7 +87,7 @@ public partial class HistoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Lỗi lịch sử nghe", ex.Message, "OK");
+            await DisplayAlert(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
         }
     }
 
@@ -88,15 +95,15 @@ public partial class HistoryPage : ContentPage
     {
         if (Items.Count == 0)
         {
-            await DisplayAlert("Thông báo", "Hiện chưa có lịch sử để xóa.", "OK");
+            await DisplayAlert(_text["Common.Error"], _text["History.ClearEmptyMessage"], _text["Common.Ok"]);
             return;
         }
 
         var confirm = await DisplayAlert(
-            "Xóa lịch sử",
-            "Bạn có chắc muốn xóa toàn bộ lịch sử nghe không?",
-            "Xóa",
-            "Hủy");
+            _text["History.ClearTitle"],
+            _text["History.ClearMessage"],
+            _text["Common.Delete"],
+            _text["Common.Cancel"]);
 
         if (!confirm)
             return;
@@ -108,32 +115,71 @@ public partial class HistoryPage : ContentPage
         await LoadAsync();
     }
 
-    private static (string ModeText, string LanguageText) ParseMode(string? raw)
+    private async void OnGoHomeClicked(object sender, EventArgs e)
+    {
+        if (Navigation.NavigationStack.OfType<HomeDesignPage>().Any())
+        {
+            await Navigation.PopToRootAsync();
+            return;
+        }
+
+        Application.Current!.MainPage =
+            new NavigationPage(_serviceProvider.GetRequiredService<HomeDesignPage>());
+    }
+
+    private async void OnOpenFullMapClicked(object sender, EventArgs e)
+    {
+        var page = _serviceProvider.GetRequiredService<FullMapPage>();
+        await Navigation.PushAsync(page);
+    }
+
+    private async void OnHistoryClickedCurrent(object sender, EventArgs e)
+    {
+        await Task.CompletedTask;
+    }
+
+    private async void OnUserClicked(object sender, EventArgs e)
+    {
+        var page = _serviceProvider.GetRequiredService<User.UserPage>();
+        await Navigation.PushAsync(page);
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["History.PageTitle"];
+        HeaderTitleLabel.Text = _text["History.PageTitle"];
+        RefreshButton.Text = _text["Common.Refresh"];
+        ClearButton.Text = _text["Common.Delete"];
+        EmptyTitleLabel.Text = _text["History.EmptyTitle"];
+        EmptyMessageLabel.Text = _text["History.EmptyMessage"];
+        NavHomeButton.Text = $"🏠\n{_text["Nav.Home"]}";
+        NavMapButton.Text = $"🗺\n{_text["Nav.Map"]}";
+        NavHistoryButton.Text = $"🕘\n{_text["Nav.History"]}";
+        NavAccountButton.Text = $"👤\n{_text["Nav.Account"]}";
+        OnPropertyChanged(nameof(SummaryText));
+    }
+
+    private void ApplyLocalizedTextClean()
+    {
+        ApplyLocalizedText();
+        NavHomeButton.Text = _text["Nav.Home"];
+        NavMapButton.Text = _text["Nav.Map"];
+        NavHistoryButton.Text = _text["Nav.History"];
+        NavAccountButton.Text = _text["Nav.Account"];
+    }
+
+    private (string ModeText, string LanguageText) ParseMode(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
-            return ("TTS", "Tiếng Việt");
+            return ("TTS", _text.GetLanguageDisplay("vi"));
 
         var parts = raw.Split('-', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var mode = parts.Length > 0 ? parts[0] : "TTS";
         var language = parts.Length > 1 ? parts[1] : "vi";
 
-        var modeText = mode switch
-        {
-            "Auto" => "Tự động",
-            "Audio" => "Audio",
-            "TTS" => "TTS",
-            _ => mode
-        };
-
-        var languageText = language switch
-        {
-            "en" => "English",
-            "zh" => "中文",
-            "ja" => "日本語",
-            "de" => "Deutsch",
-            _ => "Tiếng Việt"
-        };
+        var modeText = _text.GetModeDisplay(mode);
+        var languageText = _text.GetLanguageDisplay(language);
 
         return (modeText, languageText);
     }

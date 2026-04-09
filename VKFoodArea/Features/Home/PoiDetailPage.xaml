@@ -1,64 +1,134 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="VKFoodArea.Features.Home.PoiDetailPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:VKFoodArea.Features.Home"
-    BackgroundColor="White"
+    BackgroundColor="#EEF4F1"
     x:DataType="local:PoiDetailPage"
     Title="{Binding Poi.Name}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="16">
+        <VerticalStackLayout Spacing="16" Padding="16,12,16,24">
+            <Grid HeightRequest="310">
+                <Border StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="32" />
+                    </Border.StrokeShape>
+                    <Grid>
+                        <Image Source="{Binding Poi.ImageUrl}"
+                               Aspect="AspectFill" />
+                        <Border BackgroundColor="#60102C2A"
+                                StrokeThickness="0" />
+                    </Grid>
+                </Border>
 
-            <Image Source="{Binding Poi.ImageUrl}"
-                   HeightRequest="240"
-                   Aspect="AspectFill" />
-
-            <Label Text="{Binding Poi.Name}"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   TextColor="#111827" />
-
-            <Label Text="{Binding Poi.Address}"
-                   FontSize="14"
-                   TextColor="#6B7280" />
-
-            <Border BackgroundColor="#F9FAFB"
-                    Stroke="#E5E7EB"
-                    Padding="14">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
-                </Border.StrokeShape>
-
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Giới thiệu"
-                           FontSize="16"
+                <Border Margin="14"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Start"
+                        BackgroundColor="#DFFFF8"
+                        StrokeThickness="0"
+                        Padding="12,7"
+                        StrokeShape="RoundRectangle 14">
+                    <Label x:Name="BadgeLabel"
+                           FontSize="11"
                            FontAttributes="Bold"
-                           TextColor="#111827" />
+                           TextColor="#158B7F" />
+                </Border>
 
+                <Border Margin="16"
+                        VerticalOptions="End"
+                        BackgroundColor="#E8123432"
+                        StrokeThickness="0"
+                        Padding="16,14"
+                        StrokeShape="RoundRectangle 22">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{Binding Poi.Name}"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               FontFamily="OpenSansSemibold"
+                               TextColor="White" />
+                        <Label Text="{Binding Poi.Address}"
+                               FontSize="13"
+                               TextColor="#D7FFFB" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="12">
+                <Border BackgroundColor="White"
+                        Stroke="#D7E4DF"
+                        StrokeThickness="1"
+                        Padding="14"
+                        StrokeShape="RoundRectangle 20">
+                    <VerticalStackLayout Spacing="4">
+                        <Label x:Name="AudioGuideLabel"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#189285" />
+                        <Label x:Name="PlayCardLabel"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#163632" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1"
+                        BackgroundColor="#E6FAF5"
+                        StrokeThickness="0"
+                        Padding="14"
+                        StrokeShape="RoundRectangle 20">
+                    <VerticalStackLayout Spacing="4">
+                        <Label x:Name="DetailTitleLabel"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#189285" />
+                        <Label Text="{Binding Poi.Name}"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#163632" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border BackgroundColor="White"
+                    Stroke="#D7E4DF"
+                    StrokeThickness="1"
+                    Padding="18"
+                    StrokeShape="RoundRectangle 24">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="DescriptionSectionLabel"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           FontFamily="OpenSansSemibold"
+                           TextColor="#163632" />
                     <Label Text="{Binding Poi.Description}"
                            FontSize="15"
-                           TextColor="#374151" />
+                           TextColor="#4F6B66" />
                 </VerticalStackLayout>
             </Border>
 
-            <Button Text="🔊 Nghe thuyết minh"
-                    Clicked="OnPlayNarrationClicked"
-                    BackgroundColor="#111827"
-                    TextColor="White"
-                    CornerRadius="14" />
-<Button Text="⏹ Dừng phát"
-        Clicked="OnStopNarrationClicked"
-        BackgroundColor="#DC2626"
-        TextColor="White"
-        CornerRadius="14" />
-            <Button Text="Book quán"
-                    Clicked="OnBookClicked"
-                    BackgroundColor="#16A34A"
-                    TextColor="White"
-                    CornerRadius="14" />
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="12">
+                <Button x:Name="PlayNarrationButton"
+                        Clicked="OnPlayNarrationClicked"
+                        BackgroundColor="#129488"
+                        TextColor="White"
+                        CornerRadius="18"
+                        HeightRequest="56"
+                        FontAttributes="Bold" />
 
+                <Button x:Name="StopNarrationButton"
+                        Grid.Column="1"
+                        Clicked="OnStopNarrationClicked"
+                        BackgroundColor="#101415"
+                        TextColor="White"
+                        CornerRadius="18"
+                        HeightRequest="56"
+                        FontAttributes="Bold" />
+            </Grid>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
+

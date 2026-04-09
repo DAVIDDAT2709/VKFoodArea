@@ -9,3 +9,13 @@ public sealed class HomePoiSuggestion
     public string Name => Poi.Name;
     public string Address => Poi.Address;
 }
+
+public sealed class FeaturedFoodCardViewModel
+{
+    public required FoodItem Food { get; init; }
+    public required string PriceText { get; init; }
+
+    public string Name => Food.Name;
+    public string RestaurantName => Food.RestaurantName;
+    public string ImageUrl => Food.ImageUrl;
+}
