@@ -15,6 +15,7 @@
         .ThenBy(x => x.PoiName)
         .Take(4)
         .ToList();
+    var latestItemId = items.FirstOrDefault()?.Id ?? 0;
 }
 
 <section class="page-header page-section">
@@ -135,6 +136,74 @@
         </div>
     }
 </section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const header = document.querySelector(".page-header.page-section");
+            if (!header) {
+                return;
+            }
+
+            let statusEl = document.getElementById("history-live-status");
+            if (!statusEl) {
+                const actions = document.createElement("div");
+                actions.className = "page-actions";
+
+                statusEl = document.createElement("span");
+                statusEl.id = "history-live-status";
+                statusEl.className = "soft-pill";
+                actions.appendChild(statusEl);
+                header.appendChild(actions);
+            }
+
+            const source = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(currentSource));
+            let lastItemId = @latestItemId;
+
+            const setStatus = (text) => {
+                statusEl.textContent = text;
+            };
+
+            const poll = async () => {
+                try {
+                    const query = new URLSearchParams({ top: "1" });
+                    if (source) {
+                        query.set("source", source);
+                    }
+
+                    const response = await fetch(`/api/narration-histories?${query.toString()}`, {
+                        cache: "no-store",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("fetch_failed");
+                    }
+
+                    const data = await response.json();
+                    const newestId = Array.isArray(data) && data.length > 0
+                        ? Number(data[0].id || 0)
+                        : 0;
+
+                    if (newestId !== lastItemId) {
+                        setStatus("Co luot nghe moi, dang cap nhat...");
+                        window.location.reload();
+                        return;
+                    }
+
+                    setStatus("Dang theo doi realtime App/Web");
+                } catch {
+                    setStatus("Mat ket noi realtime, dang giu du lieu hien tai");
+                }
+            };
+
+            setStatus("Dang theo doi realtime App/Web");
+            window.setInterval(poll, 5000);
+        })();
+    </script>
+}
 
 @functions {
     private static string MapSource(string source) =>

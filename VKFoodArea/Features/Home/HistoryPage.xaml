@@ -34,6 +34,9 @@
                 <Label Text="{Binding SummaryText}"
                        FontSize="14"
                        TextColor="#E8FFFC" />
+                <Label Text="{Binding SyncStatusText}"
+                       FontSize="12"
+                       TextColor="#D5FFF8" />
                 <Grid ColumnDefinitions="*,*"
                       ColumnSpacing="10">
                     <Button Grid.Column="0"

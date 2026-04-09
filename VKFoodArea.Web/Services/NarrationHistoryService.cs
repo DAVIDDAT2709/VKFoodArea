@@ -17,28 +17,26 @@ public class NarrationHistoryService : INarrationHistoryService
 
     public async Task<List<NarrationHistory>> GetAllAsync(string? source)
     {
-        var normalizedSource = NormalizeTriggerSource(source);
+        return await BuildFilteredQuery(source).ToListAsync();
+    }
 
-        var query = _context.NarrationHistories
-            .AsNoTracking()
-            .OrderByDescending(x => x.PlayedAt)
-            .AsQueryable();
+    public async Task<List<NarrationHistoryApiViewModel>> GetRecentForApiAsync(string? source, int top = 100)
+    {
+        var normalizedTop = Math.Clamp(top, 1, 200);
 
-        if (!string.IsNullOrWhiteSpace(normalizedSource))
-        {
-            if (normalizedSource == "gps")
+        return await BuildFilteredQuery(source)
+            .Take(normalizedTop)
+            .Select(x => new NarrationHistoryApiViewModel
             {
-                query = query.Where(x =>
-                    x.TriggerSource == "gps" ||
-                    x.TriggerSource == "auto");
-            }
-            else
-            {
-                query = query.Where(x => x.TriggerSource == normalizedSource);
-            }
-        }
-
-        return await query.ToListAsync();
+                Id = x.Id,
+                PoiId = x.PoiId,
+                PoiName = x.PoiName,
+                Language = x.Language,
+                TriggerSource = x.TriggerSource,
+                Mode = x.Mode,
+                PlayedAt = x.PlayedAt
+            })
+            .ToListAsync();
     }
 
     public async Task<NarrationHistoryApiViewModel?> CreateFromAppAsync(NarrationHistoryCreateApiViewModel vm)
@@ -92,6 +90,28 @@ public class NarrationHistoryService : INarrationHistoryService
                 PlayedAt = x.PlayedAt
             })
             .FirstOrDefaultAsync();
+    }
+
+    private IQueryable<NarrationHistory> BuildFilteredQuery(string? source)
+    {
+        var normalizedSource = NormalizeTriggerSource(source);
+
+        var query = _context.NarrationHistories
+            .AsNoTracking()
+            .OrderByDescending(x => x.PlayedAt)
+            .AsQueryable();
+
+        if (string.IsNullOrWhiteSpace(normalizedSource))
+            return query;
+
+        if (normalizedSource == "gps")
+        {
+            return query.Where(x =>
+                x.TriggerSource == "gps" ||
+                x.TriggerSource == "auto");
+        }
+
+        return query.Where(x => x.TriggerSource == normalizedSource);
     }
 
     private async Task<Poi?> ResolvePoiAsync(NarrationHistoryCreateApiViewModel vm)

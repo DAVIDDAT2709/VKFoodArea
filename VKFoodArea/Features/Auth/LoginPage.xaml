@@ -132,6 +132,9 @@
                                    FontAttributes="Bold"
                                    FontFamily="OpenSansSemibold"
                                    TextColor="#163632"/>
+                            <Label x:Name="LoginSubtitleLabel"
+                                   FontSize="13"
+                                   TextColor="#6D8681"/>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="8">
@@ -187,6 +190,36 @@
                                TextColor="#C23546"
                                FontSize="13"
                                LineBreakMode="WordWrap"/>
+
+                        <Border BackgroundColor="#F6FAF8"
+                                Stroke="#D7E4DF"
+                                StrokeThickness="1"
+                                Padding="14"
+                                StrokeShape="RoundRectangle 20">
+                            <Grid ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label x:Name="RegisterPromptLabel"
+                                           FontSize="14"
+                                           FontAttributes="Bold"
+                                           TextColor="#163632"/>
+                                    <Label x:Name="RegisterDescriptionLabel"
+                                           FontSize="12"
+                                           TextColor="#6D8681"/>
+                                </VerticalStackLayout>
+
+                                <Button x:Name="RegisterButton"
+                                        Grid.Column="1"
+                                        Clicked="OnRegisterClicked"
+                                        BackgroundColor="#E9F4F1"
+                                        TextColor="#0F6C62"
+                                        CornerRadius="16"
+                                        HeightRequest="44"
+                                        Padding="16,10"
+                                        FontAttributes="Bold"
+                                        VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

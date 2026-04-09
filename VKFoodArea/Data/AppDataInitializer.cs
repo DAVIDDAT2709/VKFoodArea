@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;
 using VKFoodArea.Models;
@@ -15,6 +16,8 @@ public static class AppDataInitializer
 #endif
 
         await db.Database.EnsureCreatedAsync();
+        await EnsureAppUsersEmailColumnAsync(db);
+        await SeedMissingEmailsAsync(db);
 
         if (!await db.AppUsers.AnyAsync())
         {
@@ -22,6 +25,7 @@ public static class AppDataInitializer
                 new AppUser
                 {
                     Username = "user",
+                    Email = "user@vkfoodarea.local",
                     PasswordHash = HashPassword("123456"),
                     FullName = "Người dùng demo",
                     Role = "User",
@@ -122,6 +126,54 @@ public static class AppDataInitializer
                     Category = "StreetFood",
                     DisplayOrder = 5
                 });
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task EnsureAppUsersEmailColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (await HasColumnAsync(connection, "AppUsers", "Email"))
+            return;
+
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE AppUsers ADD COLUMN Email TEXT NOT NULL DEFAULT '';");
+    }
+
+    private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info('{tableName}');";
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            if (reader.GetString(1).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static async Task SeedMissingEmailsAsync(AppDbContext db)
+    {
+        var users = await db.AppUsers
+            .Where(x => string.IsNullOrWhiteSpace(x.Email))
+            .ToListAsync();
+
+        if (users.Count == 0)
+            return;
+
+        foreach (var user in users)
+        {
+            var username = string.IsNullOrWhiteSpace(user.Username)
+                ? $"user{user.Id}"
+                : user.Username.Trim().ToLowerInvariant();
+
+            user.Email = $"{username}@vkfoodarea.local";
         }
 
         await db.SaveChangesAsync();

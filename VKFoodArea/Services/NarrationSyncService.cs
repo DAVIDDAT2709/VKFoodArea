@@ -49,6 +49,25 @@ public class NarrationSyncService
         }
     }
 
+    public async Task<IReadOnlyList<NarrationHistoryRemoteItem>> GetRecentHistoryAsync(
+        string? source = null,
+        int top = 100,
+        CancellationToken ct = default)
+    {
+        var normalizedTop = Math.Clamp(top, 1, 200);
+        var normalizedSource = NormalizeTriggerSource(source);
+        var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories?top={normalizedTop}";
+
+        if (!string.IsNullOrWhiteSpace(normalizedSource))
+            url += $"&source={Uri.EscapeDataString(normalizedSource)}";
+
+        using var response = await _httpClient.GetAsync(url, ct);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<List<NarrationHistoryRemoteItem>>(cancellationToken: ct)
+               ?? [];
+    }
+
     private static string NormalizeTriggerSource(string? triggerSource)
     {
         var normalized = (triggerSource ?? "manual").Trim().ToLowerInvariant();

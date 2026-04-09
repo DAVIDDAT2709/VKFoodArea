@@ -60,15 +60,21 @@ public partial class LoginPage : ContentPage
             return;
         }
 
-        var success = await _authService.LoginAsync(username, password);
+        var result = await _authService.LoginAsync(username, password);
 
-        if (!success)
+        if (!result.IsSuccess)
         {
-            MessageLabel.Text = _text["Login.InvalidError"];
+            MessageLabel.Text = _text[result.ErrorKey ?? "Login.InvalidError"];
             return;
         }
 
         SelectionOverlay.IsVisible = true;
+    }
+
+    private async void OnRegisterClicked(object sender, EventArgs e)
+    {
+        var page = _serviceProvider.GetRequiredService<RegisterPage>();
+        await Navigation.PushAsync(page);
     }
 
     private void OnDomesticSelected(object sender, TappedEventArgs e)
@@ -118,11 +124,15 @@ public partial class LoginPage : ContentPage
     {
         Title = _text["Login.PageTitle"];
         LoginTitleLabel.Text = _text["Login.Title"];
+        LoginSubtitleLabel.Text = _text["Login.Subtitle"];
         UsernameLabel.Text = _text["Login.UsernameLabel"];
         UsernameEntry.Placeholder = _text["Login.UsernamePlaceholder"];
         PasswordLabel.Text = _text["Login.PasswordLabel"];
         PasswordEntry.Placeholder = _text["Login.PasswordPlaceholder"];
         LoginButton.Text = _text["Login.Submit"];
+        RegisterPromptLabel.Text = _text["Login.RegisterPrompt"];
+        RegisterDescriptionLabel.Text = _text["Login.RegisterDescription"];
+        RegisterButton.Text = _text["Login.RegisterButton"];
         SelectionTitleLabel.Text = _text["Login.SelectionTitle"];
         SelectionSubtitleLabel.Text = _text["Login.SelectionSubtitle"];
         DomesticTitleLabel.Text = _text["Login.DomesticTitle"];

@@ -47,6 +47,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<LanguageSelectionFlowService>();
         builder.Services.AddSingleton<ApiBaseUrlService>();
         builder.Services.AddSingleton<NarrationUiStateService>();
+        builder.Services.AddSingleton<SessionStoreService>();
 
         builder.Services.AddHttpClient<QrLookupService>(client =>
         {
@@ -74,6 +75,7 @@ public static class MauiProgram
         builder.Services.AddTransient<HistoryPage>();
         builder.Services.AddTransient<FullMapPage>();
         builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<RegisterPage>();
         builder.Services.AddTransient<PoiDetailPage>();
         builder.Services.AddTransient<QrScannerPage>();
         builder.Services.AddTransient<SettingsPage>();

@@ -15,6 +15,13 @@ public class NarrationHistoryApiController : ControllerBase
         _narrationHistoryService = narrationHistoryService;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetRecent([FromQuery] string? source, [FromQuery] int top = 100)
+    {
+        var items = await _narrationHistoryService.GetRecentForApiAsync(source, top);
+        return Ok(items);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {

@@ -209,71 +209,77 @@
                                TextColor="#173330" />
 
                         <CollectionView x:Name="FeaturedFoodCollectionView"
-                                        HeightRequest="246"
+                                        HeightRequest="154"
                                         SelectionMode="None">
                             <CollectionView.ItemsLayout>
                                 <LinearItemsLayout Orientation="Horizontal"
-                                                   ItemSpacing="10"
+                                                   ItemSpacing="6"
                                                    SnapPointsType="MandatorySingle"
                                                    SnapPointsAlignment="Start" />
                             </CollectionView.ItemsLayout>
 
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="home:FeaturedFoodCardViewModel">
-                                    <Border WidthRequest="220"
+                                    <Border WidthRequest="124"
                                             BackgroundColor="White"
                                             Stroke="#DDE6E2"
                                             StrokeThickness="1"
                                             Padding="0"
-                                            StrokeShape="RoundRectangle 24">
+                                            StrokeShape="RoundRectangle 20">
                                         <Border.Shadow>
                                             <Shadow Brush="#12312B"
-                                                    Offset="0,8"
-                                                    Radius="14"
-                                                    Opacity="0.06" />
+                                                    Offset="0,4"
+                                                    Radius="10"
+                                                    Opacity="0.04" />
                                         </Border.Shadow>
 
-                                        <Grid RowDefinitions="136,Auto">
+                                        <Grid RowDefinitions="72,Auto">
                                             <Border StrokeThickness="0">
                                                 <Border.StrokeShape>
-                                                    <RoundRectangle CornerRadius="24,24,0,0" />
+                                                    <RoundRectangle CornerRadius="20,20,0,0" />
                                                 </Border.StrokeShape>
-                                                <Image Source="{Binding ImageUrl}"
-                                                       Aspect="AspectFill" />
+                                                <Grid>
+                                                    <Image Source="{Binding ImageUrl}"
+                                                           Aspect="AspectFill" />
+
+                                                    <Border Margin="8,0,8,8"
+                                                            Padding="7,3"
+                                                            HorizontalOptions="Start"
+                                                            VerticalOptions="End"
+                                                            BackgroundColor="#FFFBF2"
+                                                            StrokeThickness="0"
+                                                            StrokeShape="RoundRectangle 10">
+                                                        <Label Text="{Binding PriceText}"
+                                                               FontSize="9"
+                                                               FontAttributes="Bold"
+                                                               TextColor="#9C6A16"
+                                                               LineBreakMode="TailTruncation"
+                                                               MaxLines="1" />
+                                                    </Border>
+                                                </Grid>
                                             </Border>
 
                                             <VerticalStackLayout Grid.Row="1"
-                                                                 Padding="14,14,14,16"
-                                                                 Spacing="10">
-                                                <Border BackgroundColor="#EEF7F3"
-                                                        Padding="10,6"
-                                                        HorizontalOptions="Start"
-                                                        StrokeThickness="0"
-                                                        StrokeShape="RoundRectangle 14">
-                                                    <Label Text="{Binding RestaurantName}"
-                                                           FontSize="11.5"
-                                                           FontAttributes="Bold"
-                                                           TextColor="#176B61"
-                                                           LineBreakMode="TailTruncation"
-                                                           MaxLines="1" />
-                                                </Border>
-
+                                                                 Padding="10,8,10,10"
+                                                                 Spacing="6">
                                                 <Label Text="{Binding Name}"
-                                                       FontSize="16"
+                                                       FontSize="12.5"
                                                        FontAttributes="Bold"
                                                        TextColor="#173330"
                                                        LineBreakMode="WordWrap"
                                                        MaxLines="2" />
 
-                                                <Border BackgroundColor="#F0F7F4"
-                                                        Padding="10,6"
+                                                <Border BackgroundColor="#EEF7F3"
+                                                        Padding="8,4"
                                                         HorizontalOptions="Start"
                                                         StrokeThickness="0"
-                                                        StrokeShape="RoundRectangle 14">
-                                                    <Label Text="{Binding PriceText}"
-                                                           FontSize="11.5"
+                                                        StrokeShape="RoundRectangle 10">
+                                                    <Label Text="{Binding RestaurantName}"
+                                                           FontSize="9.5"
                                                            FontAttributes="Bold"
-                                                           TextColor="#1F6F64" />
+                                                           TextColor="#176B61"
+                                                           LineBreakMode="TailTruncation"
+                                                           MaxLines="1" />
                                                 </Border>
                                             </VerticalStackLayout>
                                         </Grid>

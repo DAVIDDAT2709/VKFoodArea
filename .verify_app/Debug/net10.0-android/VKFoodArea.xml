@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VKFoodArea</name>
+    </assembly>
+    <members>
+        <member name="F:VKFoodArea.Services.GeofenceEngine.PriorityTieThresholdMeters">
+            <summary>
+            Nếu khoảng cách giữa 2 quán chỉ lệch rất ít thì mới dùng Priority để phân xử.
+            </summary>
+        </member>
+        <member name="T:VKFoodArea.Resource">
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
+        </member>
+    </members>
+</doc>

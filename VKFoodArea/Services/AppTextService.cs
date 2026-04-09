@@ -191,12 +191,24 @@ public sealed partial class AppTextService
     {
         return new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal)
         {
-            ["vi"] = CreateVietnameseMap(),
-            ["en"] = CreateEnglishMap(),
-            ["zh"] = CreateChineseMap(),
-            ["ja"] = CreateJapaneseMap(),
-            ["de"] = CreateGermanMap()
+            ["vi"] = MergeMap(CreateVietnameseMap(), CreateVietnameseAuthOverrides()),
+            ["en"] = MergeMap(CreateEnglishMap(), CreateEnglishAuthOverrides()),
+            ["zh"] = MergeMap(CreateChineseMap(), CreateChineseAuthOverrides()),
+            ["ja"] = MergeMap(CreateJapaneseMap(), CreateJapaneseAuthOverrides()),
+            ["de"] = MergeMap(CreateGermanMap(), CreateGermanAuthOverrides())
         };
+    }
+
+    private static IReadOnlyDictionary<string, string> MergeMap(
+        IReadOnlyDictionary<string, string> source,
+        IReadOnlyDictionary<string, string> overrides)
+    {
+        var merged = new Dictionary<string, string>(source, StringComparer.Ordinal);
+
+        foreach (var pair in overrides)
+            merged[pair.Key] = pair.Value;
+
+        return merged;
     }
 }
 
