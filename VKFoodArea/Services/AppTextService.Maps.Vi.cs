@@ -40,6 +40,7 @@ public sealed partial class AppTextService
             ["Login.EnterButton"] = "Vào ứng dụng",
             ["Login.BackButton"] = "Quay lại",
             ["Home.SearchPlaceholder"] = "Tìm quán hoặc món ăn",
+            ["Home.SearchEmptyMessage"] = "Không tìm thấy quán phù hợp.",
             ["Home.FeaturedFoods"] = "Món ăn nổi bật",
             ["Home.FeaturedPois"] = "Quán nổi bật",
             ["Home.NoNarrationTitle"] = "Chưa có thuyết minh",

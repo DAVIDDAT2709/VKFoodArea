@@ -11,13 +11,21 @@ public class AuthService
 {
     private readonly AppDbContext _db;
     private readonly SessionStoreService _sessionStore;
+    private readonly AppSettingsService _settingsService;
+    private readonly AppLanguageService _languageService;
 
     public AppUser? CurrentUser { get; private set; }
 
-    public AuthService(AppDbContext db, SessionStoreService sessionStore)
+    public AuthService(
+        AppDbContext db,
+        SessionStoreService sessionStore,
+        AppSettingsService settingsService,
+        AppLanguageService languageService)
     {
         _db = db;
         _sessionStore = sessionStore;
+        _settingsService = settingsService;
+        _languageService = languageService;
     }
 
     public async Task<AuthActionResult> LoginAsync(string identifier, string password)
@@ -35,6 +43,7 @@ public class AuthService
             return AuthActionResult.Fail("Login.DisabledError");
 
         CurrentUser = user;
+        ApplyUserSoundSettings(user);
         _sessionStore.Save(user.Id);
         return AuthActionResult.Success(user);
     }
@@ -72,6 +81,8 @@ public class AuthService
             Email = normalizedEmail,
             Username = username,
             PasswordHash = HashPassword(password),
+            NarrationLanguage = "vi",
+            NarrationPlaybackMode = "TTS",
             Role = "User",
             IsActive = true
         };
@@ -100,6 +111,7 @@ public class AuthService
         }
 
         CurrentUser = user;
+        ApplyUserSoundSettings(user);
         return true;
     }
 
@@ -115,6 +127,19 @@ public class AuthService
     public void ReplaceCurrentUser(AppUser? user)
     {
         CurrentUser = user;
+
+        if (user is not null)
+            ApplyUserSoundSettings(user);
+    }
+
+    private void ApplyUserSoundSettings(AppUser user)
+    {
+        var language = AppLanguageService.NormalizeLanguage(user.NarrationLanguage);
+        var playbackMode = SoundSettingsService.NormalizePlaybackMode(user.NarrationPlaybackMode);
+
+        _settingsService.NarrationLanguage = language;
+        _settingsService.NarrationOutputMode = playbackMode;
+        _languageService.CurrentLanguage = language;
     }
 
     private async Task<AppUser?> FindUserAsync(string normalizedIdentifier)

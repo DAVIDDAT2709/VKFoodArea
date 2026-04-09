@@ -67,6 +67,9 @@ public static class MauiProgram
         builder.Services.AddTransient<NarrationService>();
         builder.Services.AddTransient<AccountService>();
         builder.Services.AddTransient<HistoryService>();
+        builder.Services.AddTransient<PoiService>();
+        builder.Services.AddTransient<SoundSettingsService>();
+        builder.Services.AddTransient<TtsAudioPreviewService>();
         builder.Services.AddTransient<PoiRepository>();
         builder.Services.AddTransient<FoodRepository>();
         builder.Services.AddSingleton<AuthService>();
@@ -74,6 +77,7 @@ public static class MauiProgram
         builder.Services.AddTransient<HomeViewModel>();
         builder.Services.AddTransient<HistoryViewModel>();
         builder.Services.AddTransient<AccountSettingsViewModel>();
+        builder.Services.AddTransient<SoundSettingsViewModel>();
 
         builder.Services.AddTransient<HomeDesignPage>();
         builder.Services.AddTransient<HistoryPage>();

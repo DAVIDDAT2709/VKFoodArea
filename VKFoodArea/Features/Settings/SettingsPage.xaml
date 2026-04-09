@@ -19,77 +19,15 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="30" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="8">
+                <VerticalStackLayout Spacing="6">
                     <Label x:Name="HeaderTitleLabel"
                            FontSize="27"
                            FontAttributes="Bold"
                            FontFamily="OpenSansSemibold"
                            TextColor="White" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="White"
-                    Stroke="#D7E4DF"
-                    StrokeThickness="1"
-                    Padding="16"
-                    StrokeShape="RoundRectangle 22">
-                <VerticalStackLayout Spacing="12">
-                    <Label x:Name="ProfileSectionLabel"
-                           FontSize="17"
-                           FontAttributes="Bold"
-                           FontFamily="OpenSansSemibold"
-                           TextColor="#163632" />
-
-                    <Grid ColumnDefinitions="*,Auto"
-                          RowDefinitions="Auto,Auto,Auto"
-                          ColumnSpacing="12"
-                          RowSpacing="10">
-                        <Label x:Name="UsernameLabel"
-                               FontSize="13"
-                               TextColor="#6A8781" />
-                        <Label x:Name="UsernameValueLabel"
-                               Grid.Column="1"
-                               FontSize="13"
-                               FontAttributes="Bold"
-                               TextColor="#163632" />
-
-                        <Label x:Name="FullNameLabel"
-                               Grid.Row="1"
-                               FontSize="13"
-                               TextColor="#6A8781" />
-                        <Border Grid.Row="1"
-                                Grid.Column="1"
-                                BackgroundColor="#F7FBF9"
-                                Stroke="#D7E4DF"
-                                StrokeThickness="1"
-                                Padding="10,4"
-                                StrokeShape="RoundRectangle 14">
-                            <Entry x:Name="FullNameEntry"
-                                   BackgroundColor="Transparent"
-                                   TextColor="#163632"
-                                   PlaceholderColor="#86A29B"
-                                   FontSize="14" />
-                        </Border>
-
-                        <Label x:Name="EmailLabel"
-                               Grid.Row="2"
-                               FontSize="13"
-                               TextColor="#6A8781" />
-                        <Border Grid.Row="2"
-                                Grid.Column="1"
-                                BackgroundColor="#F7FBF9"
-                                Stroke="#D7E4DF"
-                                StrokeThickness="1"
-                                Padding="10,4"
-                                StrokeShape="RoundRectangle 14">
-                            <Entry x:Name="EmailEntry"
-                                   BackgroundColor="Transparent"
-                                   TextColor="#163632"
-                                   PlaceholderColor="#86A29B"
-                                   FontSize="14"
-                                   Keyboard="Email" />
-                        </Border>
-                    </Grid>
+                    <Label x:Name="HeaderSubtitleLabel"
+                           FontSize="13"
+                           TextColor="#E8FFFC" />
                 </VerticalStackLayout>
             </Border>
 

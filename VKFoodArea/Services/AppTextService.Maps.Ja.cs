@@ -40,6 +40,7 @@ public sealed partial class AppTextService
             ["Login.EnterButton"] = "アプリに入る",
             ["Login.BackButton"] = "戻る",
             ["Home.SearchPlaceholder"] = "店名や料理を検索",
+            ["Home.SearchEmptyMessage"] = "一致する店舗が見つかりませんでした。",
             ["Home.FeaturedFoods"] = "注目の料理",
             ["Home.FeaturedPois"] = "注目スポット",
             ["Home.NoNarrationTitle"] = "まだガイドがありません",

@@ -75,13 +75,15 @@
             </Border>
 
             <Border x:Name="SearchSuggestionContainer"
-                    IsVisible="False"
+                    IsVisible="{Binding ShowSearchSuggestions}"
                     BackgroundColor="White"
                     Stroke="#D8E2DE"
                     StrokeThickness="1"
                     Padding="8"
                     StrokeShape="RoundRectangle 18">
                 <CollectionView x:Name="SearchSuggestionCollectionView"
+                                ItemsSource="{Binding SearchSuggestions}"
+                                HeightRequest="{Binding SearchSuggestionHeight}"
                                 SelectionMode="Single"
                                 SelectionChanged="OnSuggestionSelected">
                     <CollectionView.ItemsLayout>
@@ -114,6 +116,13 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </Border>
+
+            <Label x:Name="SearchEmptyStateLabel"
+                   IsVisible="{Binding ShowSearchEmptyState}"
+                   Text="{Binding SearchEmptyMessage}"
+                   FontSize="12"
+                   TextColor="#8C4B39"
+                   Margin="4,0,4,0" />
         </VerticalStackLayout>
 
         <Grid Grid.Row="1"
@@ -196,6 +205,7 @@
 
         <CollectionView x:Name="PoiCollectionView"
                         Grid.Row="2"
+                        ItemsSource="{Binding DisplayedPois}"
                         Margin="16,0,16,8"
                         SelectionMode="None">
             <CollectionView.Header>

@@ -17,7 +17,9 @@ public static class AppDataInitializer
 
         await db.Database.EnsureCreatedAsync();
         await EnsureAppUsersEmailColumnAsync(db);
+        await EnsureAppUsersSoundSettingsColumnsAsync(db);
         await SeedMissingEmailsAsync(db);
+        await SeedMissingSoundSettingsAsync(db);
 
         if (!await db.AppUsers.AnyAsync())
         {
@@ -28,6 +30,8 @@ public static class AppDataInitializer
                     Email = "user@vkfoodarea.local",
                     PasswordHash = HashPassword("123456"),
                     FullName = "Người dùng demo",
+                    NarrationLanguage = "vi",
+                    NarrationPlaybackMode = "TTS",
                     Role = "User",
                     IsActive = true
                 });
@@ -143,6 +147,24 @@ public static class AppDataInitializer
             "ALTER TABLE AppUsers ADD COLUMN Email TEXT NOT NULL DEFAULT '';");
     }
 
+    private static async Task EnsureAppUsersSoundSettingsColumnsAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "AppUsers", "NarrationLanguage"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE AppUsers ADD COLUMN NarrationLanguage TEXT NOT NULL DEFAULT 'vi';");
+        }
+
+        if (!await HasColumnAsync(connection, "AppUsers", "NarrationPlaybackMode"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE AppUsers ADD COLUMN NarrationPlaybackMode TEXT NOT NULL DEFAULT 'TTS';");
+        }
+    }
+
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
     {
         await using var command = connection.CreateCommand();
@@ -177,6 +199,30 @@ public static class AppDataInitializer
         }
 
         await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedMissingSoundSettingsAsync(AppDbContext db)
+    {
+        var users = await db.AppUsers.ToListAsync();
+        var hasChanges = false;
+
+        foreach (var user in users)
+        {
+            if (string.IsNullOrWhiteSpace(user.NarrationLanguage))
+            {
+                user.NarrationLanguage = "vi";
+                hasChanges = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(user.NarrationPlaybackMode))
+            {
+                user.NarrationPlaybackMode = "TTS";
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges)
+            await db.SaveChangesAsync();
     }
 
     private static string HashPassword(string password)

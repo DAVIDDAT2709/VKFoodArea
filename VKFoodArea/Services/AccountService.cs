@@ -69,10 +69,13 @@ public class AccountService
 
         user.FullName = normalizedFullName;
         user.Email = normalizedEmail;
-        await _db.SaveChangesAsync(ct);
 
         var normalizedLanguage = AppLanguageService.NormalizeLanguage(request.Language);
         var normalizedPlaybackMode = NormalizePlaybackMode(request.PlaybackMode);
+
+        user.NarrationLanguage = normalizedLanguage;
+        user.NarrationPlaybackMode = normalizedPlaybackMode;
+        await _db.SaveChangesAsync(ct);
 
         _settingsService.NarrationLanguage = normalizedLanguage;
         _settingsService.NarrationOutputMode = normalizedPlaybackMode;
@@ -91,8 +94,8 @@ public class AccountService
             user.Email,
             user.Role,
             user.IsActive,
-            AppLanguageService.NormalizeLanguage(_settingsService.NarrationLanguage),
-            NormalizePlaybackMode(_settingsService.NarrationOutputMode));
+            AppLanguageService.NormalizeLanguage(user.NarrationLanguage ?? _settingsService.NarrationLanguage),
+            NormalizePlaybackMode(user.NarrationPlaybackMode ?? _settingsService.NarrationOutputMode));
     }
 
     private static string NormalizeEmail(string? email)
@@ -130,6 +133,8 @@ public class AccountService
             Email = user.Email,
             PasswordHash = user.PasswordHash,
             FullName = user.FullName,
+            NarrationLanguage = user.NarrationLanguage,
+            NarrationPlaybackMode = user.NarrationPlaybackMode,
             Role = user.Role,
             IsActive = user.IsActive
         };

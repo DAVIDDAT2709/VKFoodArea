@@ -40,6 +40,7 @@ public sealed partial class AppTextService
             ["Login.EnterButton"] = "进入应用",
             ["Login.BackButton"] = "返回",
             ["Home.SearchPlaceholder"] = "搜索餐馆或菜品",
+            ["Home.SearchEmptyMessage"] = "未找到匹配的店铺。",
             ["Home.FeaturedFoods"] = "推荐菜品",
             ["Home.FeaturedPois"] = "推荐地点",
             ["Home.NoNarrationTitle"] = "尚未开始讲解",

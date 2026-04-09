@@ -6,14 +6,13 @@ using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices.Sensors;
 using VKFoodArea.Models;
-using VKFoodArea.Repositories;
 using VKFoodArea.Services;
 
 namespace VKFoodArea.Features.Home;
 
 public class HomeViewModel : INotifyPropertyChanged
 {
-    private readonly PoiRepository _poiRepository;
+    private readonly PoiService _poiService;
     private readonly LocationTrackerService _locationTrackerService;
     private readonly GeofenceEngine _geofenceEngine;
     private readonly NarrationService _narrationService;
@@ -31,8 +30,16 @@ public class HomeViewModel : INotifyPropertyChanged
     private string _currentNarrationImageUrl = string.Empty;
     private bool _isNarrationPlaying;
     private bool _showMiniPlayer;
+    private bool _showSearchSuggestions;
+    private bool _showSearchEmptyState;
+    private double _searchSuggestionHeight;
+    private readonly List<Poi> _allPois = [];
+    private List<Poi> _defaultPois = [];
+    private string _currentSearchKeyword = string.Empty;
 
     public ObservableCollection<Poi> NearbyPois { get; } = new();
+    public ObservableCollection<Poi> DisplayedPois { get; } = new();
+    public ObservableCollection<HomePoiSuggestion> SearchSuggestions { get; } = new();
 
     public ObservableCollection<LanguageOption> LanguageOptions { get; } = new()
     {
@@ -49,6 +56,40 @@ public class HomeViewModel : INotifyPropertyChanged
         "Audio",
         "TTS"
     };
+
+    public IReadOnlyList<Poi> AllPois => _allPois;
+
+    public bool ShowSearchSuggestions
+    {
+        get => _showSearchSuggestions;
+        private set
+        {
+            _showSearchSuggestions = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ShowSearchEmptyState
+    {
+        get => _showSearchEmptyState;
+        private set
+        {
+            _showSearchEmptyState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public double SearchSuggestionHeight
+    {
+        get => _searchSuggestionHeight;
+        private set
+        {
+            _searchSuggestionHeight = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string SearchEmptyMessage => _text["Home.SearchEmptyMessage"];
 
     public ICommand PlayPoiAudioCommand { get; }
     public ICommand StopNarrationCommand { get; }
@@ -123,7 +164,7 @@ public class HomeViewModel : INotifyPropertyChanged
             : _text.Format("Home.NearestPrefix", NearestPoi.Name);
 
     public HomeViewModel(
-        PoiRepository poiRepository,
+        PoiService poiService,
         LocationTrackerService locationTrackerService,
         GeofenceEngine geofenceEngine,
         NarrationService narrationService,
@@ -133,7 +174,7 @@ public class HomeViewModel : INotifyPropertyChanged
         AppTextService text,
         NarrationUiStateService narrationUiState)
     {
-        _poiRepository = poiRepository;
+        _poiService = poiService;
         _locationTrackerService = locationTrackerService;
         _geofenceEngine = geofenceEngine;
         _narrationService = narrationService;
@@ -229,16 +270,19 @@ public class HomeViewModel : INotifyPropertyChanged
     {
         LoadNarrationSettings();
         RefreshNarrationState();
-        var pois = await _poiRepository.GetActiveAsync();
+        var pois = await _poiService.GetAllPoisAsync();
 
         if (_isInitialized)
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                UpdateNearbyPois(CurrentLocation, pois);
+                ApplyPoiCatalog(CurrentLocation, pois);
                 UpdateNearestPoi(CurrentLocation, pois);
                 StatusText = BuildStatusText(_text.Format("Status.DisplayingPoisCount", pois.Count));
             });
+
+            if (!string.IsNullOrWhiteSpace(_currentSearchKeyword))
+                await SearchPoisAsync(_currentSearchKeyword, true);
 
             _ = RefreshPoisFromWebAsync();
             return;
@@ -247,7 +291,7 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             CurrentLocation = DefaultLocation;
-            UpdateNearbyPois(DefaultLocation, pois);
+            ApplyPoiCatalog(DefaultLocation, pois);
             UpdateNearestPoi(DefaultLocation, pois);
             StatusText = BuildStatusText(_text.Format("Status.LoadingLocalAndSyncing", pois.Count));
         });
@@ -259,7 +303,7 @@ public class HomeViewModel : INotifyPropertyChanged
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 CurrentLocation = DefaultLocation;
-                UpdateNearbyPois(DefaultLocation, pois);
+                ApplyPoiCatalog(DefaultLocation, pois);
                 UpdateNearestPoi(DefaultLocation, pois);
                 StatusText = BuildStatusText(_text.Format("Status.LocationPermissionMissing", pois.Count));
             });
@@ -276,9 +320,12 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             CurrentLocation = location;
-            UpdateNearbyPois(location, pois);
+            ApplyPoiCatalog(location, pois);
             UpdateNearestPoi(location, pois);
         });
+
+        if (!string.IsNullOrWhiteSpace(_currentSearchKeyword))
+            await SearchPoisAsync(_currentSearchKeyword, true);
 
         var started = await _locationTrackerService.StartListeningAsync();
 
@@ -297,7 +344,7 @@ public class HomeViewModel : INotifyPropertyChanged
         PoiSyncService.PoiSyncResult? syncResult = null,
         string? detail = null)
     {
-        var pois = await _poiRepository.GetActiveAsync();
+        var pois = await _poiService.GetAllPoisAsync();
 
         if (syncResult is not null)
             _syncSummary = BuildSyncSummary(syncResult, pois.Count);
@@ -305,21 +352,24 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             var currentLocation = CurrentLocation;
-            UpdateNearbyPois(currentLocation, pois);
+            ApplyPoiCatalog(currentLocation, pois);
             UpdateNearestPoi(currentLocation, pois);
             StatusText = BuildStatusText(detail ?? _text.Format("Status.DisplayingPoisCount", pois.Count));
         });
+
+        if (!string.IsNullOrWhiteSpace(_currentSearchKeyword))
+            await SearchPoisAsync(_currentSearchKeyword, true);
     }
 
     public async Task<IReadOnlyList<Poi>> GetMapPoisAsync()
     {
-        var pois = await _poiRepository.GetActiveAsync();
+        var pois = await _poiService.GetAllPoisAsync();
         return pois.Count == 0 ? NearbyPois.ToList() : pois;
     }
 
     public async Task<bool> RefreshCurrentLocationAsync()
     {
-        var pois = await _poiRepository.GetActiveAsync();
+        var pois = await _poiService.GetAllPoisAsync();
         var effectivePois = pois.Count == 0 ? NearbyPois.ToList() : pois;
         var location = await _locationTrackerService.GetCurrentAsync()
                        ?? await _locationTrackerService.GetLastKnownAsync();
@@ -330,13 +380,85 @@ public class HomeViewModel : INotifyPropertyChanged
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             CurrentLocation = location;
-            UpdateNearbyPois(location, effectivePois);
+            ApplyPoiCatalog(location, effectivePois);
             UpdateNearestPoi(location, effectivePois);
             StatusText = BuildStatusText(
                 _text.Format("Status.GpsActive", effectivePois.Count));
         });
 
+        if (!string.IsNullOrWhiteSpace(_currentSearchKeyword))
+            await SearchPoisAsync(_currentSearchKeyword, true);
+
         return true;
+    }
+
+    public async Task SearchPoisAsync(string? keyword, bool closeSuggestions = false)
+    {
+        var normalizedKeyword = PoiService.NormalizeSearchText(keyword);
+
+        if (string.IsNullOrWhiteSpace(normalizedKeyword))
+        {
+            await ClearPoiSearchAsync();
+            return;
+        }
+
+        var response = await _poiService.SearchPoisAsync(keyword);
+        _currentSearchKeyword = keyword?.Trim() ?? string.Empty;
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            ReplaceCollection(DisplayedPois, response.Results);
+            ReplaceCollection(SearchSuggestions, response.Suggestions.Select(poi => new HomePoiSuggestion
+            {
+                Poi = poi
+            }));
+
+            ShowSearchSuggestions = !closeSuggestions && SearchSuggestions.Count > 0;
+            SearchSuggestionHeight = SearchSuggestions.Count switch
+            {
+                <= 0 => 0,
+                > 5 => 280,
+                _ => SearchSuggestions.Count * 56
+            };
+            ShowSearchEmptyState = DisplayedPois.Count == 0;
+            StatusText = BuildStatusText(
+                DisplayedPois.Count == 0
+                    ? _text["Home.SearchEmptyMessage"]
+                    : _text.Format("Status.DisplayingPoisCount", DisplayedPois.Count));
+        });
+    }
+
+    public async Task ClearPoiSearchAsync()
+    {
+        var pois = await _poiService.GetAllPoisAsync();
+        _currentSearchKeyword = string.Empty;
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            ApplyPoiCatalog(CurrentLocation, pois);
+            UpdateNearestPoi(CurrentLocation, pois);
+            ReplaceCollection(SearchSuggestions, []);
+            ShowSearchSuggestions = false;
+            SearchSuggestionHeight = 0;
+            ShowSearchEmptyState = false;
+            StatusText = BuildStatusText(_text.Format("Status.DisplayingPoisCount", DisplayedPois.Count));
+        });
+    }
+
+    public Poi? FindLoadedPoiById(int poiId)
+        => _allPois.FirstOrDefault(x => x.Id == poiId);
+
+    public Poi? FindPoiByRestaurantName(string? restaurantName)
+    {
+        var restaurantKey = PoiService.NormalizeSearchText(restaurantName);
+        if (string.IsNullOrWhiteSpace(restaurantKey))
+            return null;
+
+        return _allPois.FirstOrDefault(x =>
+                   PoiService.NormalizeSearchText(x.Name) == restaurantKey)
+               ?? _allPois.FirstOrDefault(x =>
+                   PoiService.NormalizeSearchText(x.Name).Contains(restaurantKey, StringComparison.Ordinal) ||
+                   restaurantKey.Contains(PoiService.NormalizeSearchText(x.Name), StringComparison.Ordinal));
     }
 
     public bool IsPoiNarrationPlaying(int poiId)
@@ -449,14 +571,17 @@ public class HomeViewModel : INotifyPropertyChanged
 
     private async void OnLocationChanged(object? sender, Location location)
     {
-        var pois = await _poiRepository.GetActiveAsync();
+        var pois = await _poiService.GetAllPoisAsync();
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
             CurrentLocation = location;
-            UpdateNearbyPois(location, pois);
+            ApplyPoiCatalog(location, pois);
             UpdateNearestPoi(location, pois);
         });
+
+        if (!string.IsNullOrWhiteSpace(_currentSearchKeyword))
+            await SearchPoisAsync(_currentSearchKeyword, true);
 
         var decision = _geofenceEngine.Evaluate(location.Latitude, location.Longitude, pois);
 
@@ -470,7 +595,7 @@ public class HomeViewModel : INotifyPropertyChanged
             return;
 
         var poi = pois.FirstOrDefault(x => x.Id == decision.PoiId.Value)
-                  ?? await _poiRepository.GetByIdAsync(decision.PoiId.Value);
+                  ?? await _poiService.GetPoiByIdAsync(decision.PoiId.Value);
 
         if (poi is null)
             return;
@@ -489,6 +614,19 @@ public class HomeViewModel : INotifyPropertyChanged
         await _narrationService.PlayPoiAsync(poi.Id, "auto");
     }
 
+    private void ApplyPoiCatalog(Location location, IEnumerable<Poi> pois)
+    {
+        _allPois.Clear();
+        _allPois.AddRange(pois);
+        UpdateNearbyPois(location, _allPois);
+
+        if (string.IsNullOrWhiteSpace(_currentSearchKeyword))
+        {
+            ReplaceCollection(DisplayedPois, _defaultPois);
+            ShowSearchEmptyState = DisplayedPois.Count == 0;
+        }
+    }
+
     private void UpdateNearbyPois(Location location, IEnumerable<Poi> pois)
     {
         var orderedPois = pois
@@ -501,6 +639,7 @@ public class HomeViewModel : INotifyPropertyChanged
             .Take(10)
             .ToList();
 
+        _defaultPois = orderedPois;
         NearbyPois.Clear();
 
         foreach (var poi in orderedPois)
@@ -539,19 +678,22 @@ public class HomeViewModel : INotifyPropertyChanged
             });
 
             var syncResult = await _poiSyncService.SyncPoisAsync();
-            var pois = await _poiRepository.GetActiveAsync();
+            var pois = await _poiService.GetAllPoisAsync();
             _syncSummary = BuildSyncSummary(syncResult, pois.Count);
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 var currentLocation = CurrentLocation;
-                UpdateNearbyPois(currentLocation, pois);
+                ApplyPoiCatalog(currentLocation, pois);
                 UpdateNearestPoi(currentLocation, pois);
                 StatusText = BuildStatusText(
                     syncResult.Success
                         ? _text.Format("Status.SyncCompleted", pois.Count)
                         : _text.Format("Status.SyncFailed", pois.Count));
             });
+
+            if (!string.IsNullOrWhiteSpace(_currentSearchKeyword))
+                await SearchPoisAsync(_currentSearchKeyword, true);
         }
         finally
         {
@@ -575,6 +717,14 @@ public class HomeViewModel : INotifyPropertyChanged
         return $"{_syncSummary} | {detail} | {NarrationSummary}";
     }
 
+    private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> items)
+    {
+        target.Clear();
+
+        foreach (var item in items)
+            target.Add(item);
+    }
+
     public void RefreshLocalizedText()
     {
         _syncSummary = string.IsNullOrWhiteSpace(_syncSummary)
@@ -583,6 +733,7 @@ public class HomeViewModel : INotifyPropertyChanged
 
         OnPropertyChanged(nameof(NarrationSummary));
         OnPropertyChanged(nameof(NearestPoiText));
+        OnPropertyChanged(nameof(SearchEmptyMessage));
         RefreshNarrationState();
 
         if (string.IsNullOrWhiteSpace(StatusText))

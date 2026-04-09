@@ -40,6 +40,7 @@ public sealed partial class AppTextService
             ["Login.EnterButton"] = "App öffnen",
             ["Login.BackButton"] = "Zurück",
             ["Home.SearchPlaceholder"] = "Restaurant oder Gericht suchen",
+            ["Home.SearchEmptyMessage"] = "Keine passenden Orte gefunden.",
             ["Home.FeaturedFoods"] = "Empfohlene Gerichte",
             ["Home.FeaturedPois"] = "Empfohlene Orte",
             ["Home.NoNarrationTitle"] = "Noch keine Sprachführung",

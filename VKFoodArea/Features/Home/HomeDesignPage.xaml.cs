@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Features;
@@ -28,11 +26,9 @@ public partial class HomeDesignPage : ContentPage
     private readonly SettingsPage _settingsPage;
     private readonly FullMapPage _fullMapPage;
     private readonly IServiceProvider _serviceProvider;
-    private readonly PoiRepository _poiRepository;
     private readonly FoodRepository _foodRepository;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
-    private readonly Dictionary<int, PoiSearchDescriptor> _poiSearchCache = new();
 
     private DateTime _lastMapTapTime = DateTime.MinValue;
     private bool _isOpeningFullMap;
@@ -42,9 +38,6 @@ public partial class HomeDesignPage : ContentPage
     private MemoryLayer? _poiLayer;
     private MemoryLayer? _currentLocationLayer;
 
-    private List<Poi> _allPois = new();
-    private List<Poi> _defaultPois = new();
-    private List<Poi> _displayedPois = new();
     private List<FeaturedFoodCardViewModel> _featuredFoodCards = new();
 
     private const string PoiPinSvg =
@@ -58,7 +51,6 @@ public partial class HomeDesignPage : ContentPage
         NarrationService narrationService,
         SettingsPage settingsPage,
         FullMapPage fullMapPage,
-        PoiRepository poiRepository,
         FoodRepository foodRepository,
         IServiceProvider serviceProvider,
         AppTextService text,
@@ -69,7 +61,6 @@ public partial class HomeDesignPage : ContentPage
         _narrationService = narrationService;
         _settingsPage = settingsPage;
         _fullMapPage = fullMapPage;
-        _poiRepository = poiRepository;
         _foodRepository = foodRepository;
         _serviceProvider = serviceProvider;
         _text = text;
@@ -129,18 +120,7 @@ public partial class HomeDesignPage : ContentPage
 
     private async Task RefreshPoiDataAsync()
     {
-        _allPois = await _poiRepository.GetActiveAsync();
-        _defaultPois = _viewModel.NearbyPois.ToList();
         await LoadFeaturedFoodsAsync();
-
-        if (_allPois.Count == 0)
-            _allPois = _defaultPois.ToList();
-
-        if (_defaultPois.Count == 0)
-            _defaultPois = _allPois.Take(10).ToList();
-
-        RebuildPoiSearchCache();
-        ApplySearch(PoiSearchBar.Text, closeSuggestions: true);
         InitializeMap();
     }
 
@@ -174,7 +154,7 @@ public partial class HomeDesignPage : ContentPage
             MapHost.Content = _mapControl;
         }
 
-        _mapControl.Map = BuildMap(_displayedPois);
+        _mapControl.Map = BuildMap(_viewModel.DisplayedPois);
         _mapControl.Refresh();
     }
 
@@ -295,7 +275,7 @@ public partial class HomeDesignPage : ContentPage
         if (!int.TryParse(mapInfo.Feature["PoiId"]?.ToString(), out var poiId))
             return;
 
-        var poi = _allPois.FirstOrDefault(x => x.Id == poiId);
+        var poi = _viewModel.FindLoadedPoiById(poiId);
         if (poi is null)
             return;
 
@@ -329,18 +309,19 @@ public partial class HomeDesignPage : ContentPage
         _mapControl.Refresh();
     }
 
-    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    private async void OnSearchTextChanged(object sender, TextChangedEventArgs e)
     {
         if (_isApplyingSuggestion)
             return;
 
-        UpdateSuggestions(e.NewTextValue);
-        ApplySearch(e.NewTextValue, closeSuggestions: false);
+        await _viewModel.SearchPoisAsync(e.NewTextValue, closeSuggestions: false);
+        RefreshMapPois();
     }
 
-    private void OnSearchButtonPressed(object sender, EventArgs e)
+    private async void OnSearchButtonPressed(object sender, EventArgs e)
     {
-        ApplySearch(PoiSearchBar.Text, closeSuggestions: true);
+        await _viewModel.SearchPoisAsync(PoiSearchBar.Text, closeSuggestions: true);
+        RefreshMapPois();
     }
 
     private async void OnSuggestionSelected(object? sender, SelectionChangedEventArgs e)
@@ -355,85 +336,9 @@ public partial class HomeDesignPage : ContentPage
         PoiSearchBar.Text = suggestion.Name;
         _isApplyingSuggestion = false;
 
-        ApplySearch(suggestion.Name, closeSuggestions: true);
+        await _viewModel.SearchPoisAsync(suggestion.Name, closeSuggestions: true);
+        RefreshMapPois();
         await OpenPoiDetailAsync(suggestion.Poi);
-    }
-
-    private void UpdateSuggestions(string? keyword)
-    {
-        var suggestions = GetSuggestions(keyword);
-
-        SearchSuggestionContainer.IsVisible = suggestions.Count > 0;
-        SearchSuggestionCollectionView.ItemsSource = suggestions;
-        SearchSuggestionCollectionView.HeightRequest = suggestions.Count switch
-        {
-            <= 0 => 0,
-            > 5 => 280,
-            _ => suggestions.Count * 56
-        };
-    }
-
-    private List<HomePoiSuggestion> GetSuggestions(string? keyword)
-    {
-        var normalizedKeyword = NormalizeSearchText(keyword);
-
-        if (string.IsNullOrWhiteSpace(normalizedKeyword))
-            return [];
-
-        return _allPois
-            .Select(poi => new
-            {
-                Poi = poi,
-                Score = GetSearchScore(poi, normalizedKeyword)
-            })
-            .Where(x => x.Score > int.MinValue)
-            .OrderByDescending(x => x.Score)
-            .ThenBy(x => x.Poi.Name.Length)
-            .Take(6)
-            .Select(x => new HomePoiSuggestion
-            {
-                Poi = x.Poi
-            })
-            .ToList();
-    }
-
-    private void ApplySearch(string? keyword, bool closeSuggestions)
-    {
-        var normalizedKeyword = NormalizeSearchText(keyword);
-
-        if (string.IsNullOrWhiteSpace(normalizedKeyword))
-        {
-            _displayedPois = _defaultPois.ToList();
-        }
-        else
-        {
-            _displayedPois = _allPois
-                .Select(poi => new
-                {
-                    Poi = poi,
-                    Score = GetSearchScore(poi, normalizedKeyword)
-                })
-                .Where(x => x.Score > int.MinValue)
-                .OrderByDescending(x => x.Score)
-                .ThenBy(x => x.Poi.Name.Length)
-                .Select(x => x.Poi)
-                .ToList();
-        }
-
-        PoiCollectionView.ItemsSource = _displayedPois;
-
-        if (_mapControl is not null)
-        {
-            _mapControl.Map = BuildMap(_displayedPois);
-            _mapControl.Refresh();
-        }
-
-        if (closeSuggestions || string.IsNullOrWhiteSpace(normalizedKeyword))
-        {
-            SearchSuggestionContainer.IsVisible = false;
-            SearchSuggestionCollectionView.ItemsSource = null;
-            SearchSuggestionCollectionView.HeightRequest = 0;
-        }
     }
 
     private async void OnOpenFullMapClicked(object sender, EventArgs e)
@@ -463,13 +368,7 @@ public partial class HomeDesignPage : ContentPage
             return;
 
         var food = card.Food;
-        var restaurantKey = NormalizeSearchText(food.RestaurantName);
-
-        var poi = _allPois.FirstOrDefault(x =>
-                      NormalizeSearchText(x.Name) == restaurantKey)
-                  ?? _allPois.FirstOrDefault(x =>
-                      NormalizeSearchText(x.Name).Contains(restaurantKey, StringComparison.Ordinal) ||
-                      restaurantKey.Contains(NormalizeSearchText(x.Name), StringComparison.Ordinal));
+        var poi = _viewModel.FindPoiByRestaurantName(food.RestaurantName);
 
         if (poi is not null)
         {
@@ -525,6 +424,7 @@ public partial class HomeDesignPage : ContentPage
     {
         Title = _text["Nav.Home"];
         PoiSearchBar.Placeholder = _text["Home.SearchPlaceholder"];
+        SearchEmptyStateLabel.Text = _text["Home.SearchEmptyMessage"];
         QrButton.Text = _text["Home.QrButton"];
         FeaturedFoodsTitleLabel.Text = _text["Home.FeaturedFoods"];
         FeaturedPoisTitleLabel.Text = _text["Home.FeaturedPois"];
@@ -537,85 +437,14 @@ public partial class HomeDesignPage : ContentPage
         _viewModel.RefreshLocalizedText();
     }
 
-    private void RebuildPoiSearchCache()
+    private void RefreshMapPois()
     {
-        _poiSearchCache.Clear();
+        if (_mapControl is null)
+            return;
 
-        foreach (var poi in _allPois)
-        {
-            _poiSearchCache[poi.Id] = new PoiSearchDescriptor(
-                NormalizeSearchText(poi.Name),
-                NormalizeSearchText(poi.Address));
-        }
+        _mapControl.Map = BuildMap(_viewModel.DisplayedPois);
+        _mapControl.Refresh();
     }
-
-    private int GetSearchScore(Poi poi, string normalizedKeyword)
-    {
-        if (!_poiSearchCache.TryGetValue(poi.Id, out var descriptor))
-            return int.MinValue;
-
-        var tokens = normalizedKeyword
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        if (tokens.Length == 0)
-            return int.MinValue;
-
-        var combined = $"{descriptor.NameKey} {descriptor.AddressKey}";
-
-        if (tokens.Any(token => !combined.Contains(token, StringComparison.Ordinal)))
-            return int.MinValue;
-
-        var score = 0;
-
-        if (descriptor.NameKey.StartsWith(normalizedKeyword, StringComparison.Ordinal))
-            score += 500;
-        else if (descriptor.NameKey.Contains(normalizedKeyword, StringComparison.Ordinal))
-            score += 360;
-        else if (descriptor.AddressKey.StartsWith(normalizedKeyword, StringComparison.Ordinal))
-            score += 260;
-        else if (descriptor.AddressKey.Contains(normalizedKeyword, StringComparison.Ordinal))
-            score += 180;
-
-        foreach (var token in tokens)
-        {
-            if (descriptor.NameKey.Contains(token, StringComparison.Ordinal))
-                score += 30;
-            else if (descriptor.AddressKey.Contains(token, StringComparison.Ordinal))
-                score += 16;
-        }
-
-        return score;
-    }
-
-    private static string NormalizeSearchText(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return string.Empty;
-
-        var normalized = text.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
-        var builder = new StringBuilder(normalized.Length);
-
-        foreach (var character in normalized)
-        {
-            var category = CharUnicodeInfo.GetUnicodeCategory(character);
-
-            if (category == UnicodeCategory.NonSpacingMark)
-                continue;
-
-            builder.Append(character switch
-            {
-                '\u0111' => 'd',
-                '\u0110' => 'd',
-                _ => character
-            });
-        }
-
-        return builder
-            .ToString()
-            .Normalize(NormalizationForm.FormC);
-    }
-
-    private sealed record PoiSearchDescriptor(string NameKey, string AddressKey);
 
     private void ApplyLocalizedTextClean()
     {
