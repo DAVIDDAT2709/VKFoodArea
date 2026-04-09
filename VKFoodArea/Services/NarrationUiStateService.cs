@@ -8,6 +8,7 @@ public sealed class NarrationUiStateService
 
     public bool HasContext { get; private set; }
     public bool IsPlaying { get; private set; }
+    public int? PoiId { get; private set; }
     public string PoiName { get; private set; } = string.Empty;
     public string ImageUrl { get; private set; } = string.Empty;
     public string Language { get; private set; } = "vi";
@@ -15,6 +16,7 @@ public sealed class NarrationUiStateService
 
     public void SetContext(Poi poi, string? mode = null, string? language = null)
     {
+        PoiId = poi.Id;
         PoiName = poi.Name;
         ImageUrl = poi.ImageUrl;
         HasContext = true;
@@ -32,6 +34,7 @@ public sealed class NarrationUiStateService
     {
         if (poi is not null)
         {
+            PoiId = poi.Id;
             PoiName = poi.Name;
             ImageUrl = poi.ImageUrl;
             HasContext = true;

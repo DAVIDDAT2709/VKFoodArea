@@ -14,30 +14,23 @@ using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
 using VKFoodArea.Features.User;
 using VKFoodArea.Models;
-using VKFoodArea.Repositories;
 using VKFoodArea.Services;
+using System.ComponentModel;
 
 namespace VKFoodArea.Features.Home;
 
 public partial class FullMapPage : ContentPage
 {
     private readonly HomeViewModel _viewModel;
-    private readonly NarrationService _narrationService;
-    private readonly GeofenceEngine _geofenceEngine;
-    private readonly PoiRepository _poiRepository;
     private readonly IServiceProvider _serviceProvider;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
-    private MemoryLayer? _currentLocationLayer;
     private List<Poi> _allPois = new();
 
     private Location? _currentGpsLocation;
-    private bool _isListeningLocation;
     private bool _followMyLocation = true;
-    private DateTime _lastPoiTapTime = DateTime.MinValue;
-    private int? _lastTappedPoiId;
 
     private const double DemoLatitude = 10.7618;
     private const double DemoLongitude = 106.7022;
@@ -49,19 +42,13 @@ public partial class FullMapPage : ContentPage
         "</svg>";
 
     public FullMapPage(
-    HomeViewModel viewModel,
-    NarrationService narrationService,
-    GeofenceEngine geofenceEngine,
-    PoiRepository poiRepository,
-    IServiceProvider serviceProvider,
-    AppTextService text,
-    NarrationUiStateService narrationUiState)
+        HomeViewModel viewModel,
+        IServiceProvider serviceProvider,
+        AppTextService text,
+        NarrationUiStateService narrationUiState)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _narrationService = narrationService;
-        _geofenceEngine = geofenceEngine;
-        _poiRepository = poiRepository;
         _serviceProvider = serviceProvider;
         _text = text;
         _narrationUiState = narrationUiState;
@@ -73,121 +60,48 @@ public partial class FullMapPage : ContentPage
         base.OnAppearing();
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         _narrationUiState.StateChanged += OnNarrationUiStateChanged;
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         ApplyLocalizedTextClean();
         await _viewModel.InitializeAsync();
-        _allPois = (await _poiRepository.GetActiveAsync()).ToList();
-        await InitializeGpsAsync();
-        InitializeMap();
-        UpdateNearestPoiInfo();
+        _allPois = (await _viewModel.GetMapPoisAsync()).ToList();
+        RefreshMapLocationFromViewModel(shouldCenterMap: true);
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
-        StopListeningLocation();
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
     }
 
-    private async Task InitializeGpsAsync()
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        var permission = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+        if (e.PropertyName != nameof(HomeViewModel.CurrentLocation))
+            return;
 
-        if (permission != PermissionStatus.Granted)
-            permission = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+        MainThread.BeginInvokeOnMainThread(() =>
+            RefreshMapLocationFromViewModel(_followMyLocation));
+    }
 
-        if (permission != PermissionStatus.Granted)
+    private void RefreshMapLocationFromViewModel(bool shouldCenterMap)
+    {
+        _currentGpsLocation = _viewModel.CurrentLocation;
+        UpdateNearestPoiInfo();
+
+        if (_mapControl is null)
         {
-            InfoLabel.Text = _text["Map.InfoNoPermission"];
+            InitializeMap();
             return;
         }
 
-        await LoadCurrentLocationAsync();
-        await StartListeningLocationAsync();
-    }
+        _mapControl.Map = BuildMap();
 
-    private async Task LoadCurrentLocationAsync()
-    {
-        try
-        {
-            Location? resolvedLocation = null;
+        if (shouldCenterMap)
+            CenterMap(_mapControl.Map);
 
-            var lastKnown = await Geolocation.Default.GetLastKnownLocationAsync();
-            if (lastKnown is not null)
-                resolvedLocation = lastKnown;
-
-            var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
-            var current = await Geolocation.Default.GetLocationAsync(request);
-            if (current is not null)
-                resolvedLocation = current;
-
-            if (resolvedLocation is not null)
-                await HandleLocationChangedAsync(resolvedLocation, shouldCenterMap: false, allowAutoNarration: false);
-        }
-        catch (FeatureNotSupportedException)
-        {
-            InfoLabel.Text = _text["Map.InfoGpsUnsupported"];
-        }
-        catch (FeatureNotEnabledException)
-        {
-            InfoLabel.Text = _text["Map.InfoGpsDisabled"];
-        }
-        catch (PermissionException)
-        {
-            InfoLabel.Text = _text["Map.InfoGpsPermission"];
-        }
-        catch
-        {
-            InfoLabel.Text = _text["Map.InfoGpsError"];
-        }
-    }
-
-    private async Task StartListeningLocationAsync()
-    {
-        if (_isListeningLocation)
-            return;
-
-        try
-        {
-            Geolocation.LocationChanged += Geolocation_LocationChanged;
-
-            var request = new GeolocationListeningRequest(GeolocationAccuracy.Best);
-            var success = await Geolocation.StartListeningForegroundAsync(request);
-
-            _isListeningLocation = success;
-
-            if (!success)
-                InfoLabel.Text = _text["Map.InfoGpsTrackingFailed"];
-        }
-        catch
-        {
-            InfoLabel.Text = _text["Map.InfoGpsTrackingError"];
-        }
-    }
-
-    private void StopListeningLocation()
-    {
-        if (!_isListeningLocation)
-            return;
-
-        try
-        {
-            Geolocation.LocationChanged -= Geolocation_LocationChanged;
-            Geolocation.StopListeningForeground();
-        }
-        catch
-        {
-        }
-        finally
-        {
-            _isListeningLocation = false;
-        }
-    }
-
-    private async void Geolocation_LocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
-    {
-        await MainThread.InvokeOnMainThreadAsync(() =>
-            HandleLocationChangedAsync(e.Location, shouldCenterMap: _followMyLocation, allowAutoNarration: true));
+        _mapControl.Refresh();
     }
 
     private void InitializeMap()
@@ -219,7 +133,7 @@ public partial class FullMapPage : ContentPage
 
         _poiLayer = new MemoryLayer("POIs")
         {
-            Features = GetMapPois()
+            Features = _allPois
                 .Select(CreatePoiFeature)
                 .Cast<IFeature>()
                 .ToList()
@@ -227,15 +141,15 @@ public partial class FullMapPage : ContentPage
 
         var currentLocationFeature = CreateCurrentLocationFeature();
 
-        _currentLocationLayer = new MemoryLayer("CurrentLocation")
+        var currentLocationLayer = new MemoryLayer("CurrentLocation")
         {
             Features = currentLocationFeature is null
-                ? new List<IFeature>()
-                : new List<IFeature> { currentLocationFeature }
+                ? []
+                : [currentLocationFeature]
         };
 
         map.Layers.Add(_poiLayer);
-        map.Layers.Add(_currentLocationLayer);
+        map.Layers.Add(currentLocationLayer);
 
         CenterMap(map);
 
@@ -257,40 +171,7 @@ public partial class FullMapPage : ContentPage
     }
 
     private Location GetMapCenterLocation()
-    {
-        if (_currentGpsLocation is not null && IsGpsNearPoiArea())
-            return _currentGpsLocation;
-
-        return _currentGpsLocation ?? new Location(DemoLatitude, DemoLongitude);
-    }
-
-    private bool IsGpsNearPoiArea()
-    {
-        if (_currentGpsLocation is null)
-            return false;
-
-        const double maxDistanceKm = 3.0;
-
-        var pois = GetMapPois();
-
-        if (pois.Any())
-        {
-            foreach (var poi in pois)
-            {
-                var distanceKm = Location.CalculateDistance(
-                    _currentGpsLocation.Latitude,
-                    _currentGpsLocation.Longitude,
-                    poi.Latitude,
-                    poi.Longitude,
-                    DistanceUnits.Kilometers);
-
-                if (distanceKm <= maxDistanceKm)
-                    return true;
-            }
-        }
-
-        return false;
-    }
+        => _currentGpsLocation ?? new Location(DemoLatitude, DemoLongitude);
 
     private void UpdateNearestPoiInfo()
     {
@@ -300,9 +181,7 @@ public partial class FullMapPage : ContentPage
             return;
         }
 
-        var pois = GetMapPois();
-
-        if (!pois.Any())
+        if (_allPois.Count == 0)
         {
             InfoLabel.Text = _text.Format(
                 "Map.InfoGpsActiveCoords",
@@ -314,7 +193,7 @@ public partial class FullMapPage : ContentPage
         Poi? nearestPoi = null;
         double nearestDistanceMeters = double.MaxValue;
 
-        foreach (var poi in pois)
+        foreach (var poi in _allPois)
         {
             var distanceMeters = Location.CalculateDistance(
                 _currentGpsLocation.Latitude,
@@ -413,60 +292,45 @@ public partial class FullMapPage : ContentPage
             return;
 
         _followMyLocation = true;
-        await LoadCurrentLocationAsync();
 
-        _mapControl.Map = BuildMap();
-        _mapControl.Refresh();
+        if (!await _viewModel.RefreshCurrentLocationAsync())
+        {
+            if (_currentGpsLocation is null)
+                InfoLabel.Text = _text["Map.InfoLocationUnavailable"];
+
+            return;
+        }
+
+        RefreshMapLocationFromViewModel(shouldCenterMap: true);
     }
 
     private async void OnMapTapped(object? sender, MapEventArgs e)
     {
         _followMyLocation = false;
 
-        if (_mapControl?.Map is null)
+        if (_mapControl?.Map is null || _poiLayer is null)
             return;
 
-        if (_poiLayer is not null)
+        var mapInfo = e.GetMapInfo(new[] { _poiLayer });
+        if (mapInfo?.Feature is null)
         {
-            var mapInfo = e.GetMapInfo(new[] { _poiLayer });
-
-            if (mapInfo?.Feature is not null)
-            {
-                var name = mapInfo.Feature["Name"]?.ToString();
-                var poiIdObj = mapInfo.Feature["PoiId"];
-
-                if (!string.IsNullOrWhiteSpace(name))
-                    InfoLabel.Text = _text.Format("Map.InfoRestaurant", name);
-
-                if (poiIdObj is not null && int.TryParse(poiIdObj.ToString(), out var poiId))
-                {
-                    var now = DateTime.UtcNow;
-                    var isDoubleTap = _lastTappedPoiId == poiId &&
-                                      (now - _lastPoiTapTime).TotalMilliseconds <= 350;
-
-                    _lastTappedPoiId = poiId;
-                    _lastPoiTapTime = now;
-
-                    if (isDoubleTap)
-                    {
-                        await _narrationService.StopAsync();
-
-                        if (!string.IsNullOrWhiteSpace(name))
-                            InfoLabel.Text = _text.Format("Map.InfoStoppedNarration", name);
-
-                        return;
-                    }
-
-                    await _narrationService.PlayPoiAsync(poiId);
-                }
-
-                return;
-            }
+            UpdateNearestPoiInfo();
+            return;
         }
 
-        _lastTappedPoiId = null;
-        var (lon, lat) = SphericalMercator.ToLonLat(e.WorldPosition.X, e.WorldPosition.Y);
-        await HandleLocationChangedAsync(new Location(lat, lon), shouldCenterMap: false, allowAutoNarration: true);
+        if (!int.TryParse(mapInfo.Feature["PoiId"]?.ToString(), out var poiId))
+            return;
+
+        var poi = _allPois.FirstOrDefault(x => x.Id == poiId);
+        if (poi is null)
+            return;
+
+        var wasPlayingCurrentPoi = _viewModel.IsPoiNarrationPlaying(poi.Id);
+        await _viewModel.PlayPoiAudioAsync(poi);
+
+        InfoLabel.Text = wasPlayingCurrentPoi
+            ? _text.Format("Map.InfoStoppedNarration", poi.Name)
+            : _text.Format("Map.InfoRestaurant", poi.Name);
     }
 
     private async void OnGoHomeClicked(object sender, EventArgs e)
@@ -491,58 +355,6 @@ public partial class FullMapPage : ContentPage
         await Navigation.PushAsync(page);
     }
 
-    private IReadOnlyList<Poi> GetMapPois()
-    {
-        if (_allPois.Count > 0)
-            return _allPois;
-
-        return _viewModel.NearbyPois.ToList();
-    }
-
-    private async Task HandleLocationChangedAsync(
-        Location location,
-        bool shouldCenterMap,
-        bool allowAutoNarration)
-    {
-        _currentGpsLocation = location;
-        UpdateNearestPoiInfo();
-
-        if (allowAutoNarration)
-            await TryAutoNarrationAsync(location);
-
-        if (_mapControl is null)
-            return;
-
-        _mapControl.Map = BuildMap();
-
-        if (shouldCenterMap)
-            CenterMap(_mapControl.Map);
-
-        _mapControl.Refresh();
-    }
-
-    private async Task TryAutoNarrationAsync(Location location)
-    {
-        var pois = GetMapPois();
-
-        if (pois.Count == 0)
-            return;
-
-        var decision = _geofenceEngine.Evaluate(location.Latitude, location.Longitude, pois);
-
-        if (!decision.ShouldTrigger || !decision.PoiId.HasValue)
-            return;
-
-        var poi = pois.FirstOrDefault(x => x.Id == decision.PoiId.Value)
-                  ?? await _poiRepository.GetByIdAsync(decision.PoiId.Value);
-
-        if (poi is null)
-            return;
-
-        InfoLabel.Text = _text.Format("Map.InfoAutoNarration", poi.Name, decision.DistanceMeters);
-        await _narrationService.PlayPoiAsync(poi, "auto");
-    }
-
     private void OnNarrationUiStateChanged(object? sender, EventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(_viewModel.RefreshNarrationState);
@@ -562,6 +374,8 @@ public partial class FullMapPage : ContentPage
 
         if (_currentGpsLocation is null)
             InfoLabel.Text = _text["Map.InfoLocationUnavailable"];
+        else
+            UpdateNearestPoiInfo();
     }
 
     private void ApplyLocalizedTextClean()

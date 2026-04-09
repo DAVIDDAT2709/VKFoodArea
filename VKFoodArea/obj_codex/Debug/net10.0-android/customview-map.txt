@@ -1,5 +1,7 @@
 @string/appbar_scrolling_view_behavior;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\192\jl\res\layout\fragment_backstack.xml
 @string/appbar_scrolling_view_behavior;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\192\jl\res\layout\navigationlayout.xml
+adaptive-icon;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
+adaptive-icon;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 adaptive-icon;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
 adaptive-icon;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 alpha;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\190\jl\res\anim\enterfromleft.xml
@@ -16,6 +18,8 @@ androidx.fragment.app.FragmentContainerView;C:\xampp\htdocs\VKFoodArea\VKFoodAre
 attr;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\189\jl\res\values\attrs.xml
 attr;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\192\jl\res\values\attr.xml
 attr;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\194\jl\res\values\attrs.xml
+background;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
+background;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 background;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
 background;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 bitmap;obj_codex\Debug\net10.0-android\resizetizer\sp\drawable-v31\maui_splash_image.xml
@@ -34,6 +38,8 @@ declare-styleable;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-
 declare-styleable;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\194\jl\res\values\attrs.xml
 external-cache-path;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\193\jl\res\xml\microsoft_maui_essentials_fileprovider_file_paths.xml
 external-path;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\193\jl\res\xml\microsoft_maui_essentials_fileprovider_file_paths.xml
+foreground;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
+foreground;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 foreground;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
 foreground;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 item;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\189\jl\res\values\styles.xml
@@ -48,6 +54,8 @@ layer-list;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android
 layer-list;obj_codex\Debug\net10.0-android\resizetizer\sp\drawable-v31\maui_splash_image.xml
 layer-list;obj_codex\Debug\net10.0-android\resizetizer\sp\drawable\maui_splash_image.xml
 microsoft.maui.controls.platform.compatibility.ShellFlyoutLayout;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\190\jl\res\layout\flyoutcontent.xml
+monochrome;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
+monochrome;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 monochrome;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon_round.xml
 monochrome;obj_codex\Debug\net10.0-android\resizetizer\r\mipmap-anydpi-v26\appicon.xml
 paths;C:\xampp\htdocs\VKFoodArea\VKFoodArea\obj_codex\Debug\net10.0-android\lp\193\jl\res\xml\microsoft_maui_essentials_fileprovider_file_paths.xml

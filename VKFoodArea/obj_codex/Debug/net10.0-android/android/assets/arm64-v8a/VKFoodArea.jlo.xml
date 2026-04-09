@@ -1,0 +1,39 @@
+<api>
+  <jcw-types>
+    <type name="MainActivity" package="crc6481e564c214041475" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="crc6488302ad6e9e4df1a.MauiAppCompatActivity" partial_assembly_qualified_name="VKFoodArea.MainActivity, VKFoodArea">
+      <constructors>
+        <constructor name="MainActivity" method="n_.ctor:()V:" jni_signature="()V" managed_parameters="" retval="void" is_dynamically_registered="True" />
+        <constructor name="MainActivity" method="n_.ctor:(I)V:" jni_signature="(I)V" managed_parameters="System.Int32, System.Private.CoreLib" params="int p0" retval="void" is_dynamically_registered="True" super_call="p0" activate_call="p0" />
+      </constructors>
+    </type>
+    <type name="MainApplication" package="crc6481e564c214041475" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="crc6488302ad6e9e4df1a.MauiApplication" is_application="True" partial_assembly_qualified_name="VKFoodArea.MainApplication, VKFoodArea" application_constructor="MainApplication" />
+    <type name="NarrationService_AndroidTtsInitListener" package="crc64bb2bca98788d8d34" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="java.lang.Object" partial_assembly_qualified_name="VKFoodArea.Services.NarrationService+AndroidTtsInitListener, VKFoodArea">
+      <implemented_interfaces>
+        <interface name="android.speech.tts.TextToSpeech.OnInitListener" />
+      </implemented_interfaces>
+      <constructors>
+        <constructor name="NarrationService_AndroidTtsInitListener" method="n_.ctor:()V:" jni_signature="()V" managed_parameters="" retval="void" is_dynamically_registered="True" />
+      </constructors>
+      <methods>
+        <method name="onInit" method="n_onInit:(I)V:GetOnInit_IHandler:Android.Speech.Tts.TextToSpeech+IOnInitListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" jni_signature="(I)V" params="int p0" retval="void" is_dynamically_registered="True" super_call="p0" activate_call="p0" />
+      </methods>
+    </type>
+    <type name="NarrationService_NarrationUtteranceProgressListener" package="crc64bb2bca98788d8d34" application_java_class="android.app.Application" mono_runtime_initialization="mono.MonoPackageManager.LoadApplication (context);" extends_type="android.speech.tts.UtteranceProgressListener" partial_assembly_qualified_name="VKFoodArea.Services.NarrationService+NarrationUtteranceProgressListener, VKFoodArea">
+      <constructors>
+        <constructor name="NarrationService_NarrationUtteranceProgressListener" method="n_.ctor:()V:" jni_signature="()V" managed_parameters="" retval="void" is_dynamically_registered="True" />
+      </constructors>
+      <methods>
+        <method name="onStart" method="n_onStart:(Ljava/lang/String;)V:GetOnStart_Ljava_lang_String_Handler" jni_signature="(Ljava/lang/String;)V" params="java.lang.String p0" retval="void" is_dynamically_registered="True" super_call="p0" activate_call="p0" />
+        <method name="onDone" method="n_onDone:(Ljava/lang/String;)V:GetOnDone_Ljava_lang_String_Handler" jni_signature="(Ljava/lang/String;)V" params="java.lang.String p0" retval="void" is_dynamically_registered="True" super_call="p0" activate_call="p0" />
+        <method name="onError" method="n_onError:(Ljava/lang/String;)V:GetOnError_Ljava_lang_String_Handler" jni_signature="(Ljava/lang/String;)V" params="java.lang.String p0" retval="void" is_dynamically_registered="True" super_call="p0" activate_call="p0" />
+        <method name="onStop" method="n_onStop:(Ljava/lang/String;Z)V:GetOnStop_Ljava_lang_String_ZHandler" jni_signature="(Ljava/lang/String;Z)V" params="java.lang.String p0, boolean p1" retval="void" is_dynamically_registered="True" super_call="p0, p1" activate_call="p0, p1" />
+      </methods>
+    </type>
+  </jcw-types>
+  <acw-types partial-assembly-name="VKFoodArea" module-name="VKFoodArea.dll">
+    <type assembly-qualified-name="VKFoodArea.MainActivity, VKFoodArea, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="vkfoodarea.MainActivity" java-key="crc6481e564c214041475.MainActivity" managed-key="VKFoodArea.MainActivity" partial-assembly-qualified-name="VKFoodArea.MainActivity, VKFoodArea" />
+    <type assembly-qualified-name="VKFoodArea.MainApplication, VKFoodArea, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="vkfoodarea.MainApplication" java-key="crc6481e564c214041475.MainApplication" managed-key="VKFoodArea.MainApplication" partial-assembly-qualified-name="VKFoodArea.MainApplication, VKFoodArea" />
+    <type assembly-qualified-name="VKFoodArea.Services.NarrationService+AndroidTtsInitListener, VKFoodArea, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="vkfoodarea.services.NarrationService_AndroidTtsInitListener" java-key="crc64bb2bca98788d8d34.NarrationService_AndroidTtsInitListener" managed-key="VKFoodArea.Services.NarrationService.AndroidTtsInitListener" partial-assembly-qualified-name="VKFoodArea.Services.NarrationService+AndroidTtsInitListener, VKFoodArea" />
+    <type assembly-qualified-name="VKFoodArea.Services.NarrationService+NarrationUtteranceProgressListener, VKFoodArea, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" compat-jni-name="vkfoodarea.services.NarrationService_NarrationUtteranceProgressListener" java-key="crc64bb2bca98788d8d34.NarrationService_NarrationUtteranceProgressListener" managed-key="VKFoodArea.Services.NarrationService.NarrationUtteranceProgressListener" partial-assembly-qualified-name="VKFoodArea.Services.NarrationService+NarrationUtteranceProgressListener, VKFoodArea" />
+  </acw-types>
+</api>

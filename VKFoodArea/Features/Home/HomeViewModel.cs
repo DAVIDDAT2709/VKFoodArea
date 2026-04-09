@@ -32,10 +32,6 @@ public class HomeViewModel : INotifyPropertyChanged
     private bool _isNarrationPlaying;
     private bool _showMiniPlayer;
 
-    // Phục vụ hiển thị trạng thái chống spam trên UI
-    private DateTime _lastPlayRequestUtc = DateTime.MinValue;
-    private int? _lastRequestedPoiId;
-
     public ObservableCollection<Poi> NearbyPois { get; } = new();
 
     public ObservableCollection<LanguageOption> LanguageOptions { get; } = new()
@@ -315,26 +311,46 @@ public class HomeViewModel : INotifyPropertyChanged
         });
     }
 
+    public async Task<IReadOnlyList<Poi>> GetMapPoisAsync()
+    {
+        var pois = await _poiRepository.GetActiveAsync();
+        return pois.Count == 0 ? NearbyPois.ToList() : pois;
+    }
+
+    public async Task<bool> RefreshCurrentLocationAsync()
+    {
+        var pois = await _poiRepository.GetActiveAsync();
+        var effectivePois = pois.Count == 0 ? NearbyPois.ToList() : pois;
+        var location = await _locationTrackerService.GetCurrentAsync()
+                       ?? await _locationTrackerService.GetLastKnownAsync();
+
+        if (location is null)
+            return false;
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            CurrentLocation = location;
+            UpdateNearbyPois(location, effectivePois);
+            UpdateNearestPoi(location, effectivePois);
+            StatusText = BuildStatusText(
+                _text.Format("Status.GpsActive", effectivePois.Count));
+        });
+
+        return true;
+    }
+
+    public bool IsPoiNarrationPlaying(int poiId)
+        => _narrationUiState.IsPlaying && _narrationUiState.PoiId == poiId;
+
     public async Task PlayPoiAudioAsync(Poi? poi)
     {
         if (poi is null)
             return;
 
-        var now = DateTime.UtcNow;
-        var isSamePoiSpam =
-            _lastRequestedPoiId == poi.Id &&
-            now - _lastPlayRequestUtc < TimeSpan.FromSeconds(5);
-
-        _lastRequestedPoiId = poi.Id;
-        _lastPlayRequestUtc = now;
-
-        if (isSamePoiSpam)
+        if (IsPoiNarrationPlaying(poi.Id))
         {
-            await MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                NearestPoi = poi;
-                StatusText = BuildStatusText(_text.Format("Status.SpamSamePoi", poi.Name));
-            });
+            await StopNarrationAsync();
+            await MainThread.InvokeOnMainThreadAsync(() => NearestPoi = poi);
             return;
         }
 
@@ -351,7 +367,7 @@ public class HomeViewModel : INotifyPropertyChanged
 
         try
         {
-            await _narrationService.PlayPoiAsync(poi);
+            await _narrationService.PlayPoiAsync(poi.Id);
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -391,7 +407,7 @@ public class HomeViewModel : INotifyPropertyChanged
             StatusText = BuildStatusText(_text.Format("Status.PreviewPlaying", poi.Name));
         });
 
-        await _narrationService.PlayPoiAsync(poi);
+        await _narrationService.PlayPoiAsync(poi.Id);
     }
 
     public async Task StopNarrationAsync()
@@ -470,7 +486,7 @@ public class HomeViewModel : INotifyPropertyChanged
             StatusText = BuildStatusText(_text.Format("Status.PlayingPoi", poi.Name));
         });
 
-        await _narrationService.PlayPoiAsync(poi, "auto");
+        await _narrationService.PlayPoiAsync(poi.Id, "auto");
     }
 
     private void UpdateNearbyPois(Location location, IEnumerable<Poi> pois)

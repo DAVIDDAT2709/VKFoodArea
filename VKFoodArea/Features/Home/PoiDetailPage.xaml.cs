@@ -36,21 +36,28 @@ public partial class PoiDetailPage : ContentPage
     }
 
     private async void OnPlayNarrationClicked(object sender, EventArgs e)
-{
-    try
     {
-        _narrationUiState.SetContext(Poi);
-        await _narrationService.PlayPoiAsync(Poi);
+        try
+        {
+            if (_narrationUiState.IsPlaying && _narrationUiState.PoiId == Poi.Id)
+            {
+                await _narrationService.StopAsync();
+                return;
+            }
+
+            _narrationUiState.SetContext(Poi);
+            await _narrationService.PlayPoiAsync(Poi.Id);
+        }
+        catch
+        {
+            await DisplayAlert(_text["PoiDetail.PlayErrorTitle"], _text["PoiDetail.PlayErrorMessage"], _text["Common.Ok"]);
+        }
     }
-    catch
+
+    private async void OnStopNarrationClicked(object sender, EventArgs e)
     {
-        await DisplayAlert(_text["PoiDetail.PlayErrorTitle"], _text["PoiDetail.PlayErrorMessage"], _text["Common.Ok"]);
+        await _narrationService.StopAsync();
     }
-}
-private async void OnStopNarrationClicked(object sender, EventArgs e)
-{
-    await _narrationService.StopAsync();
-}
 
     private void ApplyLocalizedText()
     {

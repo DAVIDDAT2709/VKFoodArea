@@ -108,6 +108,15 @@ public class AuthService
         CurrentUser = null;
         _sessionStore.Clear();
     }
+
+    public int? GetCurrentUserId()
+        => CurrentUser?.Id ?? _sessionStore.GetCurrentUserId();
+
+    public void ReplaceCurrentUser(AppUser? user)
+    {
+        CurrentUser = user;
+    }
+
     private async Task<AppUser?> FindUserAsync(string normalizedIdentifier)
     {
         if (string.IsNullOrWhiteSpace(normalizedIdentifier))

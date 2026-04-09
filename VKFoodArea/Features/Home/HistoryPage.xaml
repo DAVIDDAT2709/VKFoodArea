@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:VKFoodArea.Features.Home"
-    x:DataType="local:HistoryPage"
+    x:DataType="local:HistoryViewModel"
     Title=""
     BackgroundColor="#EEF4F1"
     NavigationPage.HasNavigationBar="False">
@@ -57,80 +57,122 @@
             </VerticalStackLayout>
         </Border>
 
-        <CollectionView Grid.Row="1"
-                        Margin="0,16,0,0"
-                        ItemsSource="{Binding Items}"
-                        SelectionMode="None">
-            <CollectionView.EmptyView>
-                <Border BackgroundColor="White"
-                        Stroke="#D7E4DF"
-                        StrokeThickness="1"
-                        Padding="20"
-                        StrokeShape="RoundRectangle 24">
-                    <VerticalStackLayout Spacing="10">
-                        <Label x:Name="EmptyTitleLabel"
-                               FontSize="20"
-                               FontAttributes="Bold"
-                               TextColor="#163632" />
-                        <Label x:Name="EmptyMessageLabel"
-                               FontSize="14"
-                               TextColor="#66817B" />
-                    </VerticalStackLayout>
-                </Border>
-            </CollectionView.EmptyView>
-
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="local:HistoryItemViewModel">
+        <Grid Grid.Row="1"
+              Margin="0,16,0,0"
+              RowDefinitions="*,Auto"
+              RowSpacing="12">
+            <CollectionView Grid.Row="0"
+                            ItemsSource="{Binding Items}"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                            SelectionChanged="OnHistorySelectionChanged">
+                <CollectionView.EmptyView>
                     <Border BackgroundColor="White"
                             Stroke="#D7E4DF"
                             StrokeThickness="1"
-                            Padding="14"
-                            Margin="0,0,0,10"
-                            StrokeShape="RoundRectangle 22">
-                        <Border.Shadow>
-                            <Shadow Brush="#8FAAA3"
-                                    Offset="0,10"
-                                    Radius="16"
-                                    Opacity="0.10" />
-                        </Border.Shadow>
-                        <Grid ColumnDefinitions="Auto,*"
-                              ColumnSpacing="12">
-                            <Border WidthRequest="42"
-                                    HeightRequest="42"
-                                    BackgroundColor="#DDF7F1"
-                                    StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 21">
-                                <Label Text="♪"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"
-                                       FontSize="18"
-                                       TextColor="#139587" />
-                            </Border>
-                            <VerticalStackLayout Grid.Column="1"
-                                                 Spacing="4">
-                                <Label Text="{Binding PoiName}"
-                                       FontSize="16"
-                                       FontAttributes="Bold"
-                                       TextColor="#163632" />
-                                <Label Text="{Binding PlayedAtText}"
-                                       FontSize="13"
-                                       TextColor="#6C8781" />
-                                <Border BackgroundColor="#F4FBF8"
-                                        Padding="10,6"
-                                        StrokeThickness="0"
-                                        HorizontalOptions="Start"
-                                        StrokeShape="RoundRectangle 12">
-                                    <Label Text="{Binding MetaText}"
-                                           FontSize="12"
-                                           FontAttributes="Bold"
-                                           TextColor="#169488" />
-                                </Border>
-                            </VerticalStackLayout>
-                        </Grid>
+                            Padding="20"
+                            StrokeShape="RoundRectangle 24">
+                        <VerticalStackLayout Spacing="10">
+                            <Label x:Name="EmptyTitleLabel"
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="#163632" />
+                            <Label x:Name="EmptyMessageLabel"
+                                   FontSize="14"
+                                   TextColor="#66817B" />
+                        </VerticalStackLayout>
                     </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:HistoryItemViewModel">
+                        <Border BackgroundColor="White"
+                                Stroke="#D7E4DF"
+                                StrokeThickness="1"
+                                Padding="14"
+                                Margin="0,0,0,10"
+                                StrokeShape="RoundRectangle 22">
+                            <Border.Shadow>
+                                <Shadow Brush="#8FAAA3"
+                                        Offset="0,10"
+                                        Radius="16"
+                                        Opacity="0.10" />
+                            </Border.Shadow>
+                            <Grid ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="12">
+                                <Border WidthRequest="42"
+                                        HeightRequest="42"
+                                        BackgroundColor="#DDF7F1"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 21">
+                                    <Label Text="♪"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           FontSize="18"
+                                           TextColor="#139587" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1"
+                                                     Spacing="4">
+                                    <Label Text="{Binding PoiName}"
+                                           FontSize="16"
+                                           FontAttributes="Bold"
+                                           TextColor="#163632" />
+                                    <Label Text="{Binding PlayedAtText}"
+                                           FontSize="13"
+                                           TextColor="#6C8781" />
+                                    <Border BackgroundColor="#F4FBF8"
+                                            Padding="10,6"
+                                            StrokeThickness="0"
+                                            HorizontalOptions="Start"
+                                            StrokeShape="RoundRectangle 12">
+                                        <Label Text="{Binding MetaText}"
+                                               FontSize="12"
+                                               FontAttributes="Bold"
+                                               TextColor="#169488" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Border Grid.Row="1"
+                    IsVisible="{Binding IsDetailVisible}"
+                    BackgroundColor="White"
+                    Stroke="#D7E4DF"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 22">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="DetailTitleLabel"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#163632"
+                           Text="{Binding SelectedDetailTitle}" />
+                    <Label Text="{Binding SelectedDetailMeta}"
+                           FontSize="12.5"
+                           TextColor="#6C8781" />
+                    <Border BackgroundColor="#F4FBF8"
+                            Padding="10,6"
+                            StrokeThickness="0"
+                            HorizontalOptions="Start"
+                            StrokeShape="RoundRectangle 12">
+                        <Label Text="{Binding SelectedDetailStatus}"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#169488" />
+                    </Border>
+                    <Button x:Name="ReplayButton"
+                            Clicked="OnReplayClicked"
+                            BackgroundColor="#129488"
+                            TextColor="White"
+                            CornerRadius="16"
+                            FontAttributes="Bold"
+                            IsEnabled="{Binding CanReplaySelected}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
 
         <Border Grid.Row="2"
                 Margin="0,14,0,0"

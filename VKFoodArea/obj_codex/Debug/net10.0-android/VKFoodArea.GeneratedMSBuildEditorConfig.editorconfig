@@ -54,6 +54,16 @@ build_metadata.AdditionalFiles.NoWarn =
 build_metadata.AdditionalFiles.EnableDiagnostics = 
 build_metadata.AdditionalFiles.LineInfo = 
 
+[C:/xampp/htdocs/VKFoodArea/VKFoodArea/Features/Auth/RegisterPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = VKFoodArea.Features.Auth.RegisterPage.xaml
+build_metadata.AdditionalFiles.TargetPath = Features\Auth\RegisterPage.xaml
+build_metadata.AdditionalFiles.RelativePath = Features\Auth\RegisterPage.xaml
+build_metadata.AdditionalFiles.Inflator = Runtime
+build_metadata.AdditionalFiles.NoWarn = 
+build_metadata.AdditionalFiles.EnableDiagnostics = 
+build_metadata.AdditionalFiles.LineInfo = 
+
 [C:/xampp/htdocs/VKFoodArea/VKFoodArea/Features/Home/FullMapPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = VKFoodArea.Features.Home.FullMapPage.xaml

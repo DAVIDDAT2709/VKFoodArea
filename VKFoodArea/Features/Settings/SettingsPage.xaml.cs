@@ -8,94 +8,59 @@ namespace VKFoodArea.Features.Settings;
 
 public partial class SettingsPage : ContentPage
 {
-    private readonly AppSettingsService _settings;
-    private readonly AppLanguageService _languageService;
-    private readonly NarrationService _narrationService;
+    private readonly AccountSettingsViewModel _viewModel;
     private readonly AppTextService _text;
 
-    private readonly List<LanguageItem> _languages = new()
-    {
-        new LanguageItem("Tiếng Việt", "vi"),
-        new LanguageItem("English", "en"),
-        new LanguageItem("中文", "zh"),
-        new LanguageItem("日本語", "ja"),
-        new LanguageItem("Deutsch", "de")
-    };
-
-    private readonly List<string> _modes = new()
-    {
-        "Auto",
-        "Audio",
-        "TTS"
-    };
-
     public SettingsPage(
-        AppSettingsService settings,
-        AppLanguageService languageService,
-        NarrationService narrationService,
+        AccountSettingsViewModel viewModel,
         AppTextService text)
     {
         InitializeComponent();
-        _settings = settings;
-        _languageService = languageService;
-        _narrationService = narrationService;
+        _viewModel = viewModel;
         _text = text;
+        BindingContext = _viewModel;
 
-        LanguagePicker.ItemsSource = _languages;
-        LanguagePicker.ItemDisplayBinding = new Binding(nameof(LanguageItem.DisplayName));
-
-        ModePicker.ItemsSource = _modes;
+        LanguagePicker.ItemsSource = _viewModel.LanguageOptions;
+        LanguagePicker.ItemDisplayBinding = new Binding(nameof(AccountSettingsViewModel.LanguageOption.DisplayName));
+        ModePicker.ItemsSource = _viewModel.OutputModeOptions;
 
         LanguagePicker.SelectedIndexChanged += OnSelectionChanged;
         ModePicker.SelectedIndexChanged += OnSelectionChanged;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+        var result = await _viewModel.LoadAccountSettingsAsync();
+        SyncControlsFromViewModel();
         ApplyLocalizedText();
 
-        var lang = string.IsNullOrWhiteSpace(_settings.NarrationLanguage)
-            ? "vi"
-            : _settings.NarrationLanguage;
-
-        var mode = string.IsNullOrWhiteSpace(_settings.NarrationOutputMode)
-            ? "TTS"
-            : _settings.NarrationOutputMode;
-
-        LanguagePicker.SelectedItem = _languages.FirstOrDefault(x => x.Code == lang) ?? _languages[0];
-        ModePicker.SelectedItem = _modes.Contains(mode) ? mode : "TTS";
-
-        UpdateSummary(false);
+        if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.Message))
+            await DisplayAlert(_text["Common.Error"], result.Message, _text["Common.Ok"]);
     }
 
     private async void OnSaveClicked(object sender, EventArgs e)
     {
-        var selectedLanguage = LanguagePicker.SelectedItem as LanguageItem ?? _languages[0];
-        var selectedMode = ModePicker.SelectedItem?.ToString() ?? "TTS";
-
-        var languageCode = selectedLanguage.Code;
-        var languageName = selectedLanguage.DisplayName;
-
-        _settings.NarrationLanguage = languageCode;
-        _settings.NarrationOutputMode = selectedMode;
-
-        _languageService.CurrentLanguage = languageCode;
-        _text.SetLanguage(languageCode);
-
+        SyncViewModelFromControls();
+        var result = await _viewModel.UpdateProfileAsync();
         ApplyLocalizedText();
-        SummaryLabel.Text = _text.Format("Settings.SaveSummary", languageName, _text.GetModeDisplay(selectedMode));
-        await DisplayAlert(_text["Settings.SaveAlertTitle"], _text["Settings.SaveAlertMessage"], _text["Common.Ok"]);
+        SyncControlsFromViewModel();
+
+        var title = result.IsSuccess
+            ? _text["Settings.SaveAlertTitle"]
+            : _text["Common.Error"];
+        var message = result.Message ?? _text["Common.Error"];
+
+        await DisplayAlert(title, message, _text["Common.Ok"]);
     }
 
     private async void OnPreviewClicked(object sender, EventArgs e)
     {
+        SyncViewModelFromControls();
+
         try
         {
-            var selectedLanguage = LanguagePicker.SelectedItem as LanguageItem ?? _languages[0];
-            var languageCode = selectedLanguage.Code;
-
-            await _narrationService.PreviewAsync(_text.GetPreviewText(languageCode), languageCode);
+            await _viewModel.PreviewAsync();
         }
         catch (Exception ex)
         {
@@ -108,23 +73,20 @@ public partial class SettingsPage : ContentPage
 
     private void OnSelectionChanged(object? sender, EventArgs e)
     {
-        UpdateSummary(false);
-    }
-
-    private void UpdateSummary(bool saved)
-    {
-        var selectedLanguage = LanguagePicker.SelectedItem as LanguageItem ?? _languages[0];
-        var selectedMode = ModePicker.SelectedItem?.ToString() ?? "TTS";
-
-        SummaryLabel.Text = saved
-            ? _text.Format("Settings.SaveSummary", selectedLanguage.DisplayName, _text.GetModeDisplay(selectedMode))
-            : _text.Format("Settings.CurrentSummary", selectedLanguage.DisplayName, _text.GetModeDisplay(selectedMode));
+        SyncViewModelFromControls();
+        SummaryLabel.Text = _viewModel.SummaryText;
     }
 
     private void ApplyLocalizedText()
     {
-        Title = _text["Settings.PageTitle"];
-        HeaderTitleLabel.Text = _text["Settings.HeaderTitle"];
+        Title = _text["User.PageTitle"];
+        HeaderTitleLabel.Text = _text["User.PageTitle"];
+        ProfileSectionLabel.Text = _text["User.AccountInfo"];
+        UsernameLabel.Text = _text["User.Username"];
+        FullNameLabel.Text = _text["Register.FullNameLabel"];
+        EmailLabel.Text = _text["Register.EmailLabel"];
+        FullNameEntry.Placeholder = _text["Register.FullNamePlaceholder"];
+        EmailEntry.Placeholder = _text["Register.EmailPlaceholder"];
         LanguageSectionLabel.Text = _text["Settings.LanguageSection"];
         ModeSectionLabel.Text = _text["Settings.ModeSection"];
         PreviewTitleLabel.Text = _text["Settings.PreviewTitle"];
@@ -133,17 +95,27 @@ public partial class SettingsPage : ContentPage
         SaveButton.Text = _text["Common.Save"];
         LanguagePicker.Title = _text["Settings.LanguagePickerTitle"];
         ModePicker.Title = _text["Settings.ModePickerTitle"];
+        SummaryLabel.Text = _viewModel.SummaryText;
     }
 
-    private sealed class LanguageItem
+    private void SyncControlsFromViewModel()
     {
-        public LanguageItem(string displayName, string code)
-        {
-            DisplayName = displayName;
-            Code = code;
-        }
+        UsernameValueLabel.Text = string.IsNullOrWhiteSpace(_viewModel.Username)
+            ? "--"
+            : _viewModel.Username;
+        FullNameEntry.Text = _viewModel.FullName;
+        EmailEntry.Text = _viewModel.Email;
+        LanguagePicker.SelectedItem = _viewModel.SelectedLanguage;
+        ModePicker.SelectedItem = _viewModel.SelectedOutputMode;
+        SummaryLabel.Text = _viewModel.SummaryText;
+    }
 
-        public string DisplayName { get; }
-        public string Code { get; }
+    private void SyncViewModelFromControls()
+    {
+        _viewModel.FullName = FullNameEntry.Text?.Trim() ?? string.Empty;
+        _viewModel.Email = EmailEntry.Text?.Trim() ?? string.Empty;
+        _viewModel.SelectedLanguage = LanguagePicker.SelectedItem as AccountSettingsViewModel.LanguageOption
+                                      ?? _viewModel.LanguageOptions.First();
+        _viewModel.SelectedOutputMode = ModePicker.SelectedItem?.ToString() ?? "TTS";
     }
 }

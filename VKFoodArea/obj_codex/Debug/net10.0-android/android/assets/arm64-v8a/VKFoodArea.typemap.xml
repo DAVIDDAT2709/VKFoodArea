@@ -1,0 +1,14 @@
+<api type="debug" assembly-name="VKFoodArea" mvid="ce2086d894064cb9a5c62dfd4b55b23c">
+  <java-to-managed>
+    <entry java-name="crc6481e564c214041475/MainActivity" managed-name="VKFoodArea.MainActivity, VKFoodArea" managed-type-token-id="33554450" />
+    <entry java-name="crc6481e564c214041475/MainApplication" managed-name="VKFoodArea.MainApplication, VKFoodArea" managed-type-token-id="33554451" />
+    <entry java-name="crc64bb2bca98788d8d34/NarrationService_AndroidTtsInitListener" managed-name="VKFoodArea.Services.NarrationService+AndroidTtsInitListener, VKFoodArea" managed-type-token-id="33554521" />
+    <entry java-name="crc64bb2bca98788d8d34/NarrationService_NarrationUtteranceProgressListener" managed-name="VKFoodArea.Services.NarrationService+NarrationUtteranceProgressListener, VKFoodArea" managed-type-token-id="33554522" />
+  </java-to-managed>
+  <managed-to-java>
+    <entry java-name="crc6481e564c214041475/MainActivity" managed-name="VKFoodArea.MainActivity, VKFoodArea" managed-type-token-id="33554450" />
+    <entry java-name="crc6481e564c214041475/MainApplication" managed-name="VKFoodArea.MainApplication, VKFoodArea" managed-type-token-id="33554451" />
+    <entry java-name="crc64bb2bca98788d8d34/NarrationService_AndroidTtsInitListener" managed-name="VKFoodArea.Services.NarrationService+AndroidTtsInitListener, VKFoodArea" managed-type-token-id="33554521" />
+    <entry java-name="crc64bb2bca98788d8d34/NarrationService_NarrationUtteranceProgressListener" managed-name="VKFoodArea.Services.NarrationService+NarrationUtteranceProgressListener, VKFoodArea" managed-type-token-id="33554522" />
+  </managed-to-java>
+</api>

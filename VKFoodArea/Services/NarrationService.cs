@@ -33,10 +33,6 @@ public class NarrationService
     private static int? _currentPoiId;
 
     // chống spam cùng một quán trong 5 giây
-    private static int? _lastRequestedPoiId;
-    private static DateTime _lastAcceptedTapUtc = DateTime.MinValue;
-
-    private static readonly TimeSpan AntiSpamCooldown = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan SwitchPoiDelay = TimeSpan.FromSeconds(3);
 
 #if ANDROID
@@ -63,24 +59,31 @@ public class NarrationService
         _uiState = uiState;
     }
 
-    public async Task PlayPoiAsync(int poiId, string triggerSource = "manual", CancellationToken ct = default)
+    public async Task PlayPoiAsync(
+        int poiId,
+        string triggerSource = "manual",
+        string? overrideLanguage = null,
+        string? overrideMode = null,
+        CancellationToken ct = default)
     {
         var poi = await _db.Pois.FirstOrDefaultAsync(x => x.Id == poiId && x.IsActive, ct);
         if (poi is null)
             return;
 
-        await PlayPoiAsync(poi, triggerSource, ct);
+        await PlayPoiAsync(poi, triggerSource, overrideLanguage, overrideMode, ct);
     }
 
-    public async Task PlayPoiAsync(Poi poi, string triggerSource = "manual", CancellationToken ct = default)
+    public async Task PlayPoiAsync(
+        Poi poi,
+        string triggerSource = "manual",
+        string? overrideLanguage = null,
+        string? overrideMode = null,
+        CancellationToken ct = default)
     {
         if (poi is null || !poi.IsActive)
             return;
 
         // Chỉ chặn spam khi bấm lại cùng một quán trong 5 giây
-        if (IsSpamRequest(poi.Id))
-            return;
-
         var requestCts = ReplaceRequestToken(ct);
         var requestToken = requestCts.Token;
 
@@ -100,8 +103,14 @@ public class NarrationService
 
             requestToken.ThrowIfCancellationRequested();
 
-            var language = AppLanguageService.NormalizeLanguage(_settingsService.NarrationLanguage);
-            var mode = (_settingsService.NarrationOutputMode ?? "TTS").Trim();
+            var language = AppLanguageService.NormalizeLanguage(
+                string.IsNullOrWhiteSpace(overrideLanguage)
+                    ? _settingsService.NarrationLanguage
+                    : overrideLanguage);
+            var mode = NormalizePlaybackMode(
+                string.IsNullOrWhiteSpace(overrideMode)
+                    ? _settingsService.NarrationOutputMode
+                    : overrideMode);
 
             _languageService.CurrentLanguage = language;
 
@@ -205,21 +214,6 @@ public class NarrationService
         }
 
         return newCts;
-    }
-
-    private static bool IsSpamRequest(int poiId)
-    {
-        var now = DateTime.UtcNow;
-
-        if (_lastRequestedPoiId == poiId &&
-            now - _lastAcceptedTapUtc < AntiSpamCooldown)
-        {
-            return true;
-        }
-
-        _lastRequestedPoiId = poiId;
-        _lastAcceptedTapUtc = now;
-        return false;
     }
 
     private async Task LogNarrationAsync(
@@ -401,6 +395,16 @@ public class NarrationService
 
     private static string NormalizeScript(string? script)
         => (script ?? string.Empty).Trim();
+
+    private static string NormalizePlaybackMode(string? mode)
+    {
+        return (mode ?? "TTS").Trim() switch
+        {
+            "Auto" => "Auto",
+            "Audio" => "Audio",
+            _ => "TTS"
+        };
+    }
 
 #if ANDROID
     private static async Task SpeakWithAndroidTtsAsync(string text, string language, CancellationToken ct)
