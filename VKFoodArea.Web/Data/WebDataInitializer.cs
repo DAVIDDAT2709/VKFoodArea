@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 using VKFoodArea.Data;
 using VKFoodArea.Web.Models;
 
@@ -9,6 +10,7 @@ public static class WebDataInitializer
     public static async Task InitializeAsync(AppDbContext db)
     {
         await db.Database.MigrateAsync();
+        await EnsureNarrationHistoryUserKeyColumnAsync(db);
 
         if (!await db.Pois.AnyAsync())
         {
@@ -49,6 +51,33 @@ public static class WebDataInitializer
 
     private static string NormalizeQrCode(string? qrCode)
         => (qrCode ?? string.Empty).Trim().ToLowerInvariant();
+
+    private static async Task EnsureNarrationHistoryUserKeyColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "NarrationHistories", "UserKey"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE NarrationHistories ADD COLUMN UserKey TEXT NOT NULL DEFAULT '';");
+        }
+    }
+
+    private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"PRAGMA table_info('{tableName}');";
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            if (reader.GetString(1).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
 
     private static Poi MapPoi(SeedPoiData source) => new()
     {

@@ -15,21 +15,26 @@ public class PoiRepository
 
     public Task<List<Poi>> GetActiveAsync(CancellationToken ct = default)
         => _db.Pois
+            .AsNoTracking()
             .Where(x => x.IsActive)
             .OrderByDescending(x => x.Priority)
             .ToListAsync(ct);
 
     public Task<Poi?> GetByIdAsync(int id, CancellationToken ct = default)
-        => _db.Pois.FirstOrDefaultAsync(x => x.Id == id, ct);
+        => _db.Pois
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public Task<Poi?> GetByQrCodeAsync(string qrCode, CancellationToken ct = default)
     {
         var normalized = (qrCode ?? string.Empty).Trim().ToLowerInvariant();
 
-        return _db.Pois.FirstOrDefaultAsync(
-            x => x.IsActive &&
-                 !string.IsNullOrWhiteSpace(x.QrCode) &&
-                 x.QrCode.ToLower() == normalized,
-            ct);
+        return _db.Pois
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.IsActive &&
+                     !string.IsNullOrWhiteSpace(x.QrCode) &&
+                     x.QrCode.ToLower() == normalized,
+                ct);
     }
 }

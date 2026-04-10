@@ -23,8 +23,6 @@ public partial class HomeDesignPage : ContentPage
 {
     private readonly HomeViewModel _viewModel;
     private readonly NarrationService _narrationService;
-    private readonly SettingsPage _settingsPage;
-    private readonly FullMapPage _fullMapPage;
     private readonly IServiceProvider _serviceProvider;
     private readonly FoodRepository _foodRepository;
     private readonly AppTextService _text;
@@ -49,8 +47,6 @@ public partial class HomeDesignPage : ContentPage
     public HomeDesignPage(
         HomeViewModel viewModel,
         NarrationService narrationService,
-        SettingsPage settingsPage,
-        FullMapPage fullMapPage,
         FoodRepository foodRepository,
         IServiceProvider serviceProvider,
         AppTextService text,
@@ -59,8 +55,6 @@ public partial class HomeDesignPage : ContentPage
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
         _narrationService = narrationService;
-        _settingsPage = settingsPage;
-        _fullMapPage = fullMapPage;
         _foodRepository = foodRepository;
         _serviceProvider = serviceProvider;
         _text = text;
@@ -254,7 +248,7 @@ public partial class HomeDesignPage : ContentPage
             _isOpeningFullMap = true;
             try
             {
-                await Navigation.PushAsync(_fullMapPage);
+                await Navigation.PushAsync(_serviceProvider.GetRequiredService<FullMapPage>());
                 return;
             }
             finally
@@ -343,12 +337,12 @@ public partial class HomeDesignPage : ContentPage
 
     private async void OnOpenFullMapClicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(_fullMapPage);
+        await Navigation.PushAsync(_serviceProvider.GetRequiredService<FullMapPage>());
     }
 
     private async void OnSettingsClicked(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(_settingsPage);
+        await Navigation.PushAsync(_serviceProvider.GetRequiredService<SettingsPage>());
     }
 
     private async void OnPoiCardTapped(object sender, TappedEventArgs e)
@@ -376,7 +370,7 @@ public partial class HomeDesignPage : ContentPage
             return;
         }
 
-        await DisplayAlert(
+        await DisplayAlertAsync(
             _text["Home.FeaturedFoodAlertTitle"],
             $"{food.Name}\n{food.RestaurantName}",
             _text["Common.Ok"]);
@@ -410,7 +404,6 @@ public partial class HomeDesignPage : ContentPage
         return Navigation.PushAsync(new PoiDetailPage(
             poi,
             _narrationService,
-            _foodRepository,
             _text,
             _narrationUiState));
     }

@@ -8,14 +8,24 @@ namespace VKFoodArea;
 
 public partial class App : Application
 {
+    private readonly IServiceProvider _serviceProvider;
+    private readonly AuthService _authService;
+
     public App(IServiceProvider serviceProvider, AuthService authService)
     {
         InitializeComponent();
+        _serviceProvider = serviceProvider;
+        _authService = authService;
+    }
 
-        var hasSession = authService.TryRestoreSessionAsync().GetAwaiter().GetResult();
-        MainPage = new NavigationPage(
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        var hasSession = _authService.TryRestoreSessionAsync().GetAwaiter().GetResult();
+        Page rootPage =
             hasSession
-                ? serviceProvider.GetRequiredService<HomeDesignPage>()
-                : serviceProvider.GetRequiredService<LoginPage>());
+                ? _serviceProvider.GetRequiredService<HomeDesignPage>()
+                : _serviceProvider.GetRequiredService<LoginPage>();
+
+        return new Window(new NavigationPage(rootPage));
     }
 }

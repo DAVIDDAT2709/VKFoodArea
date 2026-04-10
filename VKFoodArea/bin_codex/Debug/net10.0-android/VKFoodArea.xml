@@ -13,6 +13,10 @@
             Android Resource Designer class.
             Exposes the Android Resource designer assembly into the project Namespace.
             </summary>
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
         </member>
         <member name="F:VKFoodArea.Services.GeofenceEngine.PriorityTieThresholdMeters">
             <summary>

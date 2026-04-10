@@ -12,6 +12,9 @@ public class NarrationHistory
     [Required, StringLength(120)]
     public string PoiName { get; set; } = string.Empty;
 
+    [StringLength(80)]
+    public string UserKey { get; set; } = string.Empty;
+
     [Required, StringLength(10)]
     public string Language { get; set; } = "vi";
 

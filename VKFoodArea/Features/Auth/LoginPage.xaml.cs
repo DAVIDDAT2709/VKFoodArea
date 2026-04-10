@@ -8,6 +8,7 @@ public partial class LoginPage : ContentPage
     private readonly AuthService _authService;
     private readonly IServiceProvider _serviceProvider;
     private readonly LanguageSelectionFlowService _languageSelectionFlowService;
+    private readonly AppRootNavigationService _rootNavigationService;
     private readonly AppTextService _text;
     private string _selectedUserType = "domestic";
     private string _selectedLanguage = "en";
@@ -16,12 +17,14 @@ public partial class LoginPage : ContentPage
         AuthService authService,
         IServiceProvider serviceProvider,
         LanguageSelectionFlowService languageSelectionFlowService,
+        AppRootNavigationService rootNavigationService,
         AppTextService text)
     {
         InitializeComponent();
         _authService = authService;
         _serviceProvider = serviceProvider;
         _languageSelectionFlowService = languageSelectionFlowService;
+        _rootNavigationService = rootNavigationService;
         _text = text;
     }
 
@@ -99,16 +102,18 @@ public partial class LoginPage : ContentPage
         SelectionOverlay.IsVisible = false;
     }
 
-    private void OnSelectionConfirmClicked(object sender, EventArgs e)
+    private async void OnSelectionConfirmClicked(object sender, EventArgs e)
     {
         if (_selectedUserType == "domestic")
             _languageSelectionFlowService.ApplyDomestic();
         else
             _languageSelectionFlowService.ApplyTourist(_selectedLanguage);
 
+        await _authService.UpdateCurrentUserSoundSettingsAsync(
+            _selectedUserType == "domestic" ? "vi" : _selectedLanguage);
+
         SelectionOverlay.IsVisible = false;
-        Application.Current!.MainPage =
-            new NavigationPage(_serviceProvider.GetRequiredService<HomeDesignPage>());
+        await _rootNavigationService.SetRootAsync<HomeDesignPage>();
     }
 
     private void OnLanguageButtonClicked(object? sender, EventArgs e)

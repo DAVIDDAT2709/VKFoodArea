@@ -10,6 +10,7 @@ namespace VKFoodArea.Features.Home;
 public partial class HistoryPage : ContentPage
 {
     private readonly HistoryViewModel _viewModel;
+    private readonly AppRootNavigationService _rootNavigationService;
     private readonly IServiceProvider _serviceProvider;
     private readonly AppTextService _text;
     private bool _isRefreshing;
@@ -18,11 +19,13 @@ public partial class HistoryPage : ContentPage
 
     public HistoryPage(
         HistoryViewModel viewModel,
+        AppRootNavigationService rootNavigationService,
         IServiceProvider serviceProvider,
         AppTextService text)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _rootNavigationService = rootNavigationService;
         _serviceProvider = serviceProvider;
         _text = text;
         BindingContext = _viewModel;
@@ -40,7 +43,7 @@ public partial class HistoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
         }
     }
 
@@ -102,7 +105,7 @@ public partial class HistoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
         }
     }
 
@@ -110,11 +113,11 @@ public partial class HistoryPage : ContentPage
     {
         if (_viewModel.Items.Count == 0)
         {
-            await DisplayAlert(_text["Common.Error"], _text["History.ClearEmptyMessage"], _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["Common.Error"], _text["History.ClearEmptyMessage"], _text["Common.Ok"]);
             return;
         }
 
-        var confirm = await DisplayAlert(
+        var confirm = await DisplayAlertAsync(
             _text["History.ClearTitle"],
             _text["History.ClearMessage"],
             _text["Common.Delete"],
@@ -137,19 +140,18 @@ public partial class HistoryPage : ContentPage
         var result = await _viewModel.ReplaySelectedHistoryAsync();
 
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.Message))
-            await DisplayAlert(_text["Common.Error"], result.Message, _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["Common.Error"], result.Message, _text["Common.Ok"]);
     }
 
     private async void OnGoHomeClicked(object sender, EventArgs e)
     {
-        if (Navigation.NavigationStack.OfType<HomeDesignPage>().Any())
+        if (Navigation.NavigationStack.FirstOrDefault() is HomeDesignPage)
         {
             await Navigation.PopToRootAsync();
             return;
         }
 
-        Application.Current!.MainPage =
-            new NavigationPage(_serviceProvider.GetRequiredService<HomeDesignPage>());
+        await _rootNavigationService.SetRootAsync<HomeDesignPage>();
     }
 
     private async void OnOpenFullMapClicked(object sender, EventArgs e)
@@ -195,14 +197,5 @@ public partial class HistoryPage : ContentPage
     }
 
     private string GetReplayButtonText()
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => "Replay",
-            "zh" => "再次播放",
-            "ja" => "もう一度聞く",
-            "de" => "Erneut abspielen",
-            _ => "Nghe lại"
-        };
-    }
+        => _text["History.ReplayButton"];
 }

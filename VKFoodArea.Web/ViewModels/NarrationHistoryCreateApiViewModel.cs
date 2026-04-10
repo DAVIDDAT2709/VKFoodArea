@@ -16,6 +16,10 @@ public class NarrationHistoryCreateApiViewModel
     [Display(Name = "Ma QR")]
     public string? QrCode { get; set; }
 
+    [StringLength(80)]
+    [Display(Name = "User key")]
+    public string? UserKey { get; set; }
+
     [Required]
     [StringLength(10)]
     [Display(Name = "Ngon ngu")]

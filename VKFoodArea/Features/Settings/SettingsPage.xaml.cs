@@ -35,7 +35,7 @@ public partial class SettingsPage : ContentPage
         ApplyLocalizedText();
 
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.Message))
-            await DisplayAlert(_text["Common.Error"], result.Message, _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["Common.Error"], result.Message, _text["Common.Ok"]);
     }
 
     private async void OnSaveClicked(object sender, EventArgs e)
@@ -50,7 +50,7 @@ public partial class SettingsPage : ContentPage
             : _text["Common.Error"];
         var message = result.Message ?? _text["Common.Error"];
 
-        await DisplayAlert(title, message, _text["Common.Ok"]);
+        await DisplayAlertAsync(title, message, _text["Common.Ok"]);
     }
 
     private async void OnPreviewClicked(object sender, EventArgs e)
@@ -63,7 +63,7 @@ public partial class SettingsPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(
+            await DisplayAlertAsync(
                 _text["Settings.PreviewErrorTitle"],
                 _text.Format("Settings.PreviewErrorMessage", ex.Message),
                 _text["Common.Ok"]);

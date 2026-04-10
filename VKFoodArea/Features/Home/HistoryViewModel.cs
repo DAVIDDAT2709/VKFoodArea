@@ -111,7 +111,9 @@ public class HistoryViewModel : INotifyPropertyChanged
     public async Task LoadListeningHistoryAsync()
     {
         var selectedHistoryId = SelectedItem?.Id;
-        var result = await _historyService.GetListeningHistoryAsync(_authService.GetCurrentUserId());
+        var result = await _historyService.GetListeningHistoryAsync(
+            _authService.GetCurrentUserId(),
+            _authService.GetCurrentUserSyncKey());
 
         Items.Clear();
 
@@ -124,7 +126,7 @@ public class HistoryViewModel : INotifyPropertyChanged
                 PoiName = record.PoiName,
                 PlayedAtUtc = record.PlayedAtUtc,
                 PlayedAtText = record.PlayedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                MetaText = $"{_text.GetModeDisplay(record.Mode)} • {_text.GetLanguageDisplay(record.Language)} • {GetOriginDisplay(record.Origin)}",
+                MetaText = $"{_text.GetModeDisplay(record.Mode)} | {_text.GetLanguageDisplay(record.Language)} | {GetOriginDisplay(record.Origin)}",
                 CanReplay = record.CanReplay
             });
         }
@@ -159,7 +161,7 @@ public class HistoryViewModel : INotifyPropertyChanged
             return;
         }
 
-        var detail = await _historyService.GetHistoryDetailAsync(item.Id);
+        var detail = await _historyService.GetHistoryDetailAsync(item.Id, _authService.GetCurrentUserId());
         if (detail is null)
         {
             SelectedDetailTitle = item.PoiName;
@@ -172,8 +174,8 @@ public class HistoryViewModel : INotifyPropertyChanged
 
         SelectedDetailTitle = detail.PoiName;
         SelectedDetailMeta =
-            $"{detail.PlayedAtUtc.ToLocalTime():dd/MM/yyyy HH:mm} • " +
-            $"{_text.GetModeDisplay(detail.Mode)} • {_text.GetLanguageDisplay(detail.Language)} • {GetOriginDisplay(detail.Origin)}";
+            $"{detail.PlayedAtUtc.ToLocalTime():dd/MM/yyyy HH:mm} | " +
+            $"{_text.GetModeDisplay(detail.Mode)} | {_text.GetLanguageDisplay(detail.Language)} | {GetOriginDisplay(detail.Origin)}";
         SelectedDetailStatus = detail.CanReplay
             ? GetDetailReadyText()
             : GetDetailUnavailableText();
@@ -186,7 +188,9 @@ public class HistoryViewModel : INotifyPropertyChanged
         if (SelectedItem is null)
             return HistoryReplayResult.Fail(GetDetailUnavailableText());
 
-        var source = await _historyService.GetPlaybackSourceAsync(SelectedItem.Id);
+        var source = await _historyService.GetPlaybackSourceAsync(
+            SelectedItem.Id,
+            _authService.GetCurrentUserId());
         if (source is null)
         {
             SelectedDetailStatus = GetDetailUnavailableText();
@@ -209,7 +213,9 @@ public class HistoryViewModel : INotifyPropertyChanged
 
     public async Task ClearHistoryAsync()
     {
-        await _historyService.ClearLocalHistoryAsync();
+        await _historyService.ClearHistoryAsync(
+            _authService.GetCurrentUserId(),
+            _authService.GetCurrentUserSyncKey());
         SelectedItem = null;
         ClearSelectedDetail();
         await LoadListeningHistoryAsync();
@@ -225,90 +231,29 @@ public class HistoryViewModel : INotifyPropertyChanged
     }
 
     private string BuildLiveStatusText(int remoteCount)
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => $"Realtime app/web sync • {remoteCount} web items",
-            "zh" => $"应用与网页实时同步 • 网页 {remoteCount} 条",
-            "ja" => $"アプリとWebを自動同期中 • Web {remoteCount} 件",
-            "de" => $"App/Web Echtzeitabgleich • {remoteCount} Web-Einträge",
-            _ => $"Đồng bộ realtime App/Web • {remoteCount} bản ghi web"
-        };
-    }
+        => _text.Format("History.LiveStatus", remoteCount);
 
     private string BuildLocalOnlyStatusText(int localCount)
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => $"Using local app history • {localCount} items",
-            "zh" => $"当前使用应用本地记录 • {localCount} 条",
-            "ja" => $"現在はアプリ内履歴を表示中 • {localCount} 件",
-            "de" => $"Lokalen App-Verlauf anzeigen • {localCount} Einträge",
-            _ => $"Đang dùng lịch sử local trong app • {localCount} bản ghi"
-        };
-    }
+        => _text.Format("History.LocalStatus", localCount);
 
     private string GetOriginDisplay(string origin)
     {
         var normalized = (origin ?? string.Empty).Trim().ToLowerInvariant();
 
-        return _text.CurrentLanguage switch
-        {
-            "en" => normalized == "web" ? "Web" : "App",
-            "zh" => normalized == "web" ? "网页" : "应用",
-            "ja" => normalized == "web" ? "Web" : "アプリ",
-            "de" => normalized == "web" ? "Web" : "App",
-            _ => normalized == "web" ? "Web" : "App"
-        };
+        return normalized == "web"
+            ? _text["History.OriginWeb"]
+            : _text["History.OriginApp"];
     }
 
-    private string GetDetailReadyText()
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => "Replay source is ready.",
-            "zh" => "已准备好重播该讲解。",
-            "ja" => "この案内は再生できます。",
-            "de" => "Die Wiedergabe ist bereit.",
-            _ => "Bản ghi này đã sẵn sàng để nghe lại."
-        };
-    }
+    private string GetDetailReadyText() => _text["History.DetailReady"];
 
-    private string GetDetailUnavailableText()
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => "Replay source is unavailable for this record.",
-            "zh" => "当前记录没有可重播的来源。",
-            "ja" => "この履歴には再生元がありません。",
-            "de" => "Für diesen Eintrag ist keine Wiedergabequelle verfügbar.",
-            _ => "Bản ghi này hiện chưa có nguồn để nghe lại."
-        };
-    }
+    private string GetDetailUnavailableText() => _text["History.DetailUnavailable"];
 
     private string BuildReplayStatusText(string poiName)
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => $"Replaying: {poiName}",
-            "zh" => $"正在重播：{poiName}",
-            "ja" => $"再生中: {poiName}",
-            "de" => $"Wiedergabe: {poiName}",
-            _ => $"Đang nghe lại: {poiName}"
-        };
-    }
+        => _text.Format("History.ReplayStatus", poiName);
 
     private string BuildReplayCompleteText(string poiName)
-    {
-        return _text.CurrentLanguage switch
-        {
-            "en" => $"Playing again: {poiName}",
-            "zh" => $"已再次播放：{poiName}",
-            "ja" => $"再度再生中: {poiName}",
-            "de" => $"Erneut abgespielt: {poiName}",
-            _ => $"Đã phát lại: {poiName}"
-        };
-    }
+        => _text.Format("History.ReplayComplete", poiName);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

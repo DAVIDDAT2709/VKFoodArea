@@ -24,21 +24,25 @@ public class HistoryService
 
     public async Task<HistoryLoadResult> GetListeningHistoryAsync(
         int? userId,
+        string? userKey,
         CancellationToken ct = default)
     {
-        var localRows = await LoadLocalRowsAsync(ct);
+        var localRows = await LoadLocalRowsAsync(userId, ct);
         List<HistoryRecord>? remoteRows = null;
         var remoteAvailable = false;
 
-        try
+        if (!string.IsNullOrWhiteSpace(userKey))
         {
-            var remoteItems = await _narrationSyncService.GetRecentHistoryAsync(top: 100, ct: ct);
-            remoteRows = remoteItems.Select(MapRemoteRow).ToList();
-            remoteAvailable = true;
-        }
-        catch
-        {
-            remoteRows = null;
+            try
+            {
+                var remoteItems = await _narrationSyncService.GetRecentHistoryAsync(userKey: userKey, top: 100, ct: ct);
+                remoteRows = remoteItems.Select(MapRemoteRow).ToList();
+                remoteAvailable = true;
+            }
+            catch
+            {
+                remoteRows = null;
+            }
         }
 
         var mergedRows = MergeRows(localRows, remoteRows)
@@ -57,16 +61,18 @@ public class HistoryService
             remoteAvailable);
     }
 
-    public async Task<HistoryPlaybackDetail?> GetHistoryDetailAsync(int historyId, CancellationToken ct = default)
+    public async Task<HistoryPlaybackDetail?> GetHistoryDetailAsync(
+        int historyId,
+        int? userId,
+        CancellationToken ct = default)
     {
         if (_recordCache.TryGetValue(historyId, out var cachedRecord))
         {
             return await BuildPlaybackDetailAsync(cachedRecord, ct);
         }
 
-        var log = await _db.NarrationLogs
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == historyId, ct);
+        var logsQuery = await BuildScopedNarrationLogsQueryAsync(userId, ct);
+        var log = await logsQuery.FirstOrDefaultAsync(x => x.Id == historyId, ct);
 
         if (log is null)
             return null;
@@ -88,9 +94,12 @@ public class HistoryService
         return await BuildPlaybackDetailAsync(record, ct);
     }
 
-    public async Task<HistoryPlaybackSource?> GetPlaybackSourceAsync(int historyId, CancellationToken ct = default)
+    public async Task<HistoryPlaybackSource?> GetPlaybackSourceAsync(
+        int historyId,
+        int? userId,
+        CancellationToken ct = default)
     {
-        var detail = await GetHistoryDetailAsync(historyId, ct);
+        var detail = await GetHistoryDetailAsync(historyId, userId, ct);
         if (detail is null || !detail.CanReplay || !detail.PoiId.HasValue)
             return null;
 
@@ -102,18 +111,34 @@ public class HistoryService
             detail.Mode);
     }
 
-    public async Task ClearLocalHistoryAsync(CancellationToken ct = default)
+    public async Task ClearHistoryAsync(int? userId, string? userKey, CancellationToken ct = default)
     {
-        var logs = await _db.NarrationLogs.ToListAsync(ct);
-        _db.NarrationLogs.RemoveRange(logs);
-        await _db.SaveChangesAsync(ct);
+        var logsQuery = await BuildScopedNarrationLogsQueryAsync(userId, ct);
+        var logs = await logsQuery.ToListAsync(ct);
+
+        if (logs.Count > 0)
+        {
+            _db.NarrationLogs.RemoveRange(logs);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        try
+        {
+            await _narrationSyncService.ClearHistoryAsync(userKey, ct: ct);
+        }
+        catch
+        {
+            // Local clear must still succeed even if the web endpoint is temporarily unavailable.
+        }
+
         _recordCache.Clear();
     }
 
-    private async Task<List<HistoryRecord>> LoadLocalRowsAsync(CancellationToken ct)
+    private async Task<List<HistoryRecord>> LoadLocalRowsAsync(int? userId, CancellationToken ct)
     {
+        var logsQuery = await BuildScopedNarrationLogsQueryAsync(userId, ct);
         var rawRows = await (
-            from log in _db.NarrationLogs.AsNoTracking()
+            from log in logsQuery
             join poi in _db.Pois.AsNoTracking() on log.PoiId equals poi.Id into poiGroup
             from poi in poiGroup.DefaultIfEmpty()
             select new
@@ -144,6 +169,22 @@ public class HistoryService
                     x.HasPoi);
             })
             .ToList();
+    }
+
+    private async Task<IQueryable<NarrationLog>> BuildScopedNarrationLogsQueryAsync(
+        int? userId,
+        CancellationToken ct)
+    {
+        var query = _db.NarrationLogs.AsQueryable();
+        var hasScopedLogs = await query.AsNoTracking().AnyAsync(x => x.UserId.HasValue, ct);
+
+        if (!userId.HasValue)
+            return query.Where(x => x.UserId == null);
+
+        if (!hasScopedLogs)
+            return query.Where(_ => true);
+
+        return query.Where(x => x.UserId == userId.Value);
     }
 
     private static HistoryRecord MapRemoteRow(NarrationHistoryRemoteItem item)

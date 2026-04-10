@@ -63,8 +63,6 @@ public class PoiSyncService
                 .Where(x => !string.IsNullOrWhiteSpace(x.Key))
                 .GroupBy(x => x.Key, StringComparer.Ordinal)
                 .ToDictionary(x => x.Key, x => x.First().Poi, StringComparer.Ordinal);
-            var syncedLocals = new HashSet<Poi>();
-
             await using var transaction = await _db.Database.BeginTransactionAsync(ct);
 
             foreach (var dto in remotePois)
@@ -77,7 +75,6 @@ public class PoiSyncService
                 }
 
                 ApplyRemotePoi(local, dto);
-                syncedLocals.Add(local);
 
                 var normalizedQr = NormalizeQrCode(local.QrCode);
                 if (!string.IsNullOrWhiteSpace(normalizedQr))
@@ -87,13 +84,6 @@ public class PoiSyncService
                 if (!string.IsNullOrWhiteSpace(identityKey))
                     localByIdentity[identityKey] = local;
             }
-
-            var staleLocals = localPois
-                .Where(x => !syncedLocals.Contains(x))
-                .ToList();
-
-            if (staleLocals.Count > 0)
-                _db.Pois.RemoveRange(staleLocals);
 
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);

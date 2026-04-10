@@ -11,7 +11,6 @@ public partial class QrScannerPage : ContentPage
     private readonly QrLookupService _qrLookupService;
     private readonly PoiRepository _poiRepository;
     private readonly NarrationService _narrationService;
-    private readonly FoodRepository _foodRepository;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
 
@@ -22,7 +21,6 @@ public partial class QrScannerPage : ContentPage
         QrLookupService qrLookupService,
         PoiRepository poiRepository,
         NarrationService narrationService,
-        FoodRepository foodRepository,
         AppTextService text,
         NarrationUiStateService narrationUiState)
     {
@@ -31,7 +29,6 @@ public partial class QrScannerPage : ContentPage
         _qrLookupService = qrLookupService;
         _poiRepository = poiRepository;
         _narrationService = narrationService;
-        _foodRepository = foodRepository;
         _text = text;
         _narrationUiState = narrationUiState;
 
@@ -50,7 +47,7 @@ public partial class QrScannerPage : ContentPage
 
         if (!BarcodeScanning.IsSupported)
         {
-            await DisplayAlert(_text["Qr.NotSupportedTitle"], _text["Qr.NotSupportedMessage"], _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["Qr.NotSupportedTitle"], _text["Qr.NotSupportedMessage"], _text["Common.Ok"]);
             await Navigation.PopAsync();
             return;
         }
@@ -61,7 +58,7 @@ public partial class QrScannerPage : ContentPage
 
         if (status != PermissionStatus.Granted)
         {
-            await DisplayAlert(_text["Qr.PermissionTitle"], _text["Qr.PermissionMessage"], _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["Qr.PermissionTitle"], _text["Qr.PermissionMessage"], _text["Common.Ok"]);
             await Navigation.PopAsync();
             return;
         }
@@ -98,7 +95,7 @@ public partial class QrScannerPage : ContentPage
             if (poi is null)
             {
                 var retry = await MainThread.InvokeOnMainThreadAsync(() =>
-                    DisplayAlert(
+                    DisplayAlertAsync(
                         _text["Qr.NotFoundTitle"],
                         _text.Format("Qr.NotFoundMessage", value),
                         _text["Common.Again"],
@@ -121,7 +118,6 @@ public partial class QrScannerPage : ContentPage
                 Navigation.PushAsync(new PoiDetailPage(
                     poi,
                     _narrationService,
-                    _foodRepository,
                     _text,
                     _narrationUiState)));
 
@@ -130,7 +126,7 @@ public partial class QrScannerPage : ContentPage
         catch (Exception ex)
         {
             var retry = await MainThread.InvokeOnMainThreadAsync(() =>
-                DisplayAlert(
+                DisplayAlertAsync(
                     _text["Qr.ConnectionErrorTitle"],
                     ex.Message,
                     _text["Common.Again"],
@@ -163,27 +159,59 @@ public partial class QrScannerPage : ContentPage
     private static Poi? MergePoiForDisplay(Poi? localPoi, Poi? webPoi)
     {
         if (localPoi is null)
-            return webPoi;
+            return ClonePoi(webPoi);
 
         if (webPoi is null)
-            return localPoi;
+            return ClonePoi(localPoi);
 
-        localPoi.Name = webPoi.Name;
-        localPoi.Address = webPoi.Address;
-        localPoi.PhoneNumber = webPoi.PhoneNumber;
-        localPoi.ImageUrl = webPoi.ImageUrl;
-        localPoi.Description = webPoi.Description;
-        localPoi.Latitude = webPoi.Latitude;
-        localPoi.Longitude = webPoi.Longitude;
-        localPoi.RadiusMeters = webPoi.RadiusMeters;
-        localPoi.QrCode = webPoi.QrCode;
-        localPoi.IsActive = webPoi.IsActive;
-        localPoi.TtsScriptVi = webPoi.TtsScriptVi;
-        localPoi.TtsScriptEn = webPoi.TtsScriptEn;
-        localPoi.TtsScriptZh = webPoi.TtsScriptZh;
-        localPoi.TtsScriptJa = webPoi.TtsScriptJa;
-        localPoi.TtsScriptDe = webPoi.TtsScriptDe;
-        return localPoi;
+        var merged = ClonePoi(localPoi);
+        if (merged is null)
+            return ClonePoi(webPoi);
+
+        merged.Name = webPoi.Name;
+        merged.Address = webPoi.Address;
+        merged.PhoneNumber = webPoi.PhoneNumber;
+        merged.ImageUrl = webPoi.ImageUrl;
+        merged.Description = webPoi.Description;
+        merged.Latitude = webPoi.Latitude;
+        merged.Longitude = webPoi.Longitude;
+        merged.RadiusMeters = webPoi.RadiusMeters;
+        merged.QrCode = webPoi.QrCode;
+        merged.IsActive = webPoi.IsActive;
+        merged.TtsScriptVi = webPoi.TtsScriptVi;
+        merged.TtsScriptEn = webPoi.TtsScriptEn;
+        merged.TtsScriptZh = webPoi.TtsScriptZh;
+        merged.TtsScriptJa = webPoi.TtsScriptJa;
+        merged.TtsScriptDe = webPoi.TtsScriptDe;
+        return merged;
+    }
+
+    private static Poi? ClonePoi(Poi? poi)
+    {
+        if (poi is null)
+            return null;
+
+        return new Poi
+        {
+            Id = poi.Id,
+            Name = poi.Name,
+            Address = poi.Address,
+            PhoneNumber = poi.PhoneNumber,
+            ImageUrl = poi.ImageUrl,
+            Description = poi.Description,
+            Latitude = poi.Latitude,
+            Longitude = poi.Longitude,
+            RadiusMeters = poi.RadiusMeters,
+            Priority = poi.Priority,
+            QrCode = poi.QrCode,
+            IsActive = poi.IsActive,
+            MapUrl = poi.MapUrl,
+            TtsScriptVi = poi.TtsScriptVi,
+            TtsScriptEn = poi.TtsScriptEn,
+            TtsScriptZh = poi.TtsScriptZh,
+            TtsScriptJa = poi.TtsScriptJa,
+            TtsScriptDe = poi.TtsScriptDe
+        };
     }
 
     private void ApplyLocalizedText()

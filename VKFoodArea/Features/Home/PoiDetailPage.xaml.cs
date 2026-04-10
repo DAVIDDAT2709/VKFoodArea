@@ -1,5 +1,4 @@
 ﻿using VKFoodArea.Models;
-using VKFoodArea.Repositories;
 using VKFoodArea.Services;
 
 namespace VKFoodArea.Features.Home;
@@ -15,7 +14,6 @@ public partial class PoiDetailPage : ContentPage
     public PoiDetailPage(
         Poi poi,
         NarrationService narrationService,
-        FoodRepository foodRepository,
         AppTextService text,
         NarrationUiStateService narrationUiState)
     {
@@ -50,7 +48,7 @@ public partial class PoiDetailPage : ContentPage
         }
         catch
         {
-            await DisplayAlert(_text["PoiDetail.PlayErrorTitle"], _text["PoiDetail.PlayErrorMessage"], _text["Common.Ok"]);
+            await DisplayAlertAsync(_text["PoiDetail.PlayErrorTitle"], _text["PoiDetail.PlayErrorMessage"], _text["Common.Ok"]);
         }
     }
 

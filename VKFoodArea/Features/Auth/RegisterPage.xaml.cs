@@ -81,7 +81,7 @@ public partial class RegisterPage : ContentPage
             return;
         }
 
-        await DisplayAlert(
+        await DisplayAlertAsync(
             _text["Register.SuccessTitle"],
             _text["Register.SuccessMessage"],
             _text["Common.Ok"]);

@@ -18,6 +18,7 @@ public static class AppDataInitializer
         await db.Database.EnsureCreatedAsync();
         await EnsureAppUsersEmailColumnAsync(db);
         await EnsureAppUsersSoundSettingsColumnsAsync(db);
+        await EnsureNarrationLogsUserColumnAsync(db);
         await SeedMissingEmailsAsync(db);
         await SeedMissingSoundSettingsAsync(db);
 
@@ -163,6 +164,18 @@ public static class AppDataInitializer
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE AppUsers ADD COLUMN NarrationPlaybackMode TEXT NOT NULL DEFAULT 'TTS';");
         }
+    }
+
+    private static async Task EnsureNarrationLogsUserColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (await HasColumnAsync(connection, "NarrationLogs", "UserId"))
+            return;
+
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE NarrationLogs ADD COLUMN UserId INTEGER NULL;");
     }
 
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)

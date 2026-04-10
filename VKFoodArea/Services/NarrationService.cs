@@ -8,6 +8,7 @@ using VKFoodArea.Models;
 using AndroidApp = Android.App.Application;
 using AndroidBundle = Android.OS.Bundle;
 using AndroidLocale = Java.Util.Locale;
+using AndroidTextToSpeechError = Android.Speech.Tts.TextToSpeechError;
 using AndroidOperationResult = Android.Speech.Tts.OperationResult;
 using AndroidQueueMode = Android.Speech.Tts.QueueMode;
 using AndroidTextToSpeech = Android.Speech.Tts.TextToSpeech;
@@ -24,6 +25,7 @@ public class NarrationService
     private readonly AppSettingsService _settingsService;
     private readonly NarrationSyncService _narrationSyncService;
     private readonly NarrationUiStateService _uiState;
+    private readonly AuthService _authService;
 
     private static readonly SemaphoreSlim _playLock = new(1, 1);
     private static CancellationTokenSource? _ttsCts;
@@ -50,13 +52,15 @@ public class NarrationService
         AppLanguageService languageService,
         AppSettingsService settingsService,
         NarrationSyncService narrationSyncService,
-        NarrationUiStateService uiState)
+        NarrationUiStateService uiState,
+        AuthService authService)
     {
         _db = db;
         _languageService = languageService;
         _settingsService = settingsService;
         _narrationSyncService = narrationSyncService;
         _uiState = uiState;
+        _authService = authService;
     }
 
     public async Task PlayPoiAsync(
@@ -139,11 +143,19 @@ public class NarrationService
 
             requestCts.Dispose();
 
-            if (_currentPoiId == poi.Id)
-                _currentPoiId = null;
+            var shouldClearPlaybackState = false;
 
-            _uiState.SetPlayback(false, poi, mode: null, language: null);
-            PublishPlaybackState(false, poi.Name, null, null);
+            if (_currentPoiId == poi.Id)
+            {
+                _currentPoiId = null;
+                shouldClearPlaybackState = true;
+            }
+
+            if (shouldClearPlaybackState)
+            {
+                _uiState.SetPlayback(false, poi, mode: null, language: null);
+                PublishPlaybackState(false, poi.Name, null, null);
+            }
         }
     }
 
@@ -225,6 +237,7 @@ public class NarrationService
     {
         _db.NarrationLogs.Add(new NarrationLog
         {
+            UserId = _authService.GetCurrentUserId(),
             PoiId = poi.Id,
             PlayedAt = DateTimeOffset.UtcNow,
             Mode = $"{mode}-{language}"
@@ -238,6 +251,7 @@ public class NarrationService
             poi.QrCode,
             language,
             mode,
+            _authService.GetCurrentUserSyncKey(),
             triggerSource,
             ct);
     }
@@ -581,31 +595,34 @@ public class NarrationService
                 1.0f,
                 1.0f,
                 false,
-                new AndroidLocale("en", "US"),
-                new AndroidLocale("en", "GB")),
+                CreateAndroidLocale("en-US"),
+                CreateAndroidLocale("en-GB")),
             "zh" => new AndroidSpeechProfile(
                 1.0f,
                 1.0f,
                 false,
-                new AndroidLocale("zh", "CN"),
-                new AndroidLocale("zh", "TW")),
+                CreateAndroidLocale("zh-CN"),
+                CreateAndroidLocale("zh-TW")),
             "ja" => new AndroidSpeechProfile(
                 1.0f,
                 1.0f,
                 false,
-                new AndroidLocale("ja", "JP")),
+                CreateAndroidLocale("ja-JP")),
             "de" => new AndroidSpeechProfile(
                 0.98f,
                 0.98f,
                 false,
-                new AndroidLocale("de", "DE")),
+                CreateAndroidLocale("de-DE")),
             _ => new AndroidSpeechProfile(
                 0.93f,
                 0.90f,
                 true,
-                new AndroidLocale("vi", "VN"))
+                CreateAndroidLocale("vi-VN"))
         };
     }
+
+    private static AndroidLocale CreateAndroidLocale(string languageTag)
+        => AndroidLocale.ForLanguageTag(languageTag);
 
     private static void RegisterUtterance(string utteranceId, TaskCompletionSource<bool> utteranceTcs)
     {
@@ -679,11 +696,21 @@ public class NarrationService
             CompleteUtterance(utteranceId);
         }
 
+#pragma warning disable CS0672
+        [Obsolete]
         public override void OnError(string? utteranceId)
         {
             CompleteUtterance(
                 utteranceId,
                 new InvalidOperationException("Android TTS synthesis failed."));
+        }
+#pragma warning restore CS0672
+
+        public override void OnError(string? utteranceId, AndroidTextToSpeechError errorCode)
+        {
+            CompleteUtterance(
+                utteranceId,
+                new InvalidOperationException($"Android TTS synthesis failed with error {errorCode}."));
         }
 
         public override void OnStop(string? utteranceId, bool interrupted)

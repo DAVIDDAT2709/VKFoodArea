@@ -21,6 +21,7 @@ public class NarrationSyncService
         string qrCode,
         string language,
         string mode,
+        string? userKey,
         string triggerSource = "manual",
         CancellationToken ct = default)
     {
@@ -32,6 +33,7 @@ public class NarrationSyncService
     PoiId = 0,
     PoiName = poiName,
     QrCode = qrCode,
+    UserKey = NormalizeUserKey(userKey),
     Language = language,
     TriggerSource = NormalizeTriggerSource(triggerSource),
     Mode = mode.ToLowerInvariant(),
@@ -51,21 +53,47 @@ public class NarrationSyncService
 
     public async Task<IReadOnlyList<NarrationHistoryRemoteItem>> GetRecentHistoryAsync(
         string? source = null,
+        string? userKey = null,
         int top = 100,
         CancellationToken ct = default)
     {
         var normalizedTop = Math.Clamp(top, 1, 200);
         var normalizedSource = NormalizeTriggerSource(source);
+        var normalizedUserKey = NormalizeUserKey(userKey);
         var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories?top={normalizedTop}";
 
         if (!string.IsNullOrWhiteSpace(normalizedSource))
             url += $"&source={Uri.EscapeDataString(normalizedSource)}";
+
+        if (!string.IsNullOrWhiteSpace(normalizedUserKey))
+            url += $"&userKey={Uri.EscapeDataString(normalizedUserKey)}";
 
         using var response = await _httpClient.GetAsync(url, ct);
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<List<NarrationHistoryRemoteItem>>(cancellationToken: ct)
                ?? [];
+    }
+
+    public async Task ClearHistoryAsync(string? userKey, string? source = null, CancellationToken ct = default)
+    {
+        var normalizedUserKey = NormalizeUserKey(userKey);
+        if (string.IsNullOrWhiteSpace(normalizedUserKey))
+            return;
+
+        var query = new List<string>
+        {
+            $"userKey={Uri.EscapeDataString(normalizedUserKey)}"
+        };
+
+        var normalizedSource = NormalizeTriggerSource(source);
+        if (!string.IsNullOrWhiteSpace(normalizedSource))
+            query.Add($"source={Uri.EscapeDataString(normalizedSource)}");
+
+        var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories?{string.Join("&", query)}";
+        using var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        using var response = await _httpClient.SendAsync(request, ct);
+        response.EnsureSuccessStatusCode();
     }
 
     private static string NormalizeTriggerSource(string? triggerSource)
@@ -80,4 +108,7 @@ public class NarrationSyncService
             _ => "manual"
         };
     }
+
+    private static string NormalizeUserKey(string? userKey)
+        => (userKey ?? string.Empty).Trim().ToLowerInvariant();
 }

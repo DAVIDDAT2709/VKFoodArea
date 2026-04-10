@@ -124,12 +124,54 @@ public class AuthService
     public int? GetCurrentUserId()
         => CurrentUser?.Id ?? _sessionStore.GetCurrentUserId();
 
+    public string? GetCurrentUserSyncKey()
+    {
+        var identifier = CurrentUser?.Email;
+
+        if (string.IsNullOrWhiteSpace(identifier))
+            identifier = CurrentUser?.Username;
+
+        if (string.IsNullOrWhiteSpace(identifier))
+            return null;
+
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(identifier.Trim().ToLowerInvariant()));
+        return Convert.ToHexString(bytes);
+    }
+
     public void ReplaceCurrentUser(AppUser? user)
     {
         CurrentUser = user;
 
         if (user is not null)
             ApplyUserSoundSettings(user);
+    }
+
+    public async Task UpdateCurrentUserSoundSettingsAsync(
+        string? language,
+        string? playbackMode = null,
+        CancellationToken ct = default)
+    {
+        var normalizedLanguage = AppLanguageService.NormalizeLanguage(language);
+        var normalizedPlaybackMode = SoundSettingsService.NormalizePlaybackMode(
+            playbackMode ?? _settingsService.NarrationOutputMode);
+
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId.HasValue)
+        {
+            var user = await _db.AppUsers.FirstOrDefaultAsync(x => x.Id == currentUserId.Value, ct);
+            if (user is not null)
+            {
+                user.NarrationLanguage = normalizedLanguage;
+                user.NarrationPlaybackMode = normalizedPlaybackMode;
+                await _db.SaveChangesAsync(ct);
+                CurrentUser = CloneUser(user);
+            }
+        }
+
+        _settingsService.NarrationLanguage = normalizedLanguage;
+        _settingsService.NarrationOutputMode = normalizedPlaybackMode;
+        _languageService.CurrentLanguage = normalizedLanguage;
     }
 
     private void ApplyUserSoundSettings(AppUser user)
@@ -209,6 +251,22 @@ public class AuthService
 
     private static bool VerifyPassword(string password, string passwordHash)
         => string.Equals(HashPassword(password), passwordHash, StringComparison.Ordinal);
+
+    private static AppUser CloneUser(AppUser user)
+    {
+        return new AppUser
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            PasswordHash = user.PasswordHash,
+            FullName = user.FullName,
+            NarrationLanguage = user.NarrationLanguage,
+            NarrationPlaybackMode = user.NarrationPlaybackMode,
+            Role = user.Role,
+            IsActive = user.IsActive
+        };
+    }
 
     private static string HashPassword(string password)
     {

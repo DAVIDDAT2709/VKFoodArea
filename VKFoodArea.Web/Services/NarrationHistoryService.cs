@@ -20,17 +20,18 @@ public class NarrationHistoryService : INarrationHistoryService
         return await BuildFilteredQuery(source).ToListAsync();
     }
 
-    public async Task<List<NarrationHistoryApiViewModel>> GetRecentForApiAsync(string? source, int top = 100)
+    public async Task<List<NarrationHistoryApiViewModel>> GetRecentForApiAsync(string? source, string? userKey, int top = 100)
     {
         var normalizedTop = Math.Clamp(top, 1, 200);
 
-        return await BuildFilteredQuery(source)
+        return await BuildFilteredQuery(source, userKey)
             .Take(normalizedTop)
             .Select(x => new NarrationHistoryApiViewModel
             {
                 Id = x.Id,
                 PoiId = x.PoiId,
                 PoiName = x.PoiName,
+                UserKey = x.UserKey,
                 Language = x.Language,
                 TriggerSource = x.TriggerSource,
                 Mode = x.Mode,
@@ -53,6 +54,7 @@ public class NarrationHistoryService : INarrationHistoryService
         {
             PoiId = poi.Id,
             PoiName = poi.Name,
+            UserKey = NormalizeUserKey(vm.UserKey),
             Language = language,
             TriggerSource = triggerSource,
             Mode = mode,
@@ -67,6 +69,7 @@ public class NarrationHistoryService : INarrationHistoryService
             Id = entity.Id,
             PoiId = entity.PoiId,
             PoiName = entity.PoiName,
+            UserKey = entity.UserKey,
             Language = entity.Language,
             TriggerSource = entity.TriggerSource,
             Mode = entity.Mode,
@@ -84,6 +87,7 @@ public class NarrationHistoryService : INarrationHistoryService
                 Id = x.Id,
                 PoiId = x.PoiId,
                 PoiName = x.PoiName,
+                UserKey = x.UserKey,
                 Language = x.Language,
                 TriggerSource = x.TriggerSource,
                 Mode = x.Mode,
@@ -92,14 +96,33 @@ public class NarrationHistoryService : INarrationHistoryService
             .FirstOrDefaultAsync();
     }
 
-    private IQueryable<NarrationHistory> BuildFilteredQuery(string? source)
+    public async Task<int> ClearForApiAsync(string? userKey, string? source)
+    {
+        var normalizedUserKey = NormalizeUserKey(userKey);
+        if (string.IsNullOrWhiteSpace(normalizedUserKey))
+            return 0;
+
+        var items = await BuildFilteredQuery(source, normalizedUserKey).ToListAsync();
+        if (items.Count == 0)
+            return 0;
+
+        _context.NarrationHistories.RemoveRange(items);
+        await _context.SaveChangesAsync();
+        return items.Count;
+    }
+
+    private IQueryable<NarrationHistory> BuildFilteredQuery(string? source, string? userKey = null)
     {
         var normalizedSource = NormalizeTriggerSource(source);
+        var normalizedUserKey = NormalizeUserKey(userKey);
 
         var query = _context.NarrationHistories
             .AsNoTracking()
             .OrderByDescending(x => x.PlayedAt)
             .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(normalizedUserKey))
+            query = query.Where(x => x.UserKey == normalizedUserKey);
 
         if (string.IsNullOrWhiteSpace(normalizedSource))
             return query;
@@ -169,4 +192,7 @@ public class NarrationHistoryService : INarrationHistoryService
             _ => "manual"
         };
     }
+
+    private static string NormalizeUserKey(string? userKey)
+        => (userKey ?? string.Empty).Trim().ToLowerInvariant();
 }

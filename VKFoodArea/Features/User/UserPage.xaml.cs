@@ -13,6 +13,7 @@ public partial class UserPage : ContentPage
     private readonly AuthService _authService;
     private readonly AppLanguageService _languageService;
     private readonly AppSettingsService _settingsService;
+    private readonly AppRootNavigationService _rootNavigationService;
     private readonly IServiceProvider _serviceProvider;
     private readonly AppTextService _text;
 
@@ -20,6 +21,7 @@ public partial class UserPage : ContentPage
         AuthService authService,
         AppLanguageService languageService,
         AppSettingsService settingsService,
+        AppRootNavigationService rootNavigationService,
         IServiceProvider serviceProvider,
         AppTextService text)
     {
@@ -27,6 +29,7 @@ public partial class UserPage : ContentPage
         _authService = authService;
         _languageService = languageService;
         _settingsService = settingsService;
+        _rootNavigationService = rootNavigationService;
         _serviceProvider = serviceProvider;
         _text = text;
     }
@@ -79,7 +82,7 @@ public partial class UserPage : ContentPage
 
     private async void OnLogoutClicked(object sender, EventArgs e)
     {
-        var confirmed = await DisplayAlert(
+        var confirmed = await DisplayAlertAsync(
             "Đăng xuất",
             "Bạn có muốn đăng xuất khỏi tài khoản hiện tại không?",
             "Đăng xuất",
@@ -89,21 +92,18 @@ public partial class UserPage : ContentPage
             return;
 
         _authService.Logout();
-
-        Application.Current!.MainPage =
-            new NavigationPage(_serviceProvider.GetRequiredService<LoginPage>());
+        await _rootNavigationService.SetRootAsync<LoginPage>();
     }
 
     private async void OnGoHomeClicked(object sender, EventArgs e)
     {
-        if (Navigation.NavigationStack.OfType<HomeDesignPage>().Any())
+        if (Navigation.NavigationStack.FirstOrDefault() is HomeDesignPage)
         {
             await Navigation.PopToRootAsync();
             return;
         }
 
-        Application.Current!.MainPage =
-            new NavigationPage(_serviceProvider.GetRequiredService<HomeDesignPage>());
+        await _rootNavigationService.SetRootAsync<HomeDesignPage>();
     }
 
     private async void OnOpenFullMapClicked(object sender, EventArgs e)
@@ -165,7 +165,7 @@ public partial class UserPage : ContentPage
 
     private async void OnLogoutClickedEscaped(object sender, EventArgs e)
     {
-        var confirmed = await DisplayAlert(
+        var confirmed = await DisplayAlertAsync(
             _text["User.LogoutTitle"],
             _text["User.LogoutMessage"],
             _text["User.LogoutConfirm"],
@@ -176,8 +176,7 @@ public partial class UserPage : ContentPage
 
         _authService.Logout();
 
-        Application.Current!.MainPage =
-            new NavigationPage(_serviceProvider.GetRequiredService<LoginPage>());
+        await _rootNavigationService.SetRootAsync<LoginPage>();
     }
 
     private static string ResolveDisplayNameEscaped(AppUser? user)
@@ -267,7 +266,7 @@ public partial class UserPage : ContentPage
 
     private async void OnLogoutClickedClean(object sender, EventArgs e)
     {
-        var confirmed = await DisplayAlert(
+        var confirmed = await DisplayAlertAsync(
             "Đăng xuất",
             "Bạn có muốn đăng xuất khỏi tài khoản hiện tại không?",
             "Đăng xuất",
@@ -278,8 +277,7 @@ public partial class UserPage : ContentPage
 
         _authService.Logout();
 
-        Application.Current!.MainPage =
-            new NavigationPage(_serviceProvider.GetRequiredService<LoginPage>());
+        await _rootNavigationService.SetRootAsync<LoginPage>();
     }
 
     private static string ResolveDisplayName(AppUser? user)

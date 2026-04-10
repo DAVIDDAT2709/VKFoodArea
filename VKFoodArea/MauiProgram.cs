@@ -44,6 +44,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppSettingsService>();
         builder.Services.AddSingleton<AppLanguageService>();
         builder.Services.AddSingleton<AppTextService>();
+        builder.Services.AddSingleton<AppRootNavigationService>();
         builder.Services.AddSingleton<LanguageSelectionFlowService>();
         builder.Services.AddSingleton<ApiBaseUrlService>();
         builder.Services.AddSingleton<NarrationUiStateService>();

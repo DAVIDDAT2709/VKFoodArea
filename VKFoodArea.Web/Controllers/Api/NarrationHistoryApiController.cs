@@ -16,9 +16,12 @@ public class NarrationHistoryApiController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetRecent([FromQuery] string? source, [FromQuery] int top = 100)
+    public async Task<IActionResult> GetRecent(
+        [FromQuery] string? source,
+        [FromQuery] string? userKey,
+        [FromQuery] int top = 100)
     {
-        var items = await _narrationHistoryService.GetRecentForApiAsync(source, top);
+        var items = await _narrationHistoryService.GetRecentForApiAsync(source, userKey, top);
         return Ok(items);
     }
 
@@ -42,5 +45,11 @@ public class NarrationHistoryApiController : ControllerBase
             nameof(GetById),
             new { id = created.Id },
             created);
+    }
+    [HttpDelete]
+    public async Task<IActionResult> Clear([FromQuery] string? userKey, [FromQuery] string? source)
+    {
+        var deletedCount = await _narrationHistoryService.ClearForApiAsync(userKey, source);
+        return Ok(new { deletedCount });
     }
 }
