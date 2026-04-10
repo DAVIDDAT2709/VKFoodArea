@@ -11,6 +11,7 @@ using Mapsui.Widgets;
 using Mapsui.Widgets.InfoWidgets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;
+using System.ComponentModel;
 using VKFoodArea.Features.Settings;
 using VKFoodArea.Features.User;
 using VKFoodArea.Models;
@@ -43,6 +44,13 @@ public partial class HomeDesignPage : ContentPage
         "<path d='M32 4C20.402 4 11 13.402 11 25c0 14.5 21 35 21 35s21-20.5 21-35C53 13.402 43.598 4 32 4z' fill='#ff1f1f'/>" +
         "<circle cx='32' cy='25' r='10' fill='white'/>" +
         "</svg>";
+    private const string NearestPoiPinSvg =
+        "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 72 72'>" +
+        "<circle cx='36' cy='26' r='18' fill='#F7D774' opacity='0.42'/>" +
+        "<path d='M36 6C23.85 6 14 15.85 14 28c0 15.25 22 36 22 36s22-20.75 22-36C58 15.85 48.15 6 36 6z' fill='#1F9D74'/>" +
+        "<circle cx='36' cy='28' r='10' fill='white'/>" +
+        "<circle cx='36' cy='28' r='4' fill='#1F9D74'/>" +
+        "</svg>";
 
     public HomeDesignPage(
         HomeViewModel viewModel,
@@ -68,6 +76,8 @@ public partial class HomeDesignPage : ContentPage
         PoiSyncService.SyncCompleted += OnSyncCompletedEscaped;
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         _narrationUiState.StateChanged += OnNarrationUiStateChanged;
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         if (Window is not null)
         {
             Window.Resumed -= OnWindowResumed;
@@ -85,8 +95,19 @@ public partial class HomeDesignPage : ContentPage
         base.OnDisappearing();
         PoiSyncService.SyncCompleted -= OnSyncCompletedEscaped;
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         if (Window is not null)
             Window.Resumed -= OnWindowResumed;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(HomeViewModel.CurrentLocation)
+            or nameof(HomeViewModel.NearestPoi)
+            or nameof(HomeViewModel.AllPois))
+        {
+            MainThread.BeginInvokeOnMainThread(RefreshMapPois);
+        }
     }
 
     private void OnSyncCompletedEscaped(object? sender, PoiSyncService.PoiSyncCompletedEventArgs e)
@@ -162,7 +183,7 @@ public partial class HomeDesignPage : ContentPage
         _poiLayer = new MemoryLayer("POIs")
         {
             Features = pois
-                .Select(CreatePoiFeature)
+                .Select(poi => CreatePoiFeature(poi, _viewModel.NearestPoi?.Id == poi.Id))
                 .Cast<IFeature>()
                 .ToList()
         };
@@ -195,7 +216,7 @@ public partial class HomeDesignPage : ContentPage
         map.Navigator.CenterOnAndZoomTo(center, zoomResolution);
     }
 
-    private static PointFeature CreatePoiFeature(Poi poi)
+    private static PointFeature CreatePoiFeature(Poi poi, bool isNearest)
     {
         var point = SphericalMercator
             .FromLonLat(poi.Longitude, poi.Latitude)
@@ -208,8 +229,8 @@ public partial class HomeDesignPage : ContentPage
 
         feature.Styles.Add(new ImageStyle
         {
-            Image = PoiPinSvg,
-            SymbolScale = 0.52,
+            Image = isNearest ? NearestPoiPinSvg : PoiPinSvg,
+            SymbolScale = isNearest ? 0.64 : 0.52,
             Offset = new Offset(0, 18),
             RotateWithMap = false
         });

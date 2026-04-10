@@ -10,12 +10,17 @@ public partial class App : Application
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly AuthService _authService;
+    private readonly LocationTrackingPolicyService _locationTrackingPolicyService;
 
-    public App(IServiceProvider serviceProvider, AuthService authService)
+    public App(
+        IServiceProvider serviceProvider,
+        AuthService authService,
+        LocationTrackingPolicyService locationTrackingPolicyService)
     {
         InitializeComponent();
         _serviceProvider = serviceProvider;
         _authService = authService;
+        _locationTrackingPolicyService = locationTrackingPolicyService;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -26,6 +31,16 @@ public partial class App : Application
                 ? _serviceProvider.GetRequiredService<HomeDesignPage>()
                 : _serviceProvider.GetRequiredService<LoginPage>();
 
-        return new Window(new NavigationPage(rootPage));
+        var window = new Window(new NavigationPage(rootPage));
+        _locationTrackingPolicyService.SetAppForeground(true);
+        window.Resumed += OnWindowResumed;
+        window.Stopped += OnWindowStopped;
+        return window;
     }
+
+    private void OnWindowResumed(object? sender, EventArgs e)
+        => _locationTrackingPolicyService.SetAppForeground(true);
+
+    private void OnWindowStopped(object? sender, EventArgs e)
+        => _locationTrackingPolicyService.SetAppForeground(false);
 }

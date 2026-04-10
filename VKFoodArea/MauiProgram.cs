@@ -39,7 +39,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<CooldownStore>();
         builder.Services.AddSingleton<GeofenceEngine>();
         builder.Services.AddSingleton<LocationTrackerService>();
+        builder.Services.AddSingleton<LocationTrackingPolicyService>();
         builder.Services.AddSingleton<PermissionService>();
+        builder.Services.AddSingleton<PoiRuntimeService>();
 
         builder.Services.AddSingleton<AppSettingsService>();
         builder.Services.AddSingleton<AppLanguageService>();
@@ -75,7 +77,7 @@ public static class MauiProgram
         builder.Services.AddTransient<FoodRepository>();
         builder.Services.AddSingleton<AuthService>();
 
-        builder.Services.AddTransient<HomeViewModel>();
+        builder.Services.AddSingleton<HomeViewModel>();
         builder.Services.AddTransient<HistoryViewModel>();
         builder.Services.AddTransient<AccountSettingsViewModel>();
         builder.Services.AddTransient<SoundSettingsViewModel>();

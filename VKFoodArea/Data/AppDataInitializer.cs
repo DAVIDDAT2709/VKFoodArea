@@ -18,6 +18,7 @@ public static class AppDataInitializer
         await db.Database.EnsureCreatedAsync();
         await EnsureAppUsersEmailColumnAsync(db);
         await EnsureAppUsersSoundSettingsColumnsAsync(db);
+        await EnsurePoiAudioColumnsAsync(db);
         await EnsureNarrationLogsUserColumnAsync(db);
         await SeedMissingEmailsAsync(db);
         await SeedMissingSoundSettingsAsync(db);
@@ -176,6 +177,30 @@ public static class AppDataInitializer
 
         await db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE NarrationLogs ADD COLUMN UserId INTEGER NULL;");
+    }
+
+    private static async Task EnsurePoiAudioColumnsAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "Pois", "AudioFileVi"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE Pois ADD COLUMN AudioFileVi TEXT NOT NULL DEFAULT '';");
+        }
+
+        if (!await HasColumnAsync(connection, "Pois", "AudioFileEn"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE Pois ADD COLUMN AudioFileEn TEXT NOT NULL DEFAULT '';");
+        }
+
+        if (!await HasColumnAsync(connection, "Pois", "AudioFileJa"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE Pois ADD COLUMN AudioFileJa TEXT NOT NULL DEFAULT '';");
+        }
     }
 
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)

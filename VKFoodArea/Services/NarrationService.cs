@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Media;
+using Plugin.Maui.Audio;
 using VKFoodArea.Data;
 using VKFoodArea.Models;
 
@@ -26,9 +27,14 @@ public class NarrationService
     private readonly NarrationSyncService _narrationSyncService;
     private readonly NarrationUiStateService _uiState;
     private readonly AuthService _authService;
+    private readonly IAudioManager _audioManager;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ApiBaseUrlService _apiBaseUrlService;
 
     private static readonly SemaphoreSlim _playLock = new(1, 1);
     private static CancellationTokenSource? _ttsCts;
+    private static AsyncAudioPlayer? _activeAudioPlayer;
+    private static MemoryStream? _activeAudioBuffer;
 
     private static readonly object _requestLock = new();
     private static CancellationTokenSource? _requestCts;
@@ -53,7 +59,10 @@ public class NarrationService
         AppSettingsService settingsService,
         NarrationSyncService narrationSyncService,
         NarrationUiStateService uiState,
-        AuthService authService)
+        AuthService authService,
+        IAudioManager audioManager,
+        IHttpClientFactory httpClientFactory,
+        ApiBaseUrlService apiBaseUrlService)
     {
         _db = db;
         _languageService = languageService;
@@ -61,6 +70,9 @@ public class NarrationService
         _narrationSyncService = narrationSyncService;
         _uiState = uiState;
         _authService = authService;
+        _audioManager = audioManager;
+        _httpClientFactory = httpClientFactory;
+        _apiBaseUrlService = apiBaseUrlService;
     }
 
     public async Task PlayPoiAsync(
@@ -118,16 +130,16 @@ public class NarrationService
 
             _languageService.CurrentLanguage = language;
 
-            var narrationContent = ResolveNarrationContent(poi, language);
-            if (narrationContent is null)
+            var playbackPlan = ResolvePlaybackPlan(poi, language, mode);
+            if (playbackPlan is null)
                 return;
 
             _currentPoiId = poi.Id;
-            _uiState.SetPlayback(true, poi, mode, narrationContent.SpokenLanguage);
-            PublishPlaybackState(true, poi.Name, mode, narrationContent.SpokenLanguage);
+            _uiState.SetPlayback(true, poi, playbackPlan.EffectiveMode, playbackPlan.SpokenLanguage);
+            PublishPlaybackState(true, poi.Name, playbackPlan.EffectiveMode, playbackPlan.SpokenLanguage);
 
-            await LogNarrationAsync(poi, narrationContent.SpokenLanguage, mode, triggerSource, requestToken);
-            await SpeakTextAsync(narrationContent.Script, narrationContent.SpokenLanguage, requestToken);
+            await LogNarrationAsync(poi, playbackPlan.SpokenLanguage, playbackPlan.EffectiveMode, triggerSource, requestToken);
+            await PlayResolvedPlanAsync(playbackPlan, requestToken);
         }
         catch (OperationCanceledException)
         {
@@ -159,12 +171,26 @@ public class NarrationService
         }
     }
 
-    public async Task PreviewAsync(string text, string language, CancellationToken ct = default)
+    public async Task PreviewAsync(
+        string text,
+        string language,
+        string? playbackMode = null,
+        CancellationToken ct = default)
     {
+        var normalizedLanguage = AppLanguageService.NormalizeLanguage(language);
+        var normalizedMode = NormalizePlaybackMode(playbackMode);
+        var previewAudioSource = ResolvePreviewAudioSource(normalizedLanguage, normalizedMode);
+
+        if (previewAudioSource is not null)
+        {
+            await PlayAudioAsync(previewAudioSource, ct);
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(text))
             return;
 
-        await SpeakTextAsync(text, language, ct);
+        await SpeakTextAsync(text, normalizedLanguage, ct);
     }
 
     public async Task StopAsync()
@@ -326,6 +352,97 @@ public class NarrationService
         }
     }
 
+    private async Task PlayResolvedPlanAsync(ResolvedPlaybackPlan playbackPlan, CancellationToken ct)
+    {
+        if (playbackPlan.Kind == NarrationPlaybackKind.Audio && playbackPlan.AudioSource is not null)
+        {
+            await PlayAudioAsync(playbackPlan.AudioSource, ct);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(playbackPlan.Script))
+            return;
+
+        await SpeakTextAsync(playbackPlan.Script, playbackPlan.SpokenLanguage, ct);
+    }
+
+    private async Task PlayAudioAsync(ResolvedAudioSource audioSource, CancellationToken ct)
+    {
+        CancellationTokenSource playbackCts;
+        CancellationTokenSource? previousCts;
+
+        await _playLock.WaitAsync(ct);
+        try
+        {
+            playbackCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            previousCts = _ttsCts;
+            _ttsCts = playbackCts;
+        }
+        finally
+        {
+            _playLock.Release();
+        }
+
+        CancelPlayback(previousCts);
+        StopPlatformPlayback();
+
+        var buffer = await LoadAudioBufferAsync(audioSource.SourcePath, ct);
+        if (buffer is null)
+            throw new InvalidOperationException($"Audio source is unavailable: {audioSource.SourcePath}");
+
+        AsyncAudioPlayer? player = null;
+        var ownsBuffer = true;
+
+        try
+        {
+            player = _audioManager.CreateAsyncPlayer(buffer);
+
+            await _playLock.WaitAsync(ct);
+            try
+            {
+                _activeAudioPlayer = player;
+                _activeAudioBuffer = buffer;
+                ownsBuffer = false;
+            }
+            finally
+            {
+                _playLock.Release();
+            }
+
+            await player.PlayAsync(playbackCts.Token);
+        }
+        finally
+        {
+            MemoryStream? bufferToDispose = null;
+
+            await _playLock.WaitAsync();
+            try
+            {
+                if (ReferenceEquals(_ttsCts, playbackCts))
+                    _ttsCts = null;
+
+                if (ReferenceEquals(_activeAudioPlayer, player))
+                {
+                    _activeAudioPlayer = null;
+                    bufferToDispose = _activeAudioBuffer;
+                    _activeAudioBuffer = null;
+                }
+            }
+            finally
+            {
+                _playLock.Release();
+            }
+
+            player?.Dispose();
+            bufferToDispose?.Dispose();
+
+            if (ownsBuffer)
+                buffer.Dispose();
+
+            playbackCts.Dispose();
+        }
+    }
+
     private static SpeechOptions BuildMauiSpeechOptions(Locale? locale, string language)
     {
         var normalizedLanguage = AppLanguageService.NormalizeLanguage(language);
@@ -359,6 +476,21 @@ public class NarrationService
 
     private static void StopPlatformPlayback()
     {
+        try
+        {
+            _activeAudioPlayer?.Stop();
+            _activeAudioPlayer?.Dispose();
+        }
+        catch
+        {
+        }
+        finally
+        {
+            _activeAudioPlayer = null;
+            _activeAudioBuffer?.Dispose();
+            _activeAudioBuffer = null;
+        }
+
 #if ANDROID
         try
         {
@@ -407,8 +539,169 @@ public class NarrationService
             : new ResolvedNarrationContent(translatedScript, normalized);
     }
 
+    private ResolvedPlaybackPlan? ResolvePlaybackPlan(Poi poi, string language, string mode)
+    {
+        var normalizedLanguage = AppLanguageService.NormalizeLanguage(language);
+        var normalizedMode = NormalizePlaybackMode(mode);
+        var audioSource = ResolveAudioSource(poi, normalizedLanguage);
+        var narrationContent = ResolveNarrationContent(poi, normalizedLanguage);
+
+        return normalizedMode switch
+        {
+            "Audio" => audioSource is not null
+                ? new ResolvedPlaybackPlan(
+                    NarrationPlaybackKind.Audio,
+                    "Audio",
+                    audioSource.SpokenLanguage,
+                    null,
+                    audioSource)
+                : narrationContent is null
+                    ? null
+                    : new ResolvedPlaybackPlan(
+                        NarrationPlaybackKind.Tts,
+                        "TTS",
+                        narrationContent.SpokenLanguage,
+                        narrationContent.Script,
+                        null),
+            "Auto" => audioSource is not null
+                ? new ResolvedPlaybackPlan(
+                    NarrationPlaybackKind.Audio,
+                    "Audio",
+                    audioSource.SpokenLanguage,
+                    null,
+                    audioSource)
+                : narrationContent is null
+                    ? null
+                    : new ResolvedPlaybackPlan(
+                        NarrationPlaybackKind.Tts,
+                        "TTS",
+                        narrationContent.SpokenLanguage,
+                        narrationContent.Script,
+                        null),
+            _ => narrationContent is not null
+                ? new ResolvedPlaybackPlan(
+                    NarrationPlaybackKind.Tts,
+                    "TTS",
+                    narrationContent.SpokenLanguage,
+                    narrationContent.Script,
+                    null)
+                : audioSource is null
+                    ? null
+                    : new ResolvedPlaybackPlan(
+                        NarrationPlaybackKind.Audio,
+                        "Audio",
+                        audioSource.SpokenLanguage,
+                        null,
+                        audioSource)
+        };
+    }
+
+    private ResolvedAudioSource? ResolvePreviewAudioSource(string language, string playbackMode)
+    {
+        _ = language;
+        _ = playbackMode;
+        return null;
+    }
+
+    private ResolvedAudioSource? ResolveAudioSource(Poi poi, string language)
+    {
+        var audioPath = AppLanguageService.NormalizeLanguage(language) switch
+        {
+            "vi" => NormalizeAudioPath(poi.AudioFileVi),
+            "en" => NormalizeAudioPath(poi.AudioFileEn),
+            "ja" => NormalizeAudioPath(poi.AudioFileJa),
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrWhiteSpace(audioPath))
+            return null;
+
+        return new ResolvedAudioSource(audioPath, AppLanguageService.NormalizeLanguage(language));
+    }
+
+    private async Task<MemoryStream?> LoadAudioBufferAsync(string audioPath, CancellationToken ct)
+    {
+        var normalizedPath = NormalizeAudioPath(audioPath);
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+            return null;
+
+        if (Uri.TryCreate(normalizedPath, UriKind.Absolute, out var absoluteUri) &&
+            (string.Equals(absoluteUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(absoluteUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
+        {
+            using var response = await _httpClientFactory.CreateClient().GetAsync(absoluteUri, ct);
+            response.EnsureSuccessStatusCode();
+            await using var sourceStream = await response.Content.ReadAsStreamAsync(ct);
+            return await CopyToMemoryAsync(sourceStream, ct);
+        }
+
+        if (Path.IsPathRooted(normalizedPath) && File.Exists(normalizedPath))
+        {
+            await using var fileStream = File.OpenRead(normalizedPath);
+            return await CopyToMemoryAsync(fileStream, ct);
+        }
+
+        var mediaUrl = ResolveRelativeAudioUrl(normalizedPath);
+        if (Uri.TryCreate(mediaUrl, UriKind.Absolute, out var mediaUri) &&
+            (string.Equals(mediaUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(mediaUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
+        {
+            using var response = await _httpClientFactory.CreateClient().GetAsync(mediaUri, ct);
+            if (response.IsSuccessStatusCode)
+            {
+                await using var sourceStream = await response.Content.ReadAsStreamAsync(ct);
+                return await CopyToMemoryAsync(sourceStream, ct);
+            }
+        }
+
+        try
+        {
+            await using var packageStream = await FileSystem.OpenAppPackageFileAsync(
+                NormalizePackageAudioPath(normalizedPath));
+            return await CopyToMemoryAsync(packageStream, ct);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string ResolveRelativeAudioUrl(string audioPath)
+    {
+        if (audioPath.StartsWith("/", StringComparison.Ordinal))
+            return new Uri(new Uri(_apiBaseUrlService.BaseUrl), audioPath.TrimStart('/')).ToString();
+
+        if (audioPath.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return new Uri(new Uri(_apiBaseUrlService.BaseUrl), audioPath).ToString();
+
+        return audioPath;
+    }
+
+    private static async Task<MemoryStream> CopyToMemoryAsync(Stream sourceStream, CancellationToken ct)
+    {
+        var memoryStream = new MemoryStream();
+        await sourceStream.CopyToAsync(memoryStream, ct);
+        memoryStream.Position = 0;
+        return memoryStream;
+    }
+
+    private static string NormalizePackageAudioPath(string audioPath)
+    {
+        var normalizedPath = NormalizeAudioPath(audioPath);
+        if (normalizedPath.StartsWith("Resources/Raw/", StringComparison.OrdinalIgnoreCase))
+            return normalizedPath["Resources/Raw/".Length..];
+
+        if (normalizedPath.StartsWith("Resources\\Raw\\", StringComparison.OrdinalIgnoreCase))
+            return normalizedPath["Resources\\Raw\\".Length..];
+
+        return normalizedPath.TrimStart('/', '\\');
+    }
+
     private static string NormalizeScript(string? script)
         => (script ?? string.Empty).Trim();
+
+    private static string NormalizeAudioPath(string? audioPath)
+        => (audioPath ?? string.Empty).Trim();
 
     private static string NormalizePlaybackMode(string? mode)
     {
@@ -748,6 +1041,19 @@ public class NarrationService
     }
 
     private sealed record ResolvedNarrationContent(string Script, string SpokenLanguage);
+    private sealed record ResolvedAudioSource(string SourcePath, string SpokenLanguage);
+    private sealed record ResolvedPlaybackPlan(
+        NarrationPlaybackKind Kind,
+        string EffectiveMode,
+        string SpokenLanguage,
+        string? Script,
+        ResolvedAudioSource? AudioSource);
+}
+
+public enum NarrationPlaybackKind
+{
+    Tts,
+    Audio
 }
 
 public sealed class NarrationPlaybackStateChangedEventArgs : EventArgs

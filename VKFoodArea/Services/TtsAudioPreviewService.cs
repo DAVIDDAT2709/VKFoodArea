@@ -24,6 +24,7 @@ public class TtsAudioPreviewService
         return _narrationService.PreviewAsync(
             _text.GetPreviewText(normalizedLanguage),
             normalizedLanguage,
+            playbackMode,
             ct);
     }
 }

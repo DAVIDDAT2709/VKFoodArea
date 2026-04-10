@@ -17,6 +17,9 @@ public class RemotePoiDto
     public string TtsScriptZh { get; set; } = string.Empty;
     public string TtsScriptJa { get; set; } = string.Empty;
     public string TtsScriptDe { get; set; } = string.Empty;
+    public string AudioFileVi { get; set; } = string.Empty;
+    public string AudioFileEn { get; set; } = string.Empty;
+    public string AudioFileJa { get; set; } = string.Empty;
     public string QrCode { get; set; } = string.Empty;
     public bool IsActive { get; set; }
 }

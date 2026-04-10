@@ -12,16 +12,17 @@ using Mapsui.Widgets.InfoWidgets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
+using System.ComponentModel;
 using VKFoodArea.Features.User;
 using VKFoodArea.Models;
 using VKFoodArea.Services;
-using System.ComponentModel;
 
 namespace VKFoodArea.Features.Home;
 
 public partial class FullMapPage : ContentPage
 {
     private readonly HomeViewModel _viewModel;
+    private readonly NarrationService _narrationService;
     private readonly IServiceProvider _serviceProvider;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
@@ -40,15 +41,24 @@ public partial class FullMapPage : ContentPage
         "<path d='M32 4C20.402 4 11 13.402 11 25c0 14.5 21 35 21 35s21-20.5 21-35C53 13.402 43.598 4 32 4z' fill='#ff1f1f'/>" +
         "<circle cx='32' cy='25' r='10' fill='white'/>" +
         "</svg>";
+    private const string NearestPoiPinSvg =
+        "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 72 72'>" +
+        "<circle cx='36' cy='26' r='18' fill='#F7D774' opacity='0.42'/>" +
+        "<path d='M36 6C23.85 6 14 15.85 14 28c0 15.25 22 36 22 36s22-20.75 22-36C58 15.85 48.15 6 36 6z' fill='#1F9D74'/>" +
+        "<circle cx='36' cy='28' r='10' fill='white'/>" +
+        "<circle cx='36' cy='28' r='4' fill='#1F9D74'/>" +
+        "</svg>";
 
     public FullMapPage(
         HomeViewModel viewModel,
+        NarrationService narrationService,
         IServiceProvider serviceProvider,
         AppTextService text,
         NarrationUiStateService narrationUiState)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _narrationService = narrationService;
         _serviceProvider = serviceProvider;
         _text = text;
         _narrationUiState = narrationUiState;
@@ -78,6 +88,16 @@ public partial class FullMapPage : ContentPage
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(HomeViewModel.AllPois))
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                _allPois = (await _viewModel.GetMapPoisAsync()).ToList();
+                RefreshMapLocationFromViewModel(_followMyLocation);
+            });
+            return;
+        }
+
         if (e.PropertyName != nameof(HomeViewModel.CurrentLocation))
             return;
 
@@ -134,7 +154,7 @@ public partial class FullMapPage : ContentPage
         _poiLayer = new MemoryLayer("POIs")
         {
             Features = _allPois
-                .Select(CreatePoiFeature)
+                .Select(poi => CreatePoiFeature(poi, _viewModel.NearestPoi?.Id == poi.Id))
                 .Cast<IFeature>()
                 .ToList()
         };
@@ -221,7 +241,7 @@ public partial class FullMapPage : ContentPage
         InfoLabel.Text = _text.Format("Map.InfoNearestDistance", nearestPoi.Name, nearestDistanceMeters);
     }
 
-    private static PointFeature CreatePoiFeature(Poi poi)
+    private static PointFeature CreatePoiFeature(Poi poi, bool isNearest)
     {
         var point = SphericalMercator
             .FromLonLat(poi.Longitude, poi.Latitude)
@@ -234,8 +254,8 @@ public partial class FullMapPage : ContentPage
 
         feature.Styles.Add(new ImageStyle
         {
-            Image = PoiPinSvg,
-            SymbolScale = 0.55,
+            Image = isNearest ? NearestPoiPinSvg : PoiPinSvg,
+            SymbolScale = isNearest ? 0.68 : 0.55,
             Offset = new Offset(0, 18),
             RotateWithMap = false
         });
@@ -325,12 +345,8 @@ public partial class FullMapPage : ContentPage
         if (poi is null)
             return;
 
-        var wasPlayingCurrentPoi = _viewModel.IsPoiNarrationPlaying(poi.Id);
-        await _viewModel.PlayPoiAudioAsync(poi);
-
-        InfoLabel.Text = wasPlayingCurrentPoi
-            ? _text.Format("Map.InfoStoppedNarration", poi.Name)
-            : _text.Format("Map.InfoRestaurant", poi.Name);
+        InfoLabel.Text = _text.Format("Map.InfoRestaurant", poi.Name);
+        await OpenPoiDetailAsync(poi);
     }
 
     private async void OnGoHomeClicked(object sender, EventArgs e)
@@ -358,6 +374,15 @@ public partial class FullMapPage : ContentPage
     private void OnNarrationUiStateChanged(object? sender, EventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(_viewModel.RefreshNarrationState);
+    }
+
+    private Task OpenPoiDetailAsync(Poi poi)
+    {
+        return Navigation.PushAsync(new PoiDetailPage(
+            poi,
+            _narrationService,
+            _text,
+            _narrationUiState));
     }
 
     private void ApplyLocalizedText()

@@ -52,7 +52,10 @@ public class QrLookupService
             TtsScriptEn = dto.TtsScriptEn,
             TtsScriptZh = dto.TtsScriptZh,
             TtsScriptJa = dto.TtsScriptJa,
-            TtsScriptDe = dto.TtsScriptDe
+            TtsScriptDe = dto.TtsScriptDe,
+            AudioFileVi = dto.AudioFileVi,
+            AudioFileEn = dto.AudioFileEn,
+            AudioFileJa = dto.AudioFileJa
         };
     }
 }

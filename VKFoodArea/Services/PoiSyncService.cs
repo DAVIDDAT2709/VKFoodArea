@@ -146,6 +146,9 @@ public class PoiSyncService
         local.TtsScriptZh = dto.TtsScriptZh;
         local.TtsScriptJa = dto.TtsScriptJa;
         local.TtsScriptDe = dto.TtsScriptDe;
+        local.AudioFileVi = dto.AudioFileVi;
+        local.AudioFileEn = dto.AudioFileEn;
+        local.AudioFileJa = dto.AudioFileJa;
         local.ImageUrl = _apiBaseUrlService.ResolveImageUrl(dto.ImageUrl);
         local.QrCode = dto.QrCode;
         local.IsActive = dto.IsActive;
