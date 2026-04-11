@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="VKFoodArea.Features.Settings.AccountProfilePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title=""
+    BackgroundColor="#EEF4F1">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,12,16,24" Spacing="16">
+            <Border Padding="18,18,18,20" StrokeThickness="0">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="1,1">
+                        <GradientStop Color="#0E9A91" Offset="0.0" />
+                        <GradientStop Color="#38C3B4" Offset="0.58" />
+                        <GradientStop Color="#7BE8D1" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="30" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label x:Name="HeaderTitleLabel"
+                           FontSize="27"
+                           FontAttributes="Bold"
+                           FontFamily="OpenSansSemibold"
+                           TextColor="White" />
+                    <Label x:Name="HeaderSubtitleLabel"
+                           FontSize="13"
+                           TextColor="#E8FFFC" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="ProfileSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
+                    <VerticalStackLayout Spacing="8">
+                        <Label x:Name="UsernameLabel" FontSize="13" TextColor="#6A8781" />
+                        <Entry x:Name="UsernameEntry" IsReadOnly="True" BackgroundColor="#F7FBF9" TextColor="#163632" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="8">
+                        <Label x:Name="FullNameLabel" FontSize="13" TextColor="#6A8781" />
+                        <Entry x:Name="FullNameEntry" BackgroundColor="#F7FBF9" TextColor="#163632" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="8">
+                        <Label x:Name="EmailLabel" FontSize="13" TextColor="#6A8781" />
+                        <Entry x:Name="EmailEntry" Keyboard="Email" BackgroundColor="#F7FBF9" TextColor="#163632" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="NarrationSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
+                    <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="8,2" StrokeShape="RoundRectangle 16">
+                        <Picker x:Name="LanguagePicker" TitleColor="#86A29B" TextColor="#163632" />
+                    </Border>
+                    <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="8,2" StrokeShape="RoundRectangle 16">
+                        <Picker x:Name="ModePicker" TitleColor="#86A29B" TextColor="#163632" />
+                    </Border>
+                    <Label x:Name="SummaryLabel" FontSize="13" TextColor="#6A8781" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button x:Name="PreviewButton"
+                        Clicked="OnPreviewClicked"
+                        BackgroundColor="#101415"
+                        TextColor="White"
+                        CornerRadius="18"
+                        HeightRequest="52"
+                        FontAttributes="Bold" />
+                <Button x:Name="SaveButton"
+                        Grid.Column="1"
+                        Clicked="OnSaveClicked"
+                        BackgroundColor="#129488"
+                        TextColor="White"
+                        CornerRadius="18"
+                        HeightRequest="52"
+                        FontAttributes="Bold" />
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

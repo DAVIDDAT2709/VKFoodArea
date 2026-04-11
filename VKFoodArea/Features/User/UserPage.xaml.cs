@@ -80,6 +80,12 @@ public partial class UserPage : ContentPage
         await Navigation.PushAsync(page);
     }
 
+    private async void OnOpenProfileClicked(object sender, EventArgs e)
+    {
+        var page = _serviceProvider.GetRequiredService<AccountProfilePage>();
+        await Navigation.PushAsync(page);
+    }
+
     private async void OnLogoutClicked(object sender, EventArgs e)
     {
         var confirmed = await DisplayAlertAsync(

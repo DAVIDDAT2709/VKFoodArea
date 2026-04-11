@@ -33,7 +33,7 @@
                     <Label x:Name="FullNameLabel" FontSize="24" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="White" />
                     <Label x:Name="UsernameLabel" FontSize="13" TextColor="#E6FFFB" />
                 </VerticalStackLayout>
-                <Button Grid.Column="2" Text="⚙" Clicked="OnOpenSettingsClicked" WidthRequest="40" HeightRequest="40" CornerRadius="20" BackgroundColor="#33FFFFFF" TextColor="White" />
+                <Button Grid.Column="2" Text="⚙" Clicked="OnOpenProfileClicked" WidthRequest="40" HeightRequest="40" CornerRadius="20" BackgroundColor="#33FFFFFF" TextColor="White" />
             </Grid>
         </Border>
 

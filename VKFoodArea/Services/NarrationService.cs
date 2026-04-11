@@ -100,6 +100,9 @@ public class NarrationService
             return;
 
         // Chỉ chặn spam khi bấm lại cùng một quán trong 5 giây
+        if (IsCurrentPoiPlaying(poi.Id))
+            return;
+
         var requestCts = ReplaceRequestToken(ct);
         var requestToken = requestCts.Token;
 
@@ -252,6 +255,14 @@ public class NarrationService
         }
 
         return newCts;
+    }
+
+    private static bool IsCurrentPoiPlaying(int poiId)
+    {
+        lock (_requestLock)
+        {
+            return _currentPoiId == poiId && _requestCts is not null;
+        }
     }
 
     private async Task LogNarrationAsync(
@@ -885,31 +896,31 @@ public class NarrationService
         return AppLanguageService.NormalizeLanguage(language) switch
         {
             "en" => new AndroidSpeechProfile(
-                1.0f,
-                1.0f,
+                0.92f,
+                0.96f,
                 false,
                 CreateAndroidLocale("en-US"),
                 CreateAndroidLocale("en-GB")),
             "zh" => new AndroidSpeechProfile(
-                1.0f,
-                1.0f,
+                0.90f,
+                0.96f,
                 false,
                 CreateAndroidLocale("zh-CN"),
                 CreateAndroidLocale("zh-TW")),
             "ja" => new AndroidSpeechProfile(
-                1.0f,
-                1.0f,
+                0.90f,
+                0.96f,
                 false,
                 CreateAndroidLocale("ja-JP")),
             "de" => new AndroidSpeechProfile(
-                0.98f,
-                0.98f,
+                0.90f,
+                0.96f,
                 false,
                 CreateAndroidLocale("de-DE")),
             _ => new AndroidSpeechProfile(
-                0.93f,
-                0.90f,
-                true,
+                0.82f,
+                0.94f,
+                false,
                 CreateAndroidLocale("vi-VN"))
         };
     }

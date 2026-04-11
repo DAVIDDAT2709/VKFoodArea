@@ -40,4 +40,24 @@ public class AppUsersController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> Lock(int id)
+        => SetActiveAndRedirectAsync(id, isActive: false);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> Unlock(int id)
+        => SetActiveAndRedirectAsync(id, isActive: true);
+
+    private async Task<IActionResult> SetActiveAndRedirectAsync(int id, bool isActive)
+    {
+        var updated = await _appUserAccountService.SetActiveAsync(id, isActive);
+        TempData[updated ? "SuccessMessage" : "ErrorMessage"] = updated
+            ? isActive ? "Đã mở khóa user App." : "Đã khóa user App."
+            : "Không tìm thấy user App.";
+
+        return RedirectToAction(nameof(Index));
+    }
 }

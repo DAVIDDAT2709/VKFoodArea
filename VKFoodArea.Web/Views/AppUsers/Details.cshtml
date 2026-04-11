@@ -9,6 +9,12 @@
         <h2>@(string.IsNullOrWhiteSpace(user.FullName) ? user.Username : user.FullName)</h2>
     </div>
     <div class="page-actions">
+        <form asp-action="@(user.IsActive ? "Lock" : "Unlock")" method="post">
+            <input type="hidden" name="id" value="@user.Id" />
+            <button type="submit" class="btn @(user.IsActive ? "btn-outline-danger" : "btn-primary")">
+                @(user.IsActive ? "Khoa user" : "Mo khoa user")
+            </button>
+        </form>
         <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
     </div>
 </section>

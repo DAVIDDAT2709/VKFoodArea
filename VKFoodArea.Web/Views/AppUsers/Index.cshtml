@@ -85,9 +85,8 @@
                         <td>
                             <div class="table-actions justify-content-end">
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Chi tiet</a>
-                                <form asp-action="SetActive" method="post">
+                                <form asp-action="@(item.IsActive ? "Lock" : "Unlock")" method="post">
                                     <input type="hidden" name="id" value="@item.Id" />
-                                    <input type="hidden" name="isActive" value="@(!item.IsActive)" />
                                     <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-danger" : "btn-primary")">
                                         @(item.IsActive ? "Khoa" : "Mo khoa")
                                     </button>

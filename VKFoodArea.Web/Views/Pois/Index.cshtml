@@ -93,7 +93,7 @@
                         <td>
                             <button type="button"
                                     class="audio-preview-button"
-                                    data-audio="@FirstAudio(poi)"
+                                    data-audio="@VietnameseAudio(poi)"
                                     data-text="@poi.TtsScriptVi"
                                     data-title="@poi.Name"
                                     aria-label="Nghe thu @poi.Name">
@@ -149,13 +149,8 @@
         return result;
     }
 
-    private static string FirstAudio(VKFoodArea.Web.Models.Poi poi)
-    {
-        if (!string.IsNullOrWhiteSpace(poi.AudioFileVi)) return poi.AudioFileVi;
-        if (!string.IsNullOrWhiteSpace(poi.AudioFileEn)) return poi.AudioFileEn;
-        if (!string.IsNullOrWhiteSpace(poi.AudioFileJa)) return poi.AudioFileJa;
-        return string.Empty;
-    }
+    private static string VietnameseAudio(VKFoodArea.Web.Models.Poi poi)
+        => string.IsNullOrWhiteSpace(poi.AudioFileVi) ? string.Empty : poi.AudioFileVi;
 }
 
 @section Scripts {
@@ -188,6 +183,8 @@
                     if (text && window.speechSynthesis) {
                         const utterance = new SpeechSynthesisUtterance(text);
                         utterance.lang = "vi-VN";
+                        utterance.rate = 0.9;
+                        utterance.pitch = 0.95;
                         window.speechSynthesis.speak(utterance);
                     }
                 });

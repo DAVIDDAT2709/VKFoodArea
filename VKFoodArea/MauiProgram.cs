@@ -100,6 +100,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PoiDetailPage>();
         builder.Services.AddTransient<QrScannerPage>();
         builder.Services.AddTransient<SettingsPage>();
+        builder.Services.AddTransient<AccountProfilePage>();
         builder.Services.AddTransient<UserPage>();
 
 #if DEBUG
