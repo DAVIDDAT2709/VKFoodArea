@@ -35,7 +35,10 @@ public class NarrationHistoryService : INarrationHistoryService
                 Language = x.Language,
                 TriggerSource = x.TriggerSource,
                 Mode = x.Mode,
-                PlayedAt = x.PlayedAt
+                PlayedAt = x.PlayedAt,
+                DurationSeconds = x.DurationSeconds,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude
             })
             .ToListAsync();
     }
@@ -58,7 +61,10 @@ public class NarrationHistoryService : INarrationHistoryService
             Language = language,
             TriggerSource = triggerSource,
             Mode = mode,
-            PlayedAt = vm.PlayedAt ?? DateTime.UtcNow
+            PlayedAt = vm.PlayedAt ?? DateTime.UtcNow,
+            DurationSeconds = vm.DurationSeconds,
+            Latitude = vm.Latitude,
+            Longitude = vm.Longitude
         };
 
         _context.NarrationHistories.Add(entity);
@@ -73,7 +79,10 @@ public class NarrationHistoryService : INarrationHistoryService
             Language = entity.Language,
             TriggerSource = entity.TriggerSource,
             Mode = entity.Mode,
-            PlayedAt = entity.PlayedAt
+            PlayedAt = entity.PlayedAt,
+            DurationSeconds = entity.DurationSeconds,
+            Latitude = entity.Latitude,
+            Longitude = entity.Longitude
         };
     }
 
@@ -91,7 +100,10 @@ public class NarrationHistoryService : INarrationHistoryService
                 Language = x.Language,
                 TriggerSource = x.TriggerSource,
                 Mode = x.Mode,
-                PlayedAt = x.PlayedAt
+                PlayedAt = x.PlayedAt,
+                DurationSeconds = x.DurationSeconds,
+                Latitude = x.Latitude,
+                Longitude = x.Longitude
             })
             .FirstOrDefaultAsync();
     }
@@ -138,7 +150,7 @@ public class NarrationHistoryService : INarrationHistoryService
     }
 
     private async Task<Poi?> ResolvePoiAsync(NarrationHistoryCreateApiViewModel vm)
-{
+    {
     // Id trong app local có thể khác Id thật của web sau khi sync,
     // nên phải ưu tiên nhận diện bằng QR hoặc tên quán trước.
     var normalizedQrCode = QrCodeHelper.Normalize(vm.QrCode);
@@ -178,7 +190,7 @@ public class NarrationHistoryService : INarrationHistoryService
     }
 
     return null;
-}
+    }
 
     private static string NormalizeTriggerSource(string? source)
     {

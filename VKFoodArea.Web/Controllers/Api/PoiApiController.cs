@@ -59,6 +59,9 @@ public class PoiApiController : ControllerBase
             poi.TtsScriptZh,
             poi.TtsScriptJa,
             poi.TtsScriptDe,
+            poi.AudioFileVi,
+            poi.AudioFileEn,
+            poi.AudioFileJa,
             poi.QrCode,
             poi.IsActive,
             poi.MatchedQrCode,
@@ -83,6 +86,9 @@ public class PoiApiController : ControllerBase
         poi.TtsScriptZh,
         poi.TtsScriptJa,
         poi.TtsScriptDe,
+        poi.AudioFileVi,
+        poi.AudioFileEn,
+        poi.AudioFileJa,
         poi.QrCode,
         poi.IsActive
     };

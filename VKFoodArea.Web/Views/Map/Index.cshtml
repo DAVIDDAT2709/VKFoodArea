@@ -1,0 +1,121 @@
+@model VKFoodArea.Web.ViewModels.AdminMapViewModel
+@{
+    ViewData["Title"] = "Map POI";
+    var poisJson = System.Text.Json.JsonSerializer.Serialize(Model.ActivePois);
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<section class="page-header page-section">
+    <div>
+        <h2>Map POI dang hoat dong</h2>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="Pois" asp-action="Index" class="btn btn-outline-secondary">Danh sach POI</a>
+    </div>
+</section>
+
+<section class="dashboard-grid page-section">
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Ban do</h2>
+            <span class="soft-pill">@Model.ActivePois.Count POI active</span>
+        </div>
+        @if (!Model.ActivePois.Any())
+        {
+            <div class="empty-state">
+                <p>Chua co POI active de hien thi.</p>
+            </div>
+        }
+        else
+        {
+            <div id="admin-poi-map" class="admin-poi-map" aria-label="Map POI active"></div>
+            <div id="admin-map-fallback" class="empty-state mt-3 d-none">
+                <p>Khong tai duoc map tile. Danh sach POI van hien o cot ben phai.</p>
+            </div>
+        }
+    </article>
+
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>POI active</h2>
+        </div>
+        <div class="list-stack">
+            @foreach (var poi in Model.ActivePois.OrderByDescending(x => x.Priority).ThenBy(x => x.Name))
+            {
+                <div class="list-row">
+                    <div class="list-row__content">
+                        <strong>@poi.Name</strong>
+                        <p>@poi.Address</p>
+                        <p class="mono">@poi.Latitude.ToString("0.######"), @poi.Longitude.ToString("0.######")</p>
+                    </div>
+                    <span class="status-pill status-pill--info">@poi.RadiusMeters.ToString("0.#")m</span>
+                </div>
+            }
+        </div>
+    </article>
+</section>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (() => {
+            const pois = @Html.Raw(poisJson);
+            const mapElement = document.getElementById("admin-poi-map");
+            const fallback = document.getElementById("admin-map-fallback");
+
+            if (!mapElement || !Array.isArray(pois) || pois.length === 0) {
+                return;
+            }
+
+            if (!window.L) {
+                fallback?.classList.remove("d-none");
+                return;
+            }
+
+            const center = [
+                pois.reduce((sum, item) => sum + item.Latitude, 0) / pois.length,
+                pois.reduce((sum, item) => sum + item.Longitude, 0) / pois.length
+            ];
+            const map = L.map(mapElement).setView(center, 15);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "&copy; OpenStreetMap"
+            }).addTo(map);
+
+            const bounds = [];
+            pois.forEach((poi) => {
+                const latLng = [poi.Latitude, poi.Longitude];
+                bounds.push(latLng);
+                const marker = L.marker(latLng).addTo(map);
+                marker.bindPopup(`
+                    <strong>${escapeHtml(poi.Name)}</strong><br>
+                    ${escapeHtml(poi.Address)}<br>
+                    Radius: ${poi.RadiusMeters}m<br>
+                    Priority: ${poi.Priority}
+                `);
+                L.circle(latLng, {
+                    radius: poi.RadiusMeters,
+                    color: "#2563eb",
+                    fillColor: "#2563eb",
+                    fillOpacity: 0.12,
+                    weight: 1
+                }).addTo(map);
+            });
+
+            if (bounds.length > 1) {
+                map.fitBounds(bounds, { padding: [28, 28] });
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? "")
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+        })();
+    </script>
+}

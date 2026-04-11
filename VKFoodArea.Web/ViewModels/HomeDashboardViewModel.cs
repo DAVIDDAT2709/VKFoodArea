@@ -9,16 +9,27 @@ public class HomeDashboardViewModel
     public int NarrationHistoryCount { get; set; }
     public int TodayNarrationCount { get; set; }
     public int ConfiguredLanguageCount { get; set; }
+    public int GpsNarrationCount { get; set; }
+    public int QrNarrationCount { get; set; }
+    public int ManualNarrationCount { get; set; }
+    public int MovementLogCount { get; set; }
+    public int ActiveTourCount { get; set; }
+    public double AverageListenSeconds { get; set; }
     public List<RecentNarrationItemViewModel> RecentNarrations { get; set; } = new();
     public List<DashboardBreakdownItemViewModel> LanguageBreakdown { get; set; } = new();
+    public List<DashboardBreakdownItemViewModel> TriggerSourceBreakdown { get; set; } = new();
+    public List<DashboardBreakdownItemViewModel> PlaybackModeBreakdown { get; set; } = new();
     public List<TopPoiPerformanceViewModel> TopPois { get; set; } = new();
 }
 
 public class RecentNarrationItemViewModel
 {
+    public int PoiId { get; set; }
     public string PoiName { get; set; } = string.Empty;
+    public string UserKey { get; set; } = string.Empty;
     public string Language { get; set; } = string.Empty;
     public string TriggerSource { get; set; } = string.Empty;
+    public string Mode { get; set; } = string.Empty;
     public DateTime PlayedAt { get; set; }
 }
 
@@ -30,6 +41,8 @@ public class DashboardBreakdownItemViewModel
 
 public class TopPoiPerformanceViewModel
 {
+    public int PoiId { get; set; }
     public string PoiName { get; set; } = string.Empty;
     public int Count { get; set; }
+    public DateTime LatestPlayedAt { get; set; }
 }

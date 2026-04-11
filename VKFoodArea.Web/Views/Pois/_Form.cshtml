@@ -2,6 +2,9 @@
 
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 <input asp-for="ImageUrl" type="hidden" />
+<input asp-for="AudioFileVi" type="hidden" />
+<input asp-for="AudioFileEn" type="hidden" />
+<input asp-for="AudioFileJa" type="hidden" />
 
 <div class="editor-layout">
     <section class="card-surface">
@@ -125,6 +128,33 @@
             </div>
         </div>
     </section>
+
+    <section class="card-surface">
+        <div class="section-heading">
+            <h2>Audio file</h2>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="AudioFileViUpload" class="form-label"></label>
+                <input asp-for="AudioFileViUpload" class="form-control" type="file" accept=".mp3,.m4a,.aac,.wav,.ogg,audio/*" />
+                <span asp-validation-for="AudioFileViUpload" class="text-danger"></span>
+                @RenderAudioCurrent(Model.AudioFileVi)
+            </div>
+            <div class="col-md-4">
+                <label asp-for="AudioFileEnUpload" class="form-label"></label>
+                <input asp-for="AudioFileEnUpload" class="form-control" type="file" accept=".mp3,.m4a,.aac,.wav,.ogg,audio/*" />
+                <span asp-validation-for="AudioFileEnUpload" class="text-danger"></span>
+                @RenderAudioCurrent(Model.AudioFileEn)
+            </div>
+            <div class="col-md-4">
+                <label asp-for="AudioFileJaUpload" class="form-label"></label>
+                <input asp-for="AudioFileJaUpload" class="form-control" type="file" accept=".mp3,.m4a,.aac,.wav,.ogg,audio/*" />
+                <span asp-validation-for="AudioFileJaUpload" class="text-danger"></span>
+                @RenderAudioCurrent(Model.AudioFileJa)
+            </div>
+        </div>
+    </section>
 </div>
 
 @functions {
@@ -137,4 +167,24 @@
         => imageUrl.StartsWith("/", StringComparison.Ordinal)
             ? imageUrl
             : imageUrl;
+
+    private static Microsoft.AspNetCore.Html.IHtmlContent RenderAudioCurrent(string? audioUrl)
+    {
+        if (string.IsNullOrWhiteSpace(audioUrl))
+            return new Microsoft.AspNetCore.Html.HtmlString(string.Empty);
+
+        var encoded = System.Net.WebUtility.HtmlEncode(audioUrl);
+        var source = audioUrl.StartsWith("/", StringComparison.Ordinal)
+            ? encoded
+            : encoded;
+
+        return new Microsoft.AspNetCore.Html.HtmlString(
+            $"""
+            <div class="audio-current">
+                <div class="form-text">Current file</div>
+                <audio controls preload="none" src="{source}"></audio>
+                <div class="small text-muted mono">{encoded}</div>
+            </div>
+            """);
+    }
 }

@@ -16,14 +16,20 @@ public sealed record PoiRuntimeSnapshot(
 
 public class PoiRuntimeService
 {
+    private static readonly TimeSpan MovementSyncInterval = TimeSpan.FromSeconds(30);
+    private const double MovementSyncMinDistanceMeters = 20;
+
     private readonly PoiService _poiService;
     private readonly LocationTrackerService _locationTrackerService;
     private readonly GeofenceEngine _geofenceEngine;
     private readonly NarrationService _narrationService;
     private readonly PermissionService _permissionService;
     private readonly LocationTrackingPolicyService _trackingPolicyService;
+    private readonly MovementLogSyncService _movementLogSyncService;
+    private readonly AuthService _authService;
     private readonly SemaphoreSlim _stateLock = new(1, 1);
     private readonly object _snapshotSync = new();
+    private readonly object _movementSync = new();
 
     private List<Poi> _pois = [];
     private Poi? _nearestPoi;
@@ -33,6 +39,8 @@ public class PoiRuntimeService
     private LocationTrackingMode _trackingMode = LocationTrackingMode.ForegroundNavigation;
     private string _trackingPolicyName = "foreground-active";
     private string _lastGeofenceReason = string.Empty;
+    private DateTimeOffset _lastMovementSyncedAt = DateTimeOffset.MinValue;
+    private Location? _lastMovementSyncedLocation;
 
     public event EventHandler? StateChanged;
 
@@ -46,7 +54,9 @@ public class PoiRuntimeService
         GeofenceEngine geofenceEngine,
         NarrationService narrationService,
         PermissionService permissionService,
-        LocationTrackingPolicyService trackingPolicyService)
+        LocationTrackingPolicyService trackingPolicyService,
+        MovementLogSyncService movementLogSyncService,
+        AuthService authService)
     {
         _poiService = poiService;
         _locationTrackerService = locationTrackerService;
@@ -54,6 +64,8 @@ public class PoiRuntimeService
         _narrationService = narrationService;
         _permissionService = permissionService;
         _trackingPolicyService = trackingPolicyService;
+        _movementLogSyncService = movementLogSyncService;
+        _authService = authService;
         _currentLocation = DefaultLocation;
 
         _locationTrackerService.LocationChanged += OnLocationChanged;
@@ -265,6 +277,7 @@ public class PoiRuntimeService
         }
 
         RaiseStateChanged();
+        _ = PushMovementLogIfNeededAsync(location, trackingProfile.Mode, CancellationToken.None);
 
         if (poiToPlay is not null)
             await _narrationService.PlayPoiAsync(poiToPlay.Id, "auto", ct: ct);
@@ -359,6 +372,53 @@ public class PoiRuntimeService
             .OrderBy(x => x.Distance)
             .Select(x => x.Poi)
             .FirstOrDefault();
+    }
+
+    private async Task PushMovementLogIfNeededAsync(
+        Location location,
+        LocationTrackingMode trackingMode,
+        CancellationToken ct)
+    {
+        if (!ShouldPushMovementLog(location))
+            return;
+
+        try
+        {
+            await _movementLogSyncService.PushAsync(
+                location.Latitude,
+                location.Longitude,
+                location.Accuracy,
+                _authService.GetCurrentUserSyncKey(),
+                trackingMode == LocationTrackingMode.BackgroundMonitoring ? "background" : "foreground",
+                ct);
+        }
+        catch
+        {
+        }
+    }
+
+    private bool ShouldPushMovementLog(Location location)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        lock (_movementSync)
+        {
+            var hasWaitedLongEnough = now - _lastMovementSyncedAt >= MovementSyncInterval;
+            var hasMovedEnough = _lastMovementSyncedLocation is null ||
+                Location.CalculateDistance(
+                    _lastMovementSyncedLocation.Latitude,
+                    _lastMovementSyncedLocation.Longitude,
+                    location.Latitude,
+                    location.Longitude,
+                    DistanceUnits.Kilometers) * 1000 >= MovementSyncMinDistanceMeters;
+
+            if (!hasWaitedLongEnough && !hasMovedEnough)
+                return false;
+
+            _lastMovementSyncedAt = now;
+            _lastMovementSyncedLocation = location;
+            return true;
+        }
     }
 
     private void RaiseStateChanged()

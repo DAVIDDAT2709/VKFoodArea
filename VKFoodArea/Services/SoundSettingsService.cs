@@ -10,17 +10,20 @@ public class SoundSettingsService
     private readonly AuthService _authService;
     private readonly AppSettingsService _appSettingsService;
     private readonly AppLanguageService _appLanguageService;
+    private readonly AppUserSyncService _appUserSyncService;
 
     public SoundSettingsService(
         AppDbContext db,
         AuthService authService,
         AppSettingsService appSettingsService,
-        AppLanguageService appLanguageService)
+        AppLanguageService appLanguageService,
+        AppUserSyncService appUserSyncService)
     {
         _db = db;
         _authService = authService;
         _appSettingsService = appSettingsService;
         _appLanguageService = appLanguageService;
+        _appUserSyncService = appUserSyncService;
     }
 
     public async Task<SoundSettingsSnapshot> GetCurrentSoundSettingsAsync(CancellationToken ct = default)
@@ -63,7 +66,11 @@ public class SoundSettingsService
             await _db.SaveChangesAsync(ct);
 
             if (_authService.CurrentUser?.Id == user.Id)
-                _authService.ReplaceCurrentUser(CloneUser(user));
+            {
+                var clonedUser = CloneUser(user);
+                _authService.ReplaceCurrentUser(clonedUser);
+                await _appUserSyncService.SyncAsync(clonedUser, AuthService.BuildUserSyncKey(clonedUser), ct);
+            }
         }
 
         ApplySoundSettings(normalizedLanguage, normalizedPlaybackMode);

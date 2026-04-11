@@ -10,17 +10,20 @@ public class AccountService
     private readonly AuthService _authService;
     private readonly AppSettingsService _settingsService;
     private readonly AppLanguageService _languageService;
+    private readonly AppUserSyncService _appUserSyncService;
 
     public AccountService(
         AppDbContext db,
         AuthService authService,
         AppSettingsService settingsService,
-        AppLanguageService languageService)
+        AppLanguageService languageService,
+        AppUserSyncService appUserSyncService)
     {
         _db = db;
         _authService = authService;
         _settingsService = settingsService;
         _languageService = languageService;
+        _appUserSyncService = appUserSyncService;
     }
 
     public async Task<AccountSettingsSnapshot?> GetUserProfileAsync(CancellationToken ct = default)
@@ -80,7 +83,9 @@ public class AccountService
         _settingsService.NarrationLanguage = normalizedLanguage;
         _settingsService.NarrationOutputMode = normalizedPlaybackMode;
         _languageService.CurrentLanguage = normalizedLanguage;
-        _authService.ReplaceCurrentUser(CloneUser(user));
+        var clonedUser = CloneUser(user);
+        _authService.ReplaceCurrentUser(clonedUser);
+        await _appUserSyncService.SyncAsync(clonedUser, AuthService.BuildUserSyncKey(clonedUser), ct);
 
         return AccountServiceResult.Success(BuildSnapshot(user));
     }

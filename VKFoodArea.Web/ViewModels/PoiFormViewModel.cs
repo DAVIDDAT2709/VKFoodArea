@@ -59,6 +59,27 @@ public class PoiFormViewModel
     [Display(Name = "TTS Deutsch")]
     public string? TtsScriptDe { get; set; }
 
+    [StringLength(500)]
+    [Display(Name = "Audio tieng Viet")]
+    public string? AudioFileVi { get; set; }
+
+    [StringLength(500)]
+    [Display(Name = "Audio English")]
+    public string? AudioFileEn { get; set; }
+
+    [StringLength(500)]
+    [Display(Name = "Audio Japanese")]
+    public string? AudioFileJa { get; set; }
+
+    [Display(Name = "Upload audio VI")]
+    public IFormFile? AudioFileViUpload { get; set; }
+
+    [Display(Name = "Upload audio EN")]
+    public IFormFile? AudioFileEnUpload { get; set; }
+
+    [Display(Name = "Upload audio JA")]
+    public IFormFile? AudioFileJaUpload { get; set; }
+
     [StringLength(100)]
     [Display(Name = "Mã QR mặc định")]
     public string? QrCode { get; set; }

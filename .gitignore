@@ -3,6 +3,10 @@ obj/
 .vs/
 .dotnet/
 .nuget/
+bin_codex/
+obj_codex/
+obj_loginfix/
+.codexbuild/
 
 /_apk_extract/
 /_build_verify/
@@ -10,6 +14,12 @@ obj/
 /_emulator_db/
 /_emulator_db_after_patch/
 /_emulator_db_after_success/
+/.obj_web/
+/.verify_app/
+/.verify_web/
+/verify_obj_app/
+/build-check/
+/lưu/
 /UpgradeLog.htm
 /_*.png
 /_*.xml
@@ -20,3 +30,6 @@ obj/
 *.zip
 *.apk
 *.aab
+*.db
+*.db-shm
+*.db-wal

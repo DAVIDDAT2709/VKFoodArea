@@ -13,6 +13,50 @@
     </div>
 </section>
 
+<section class="page-grid page-section">
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Nguon kich hoat</h2>
+        </div>
+        @if (!Model.TriggerSourceBreakdown.Any())
+        {
+            <div class="empty-state">
+                <p>Chua co du lieu.</p>
+            </div>
+        }
+        else
+        {
+            <div class="pill-cloud">
+                @foreach (var item in Model.TriggerSourceBreakdown)
+                {
+                    <span class="soft-pill">@item.Label: @item.Count</span>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Che do phat</h2>
+        </div>
+        @if (!Model.PlaybackModeBreakdown.Any())
+        {
+            <div class="empty-state">
+                <p>Chua co du lieu.</p>
+            </div>
+        }
+        else
+        {
+            <div class="pill-cloud">
+                @foreach (var item in Model.PlaybackModeBreakdown)
+                {
+                    <span class="soft-pill">@item.Label: @item.Count</span>
+                }
+            </div>
+        }
+    </article>
+</section>
+
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">POI hoạt động</span>
@@ -29,6 +73,18 @@
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">Ngôn ngữ</span>
         <strong class="metric-card__value">@Model.ConfiguredLanguageCount</strong>
+    </article>
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Movement logs</span>
+        <strong class="metric-card__value">@Model.MovementLogCount</strong>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Tour hoạt động</span>
+        <strong class="metric-card__value">@Model.ActiveTourCount</strong>
+    </article>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">TB nghe / POI</span>
+        <strong class="metric-card__value">@Math.Round(Model.AverageListenSeconds)s</strong>
     </article>
 </section>
 
@@ -54,6 +110,10 @@
                 <span>Tổng log</span>
                 <strong>@Model.NarrationHistoryCount</strong>
             </div>
+            <div class="summary-row">
+                <span>GPS / QR / Manual</span>
+                <strong>@Model.GpsNarrationCount / @Model.QrNarrationCount / @Model.ManualNarrationCount</strong>
+            </div>
         </div>
     </article>
 
@@ -75,6 +135,7 @@
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
+                            <p>POI #@item.PoiId - latest @item.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
                         </div>
                         <span class="status-pill status-pill--info">@item.Count lượt</span>
                     </div>
@@ -103,7 +164,10 @@
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
+                            <p>POI #@item.PoiId - @item.Language.ToUpperInvariant() - @item.TriggerSource.ToUpperInvariant() - @item.Mode.ToUpperInvariant()</p>
+                            @*
                             <p>@item.Language.ToUpperInvariant() • @item.TriggerSource.ToUpperInvariant()</p>
+                            *@
                         </div>
                         <span class="status-pill status-pill--muted">@item.PlayedAt.ToString("dd/MM HH:mm")</span>
                     </div>

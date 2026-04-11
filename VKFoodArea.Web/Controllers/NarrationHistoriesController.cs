@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VKFoodArea.Web.Services;
 
 namespace VKFoodArea.Web.Controllers;
 
+[Authorize]
 public class NarrationHistoriesController : Controller
 {
     private readonly INarrationHistoryService _narrationHistoryService;

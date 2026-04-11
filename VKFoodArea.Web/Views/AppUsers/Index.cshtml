@@ -1,0 +1,113 @@
+@model IEnumerable<VKFoodArea.Web.ViewModels.AppUserAccountListItemViewModel>
+@{
+    ViewData["Title"] = "App users";
+    var users = Model.ToList();
+    var activeCount = users.Count(x => x.IsActive);
+    var listenCount = users.Sum(x => x.ListenCount);
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>Quan ly user account App</h2>
+    </div>
+</section>
+
+<section class="metrics-grid page-section">
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Tong user</span>
+        <strong class="metric-card__value">@users.Count</strong>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Dang active</span>
+        <strong class="metric-card__value">@activeCount</strong>
+    </article>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">Dang khoa</span>
+        <strong class="metric-card__value">@(users.Count - activeCount)</strong>
+    </article>
+    <article class="metric-card metric-card--red">
+        <span class="metric-card__label">Tong luot nghe</span>
+        <strong class="metric-card__value">@listenCount</strong>
+    </article>
+</section>
+
+<section class="card-surface page-section">
+    @if (!users.Any())
+    {
+        <div class="empty-state">
+            <p>Chua co user App dong bo len Web. User se xuat hien sau khi App login/register va co ket noi Web API.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table data-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Ngon ngu</th>
+                        <th>Nghe</th>
+                        <th>Trang thai</th>
+                        <th>Lan cuoi</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in users)
+                {
+                    <tr>
+                        <td>
+                            <div class="table-title">@DisplayName(item)</div>
+                            <div class="table-meta">@item.Username</div>
+                            <div class="table-meta mono">@ShortKey(item.UserKey)</div>
+                        </td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Email) ? "-" : item.Email)</td>
+                        <td>
+                            <span class="lang-pill">@item.NarrationLanguage.ToUpperInvariant()</span>
+                            <span class="soft-pill">@item.NarrationPlaybackMode</span>
+                        </td>
+                        <td>
+                            <div class="table-title">@item.ListenCount</div>
+                            <div class="table-meta">@(item.LatestPlayedAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "Chua nghe")</div>
+                        </td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="status-pill status-pill--success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-pill--muted">Locked</span>
+                            }
+                        </td>
+                        <td>@item.LastSeenAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <div class="table-actions justify-content-end">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Chi tiet</a>
+                                <form asp-action="SetActive" method="post">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="isActive" value="@(!item.IsActive)" />
+                                    <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-danger" : "btn-primary")">
+                                        @(item.IsActive ? "Khoa" : "Mo khoa")
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@functions {
+    private static string DisplayName(VKFoodArea.Web.ViewModels.AppUserAccountListItemViewModel item)
+        => string.IsNullOrWhiteSpace(item.FullName) ? item.Username : item.FullName;
+
+    private static string ShortKey(string key)
+        => string.IsNullOrWhiteSpace(key)
+            ? "-"
+            : key.Length <= 16 ? key : $"{key[..8]}...{key[^6..]}";
+}

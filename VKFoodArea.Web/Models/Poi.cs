@@ -23,9 +23,15 @@ public class Poi
     public string TtsScriptJa { get; set; } = string.Empty;
     public string TtsScriptDe { get; set; } = string.Empty;
 
+    public string AudioFileVi { get; set; } = string.Empty;
+    public string AudioFileEn { get; set; } = string.Empty;
+    public string AudioFileJa { get; set; } = string.Empty;
+
     public string QrCode { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 
     public List<QrCodeItem> QrCodeItems { get; set; } = new();
     public List<NarrationHistory> NarrationHistories { get; set; } = new();
+    public List<PoiTranslation> Translations { get; set; } = new();
+    public List<PoiAudioAsset> AudioAssets { get; set; } = new();
 }

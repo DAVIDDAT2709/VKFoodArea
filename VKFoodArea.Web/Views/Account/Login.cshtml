@@ -1,0 +1,91 @@
+@model VKFoodArea.Web.ViewModels.AdminLoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dang nhap Admin - VK Food Area CMS</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="auth-page auth-page--admin">
+    <main class="admin-login-shell" aria-label="Dang nhap khu vuc quan tri">
+        <section class="admin-login-hero" aria-label="Tong quan he thong">
+            <div class="admin-login-brand">
+                <span class="admin-login-logo">VK</span>
+                <div>
+                    <p>VK Food Area</p>
+                    <strong>CMS Control Room</strong>
+                </div>
+            </div>
+
+            <div class="admin-login-copy">
+                <span class="soft-pill soft-pill--glass">Admin workspace</span>
+                <h1>Van hanh POI, QR va audio tren mot man hinh.</h1>
+                <p>
+                    Kiem soat noi dung thuyet minh, ban do va lich su nghe dong bo voi App.
+                </p>
+            </div>
+
+            <div class="admin-login-signal" aria-label="Cac module chinh">
+                <div>
+                    <span>01</span>
+                    <strong>POI content</strong>
+                    <p>Toa do, ban kinh, uu tien va ban dich.</p>
+                </div>
+                <div>
+                    <span>02</span>
+                    <strong>Audio preview</strong>
+                    <p>Nghe thu TTS hoac file audio truoc khi xuat ban.</p>
+                </div>
+                <div>
+                    <span>03</span>
+                    <strong>Usage logs</strong>
+                    <p>Theo doi luot nghe, QR va hanh vi su dung.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-login-panel" aria-label="Form dang nhap admin">
+            <div class="admin-login-panel__head">
+                <span class="soft-pill">Secure access</span>
+                <h2>Dang nhap Admin</h2>
+                <p>Nhap tai khoan quan tri de tiep tuc vao bang dieu khien.</p>
+            </div>
+
+            <form asp-action="Login" method="post" class="admin-login-form" novalidate>
+                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                <input asp-for="ReturnUrl" type="hidden" />
+
+                <div class="auth-field">
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="admin-login-options">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-submit">Dang nhap vao CMS</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

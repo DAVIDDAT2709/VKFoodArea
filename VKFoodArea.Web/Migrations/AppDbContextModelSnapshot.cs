@@ -17,16 +17,129 @@ namespace VKFoodArea.Web.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
 
+            modelBuilder.Entity("VKFoodArea.Web.Models.AdminUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("AdminUsers");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.AppUserAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NarrationLanguage")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NarrationPlaybackMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserKey")
+                        .IsUnique();
+
+                    b.ToTable("AppUserAccounts");
+                });
+
             modelBuilder.Entity("VKFoodArea.Web.Models.NarrationHistory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Mode")
                         .IsRequired()
@@ -68,6 +181,18 @@ namespace VKFoodArea.Web.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AudioFileEn")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AudioFileJa")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AudioFileVi")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -131,6 +256,74 @@ namespace VKFoodArea.Web.Migrations
                     b.ToTable("Pois");
                 });
 
+            modelBuilder.Entity("VKFoodArea.Web.Models.PoiAudioAsset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PoiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoiId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("PoiAudioAssets");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.PoiTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PoiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Script")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoiId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("PoiTranslations");
+                });
+
             modelBuilder.Entity("VKFoodArea.Web.Models.QrCodeItem", b =>
                 {
                     b.Property<int>("Id")
@@ -163,10 +356,128 @@ namespace VKFoodArea.Web.Migrations
                     b.ToTable("QrCodeItems");
                 });
 
+            modelBuilder.Entity("VKFoodArea.Web.Models.Tour", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Tours");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.TourStop", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PoiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TourId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoiId");
+
+                    b.HasIndex("TourId", "DisplayOrder")
+                        .IsUnique();
+
+                    b.ToTable("TourStops");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.UserMovementLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("AccuracyMeters")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedAt");
+
+                    b.HasIndex("UserKey");
+
+                    b.ToTable("UserMovementLogs");
+                });
+
             modelBuilder.Entity("VKFoodArea.Web.Models.NarrationHistory", b =>
                 {
                     b.HasOne("VKFoodArea.Web.Models.Poi", "Poi")
                         .WithMany("NarrationHistories")
+                        .HasForeignKey("PoiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poi");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.PoiAudioAsset", b =>
+                {
+                    b.HasOne("VKFoodArea.Web.Models.Poi", "Poi")
+                        .WithMany("AudioAssets")
+                        .HasForeignKey("PoiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poi");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.PoiTranslation", b =>
+                {
+                    b.HasOne("VKFoodArea.Web.Models.Poi", "Poi")
+                        .WithMany("Translations")
                         .HasForeignKey("PoiId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -185,11 +496,39 @@ namespace VKFoodArea.Web.Migrations
                     b.Navigation("Poi");
                 });
 
+            modelBuilder.Entity("VKFoodArea.Web.Models.TourStop", b =>
+                {
+                    b.HasOne("VKFoodArea.Web.Models.Poi", "Poi")
+                        .WithMany()
+                        .HasForeignKey("PoiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VKFoodArea.Web.Models.Tour", "Tour")
+                        .WithMany("Stops")
+                        .HasForeignKey("TourId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poi");
+
+                    b.Navigation("Tour");
+                });
+
             modelBuilder.Entity("VKFoodArea.Web.Models.Poi", b =>
                 {
+                    b.Navigation("AudioAssets");
+
                     b.Navigation("NarrationHistories");
 
                     b.Navigation("QrCodeItems");
+
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("VKFoodArea.Web.Models.Tour", b =>
+                {
+                    b.Navigation("Stops");
                 });
 #pragma warning restore 612, 618
         }

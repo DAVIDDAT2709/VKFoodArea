@@ -37,4 +37,14 @@ public class NarrationHistoryCreateApiViewModel
 
     [Display(Name = "Thoi gian phat")]
     public DateTime? PlayedAt { get; set; }
+
+    [Range(0, 86400)]
+    [Display(Name = "Thoi luong phat")]
+    public int? DurationSeconds { get; set; }
+
+    [Range(-90, 90)]
+    public double? Latitude { get; set; }
+
+    [Range(-180, 180)]
+    public double? Longitude { get; set; }
 }

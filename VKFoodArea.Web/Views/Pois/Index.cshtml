@@ -55,6 +55,7 @@
                         <th>POI</th>
                         <th>GPS</th>
                         <th>TTS tiếng Việt</th>
+                        <th>Nghe thu</th>
                         <th>QR</th>
                         <th>Trạng thái</th>
                         <th class="text-end">Thao tác</th>
@@ -88,6 +89,17 @@
                                     }
                                 </div>
                             }
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="audio-preview-button"
+                                    data-audio="@FirstAudio(poi)"
+                                    data-text="@poi.TtsScriptVi"
+                                    data-title="@poi.Name"
+                                    aria-label="Nghe thu @poi.Name">
+                                <span class="audio-preview-button__icon" aria-hidden="true"></span>
+                                <span>Nghe</span>
+                            </button>
                         </td>
                         <td>
                             @if (string.IsNullOrWhiteSpace(poi.QrCode))
@@ -136,4 +148,50 @@
 
         return result;
     }
+
+    private static string FirstAudio(VKFoodArea.Web.Models.Poi poi)
+    {
+        if (!string.IsNullOrWhiteSpace(poi.AudioFileVi)) return poi.AudioFileVi;
+        if (!string.IsNullOrWhiteSpace(poi.AudioFileEn)) return poi.AudioFileEn;
+        if (!string.IsNullOrWhiteSpace(poi.AudioFileJa)) return poi.AudioFileJa;
+        return string.Empty;
+    }
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            let currentAudio = null;
+
+            document.querySelectorAll(".audio-preview-button").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const audioUrl = button.dataset.audio || "";
+                    const text = button.dataset.text || "";
+
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio = null;
+                    }
+
+                    if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel();
+                    }
+
+                    if (audioUrl) {
+                        currentAudio = new Audio(audioUrl);
+                        currentAudio.play().catch(() => {
+                            button.classList.add("audio-preview-button--error");
+                        });
+                        return;
+                    }
+
+                    if (text && window.speechSynthesis) {
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = "vi-VN";
+                        window.speechSynthesis.speak(utterance);
+                    }
+                });
+            });
+        })();
+    </script>
 }

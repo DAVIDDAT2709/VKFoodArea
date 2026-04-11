@@ -62,6 +62,16 @@ public static class MauiProgram
             client.Timeout = TimeSpan.FromSeconds(8);
         });
 
+        builder.Services.AddHttpClient<AppUserSyncService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(8);
+        });
+
+        builder.Services.AddHttpClient<MovementLogSyncService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(8);
+        });
+
         builder.Services.AddHttpClient<PoiSyncService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(8);

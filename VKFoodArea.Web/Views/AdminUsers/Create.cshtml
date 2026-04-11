@@ -1,0 +1,25 @@
+@model VKFoodArea.Web.ViewModels.AdminUserFormViewModel
+@{
+    ViewData["Title"] = "Them admin";
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>Them tai khoan CMS</h2>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
+    </div>
+</section>
+
+<form asp-action="Create" method="post">
+    <partial name="_Form" model="Model" />
+    <div class="page-actions page-section">
+        <button type="submit" class="btn btn-primary">Luu admin</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Huy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

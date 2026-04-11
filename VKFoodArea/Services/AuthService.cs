@@ -13,6 +13,7 @@ public class AuthService
     private readonly SessionStoreService _sessionStore;
     private readonly AppSettingsService _settingsService;
     private readonly AppLanguageService _languageService;
+    private readonly AppUserSyncService _appUserSyncService;
 
     public AppUser? CurrentUser { get; private set; }
 
@@ -20,12 +21,14 @@ public class AuthService
         AppDbContext db,
         SessionStoreService sessionStore,
         AppSettingsService settingsService,
-        AppLanguageService languageService)
+        AppLanguageService languageService,
+        AppUserSyncService appUserSyncService)
     {
         _db = db;
         _sessionStore = sessionStore;
         _settingsService = settingsService;
         _languageService = languageService;
+        _appUserSyncService = appUserSyncService;
     }
 
     public async Task<AuthActionResult> LoginAsync(string identifier, string password)
@@ -42,9 +45,15 @@ public class AuthService
         if (!user.IsActive)
             return AuthActionResult.Fail("Login.DisabledError");
 
+        var userKey = BuildUserSyncKey(user);
+        var remoteStatus = await _appUserSyncService.GetStatusAsync(userKey);
+        if (remoteStatus is { IsKnown: true, IsActive: false })
+            return AuthActionResult.Fail("Login.DisabledError");
+
         CurrentUser = user;
         ApplyUserSoundSettings(user);
         _sessionStore.Save(user.Id);
+        await _appUserSyncService.SyncAsync(user, userKey);
         return AuthActionResult.Success(user);
     }
 
@@ -89,6 +98,7 @@ public class AuthService
 
         _db.AppUsers.Add(user);
         await _db.SaveChangesAsync();
+        await _appUserSyncService.SyncAsync(user, BuildUserSyncKey(user));
 
         return AuthActionResult.Success(user);
     }
@@ -110,8 +120,18 @@ public class AuthService
             return false;
         }
 
+        var userKey = BuildUserSyncKey(user);
+        var remoteStatus = await _appUserSyncService.GetStatusAsync(userKey);
+        if (remoteStatus is { IsKnown: true, IsActive: false })
+        {
+            _sessionStore.Clear();
+            CurrentUser = null;
+            return false;
+        }
+
         CurrentUser = user;
         ApplyUserSoundSettings(user);
+        await _appUserSyncService.SyncAsync(user, userKey);
         return true;
     }
 
@@ -125,11 +145,14 @@ public class AuthService
         => CurrentUser?.Id ?? _sessionStore.GetCurrentUserId();
 
     public string? GetCurrentUserSyncKey()
+        => BuildUserSyncKey(CurrentUser);
+
+    public static string? BuildUserSyncKey(AppUser? user)
     {
-        var identifier = CurrentUser?.Email;
+        var identifier = user?.Email;
 
         if (string.IsNullOrWhiteSpace(identifier))
-            identifier = CurrentUser?.Username;
+            identifier = user?.Username;
 
         if (string.IsNullOrWhiteSpace(identifier))
             return null;
@@ -166,6 +189,7 @@ public class AuthService
                 user.NarrationPlaybackMode = normalizedPlaybackMode;
                 await _db.SaveChangesAsync(ct);
                 CurrentUser = CloneUser(user);
+                await _appUserSyncService.SyncAsync(CurrentUser, BuildUserSyncKey(CurrentUser), ct);
             }
         }
 

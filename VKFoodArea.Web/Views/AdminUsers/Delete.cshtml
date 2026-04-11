@@ -1,0 +1,44 @@
+@model VKFoodArea.Web.Models.AdminUser
+@{
+    ViewData["Title"] = "Xoa admin";
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>Xoa tai khoan CMS</h2>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
+    </div>
+</section>
+
+<section class="delete-grid page-section">
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>@Model.Username</h2>
+        </div>
+        <div class="summary-list">
+            <div class="summary-row">
+                <span>Ten hien thi</span>
+                <strong>@Model.FullName</strong>
+            </div>
+            <div class="summary-row">
+                <span>Quyen</span>
+                <strong>@Model.Role</strong>
+            </div>
+            <div class="summary-row">
+                <span>Trang thai</span>
+                <strong>@(Model.IsActive ? "Active" : "Locked")</strong>
+            </div>
+        </div>
+    </article>
+
+    <aside class="warning-panel">
+        <h3>Xac nhan xoa</h3>
+        <p>Thao tac nay xoa tai khoan quan tri khoi CMS.</p>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="page-actions">
+            <button type="submit" class="btn btn-danger">Xoa admin</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Huy</a>
+        </form>
+    </aside>
+</section>

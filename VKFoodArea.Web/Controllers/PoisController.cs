@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VKFoodArea.Web.Services;
 using VKFoodArea.Web.ViewModels;
 
 namespace VKFoodArea.Web.Controllers;
 
+[Authorize]
 public class PoisController : Controller
 {
     private readonly IPoiService _poiService;
@@ -35,6 +38,8 @@ public class PoisController : Controller
         var imageError = _poiService.ValidateImageFile(vm.ImageFile);
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
+
+        AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
             return View(vm);
@@ -69,6 +74,8 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
 
+        AddAudioValidationErrors(vm);
+
         if (!ModelState.IsValid)
             return View(vm);
 
@@ -97,5 +104,19 @@ public class PoisController : Controller
 
         TempData["SuccessMessage"] = "Đã xóa POI.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private void AddAudioValidationErrors(PoiFormViewModel vm)
+    {
+        AddAudioValidationError(nameof(vm.AudioFileViUpload), vm.AudioFileViUpload);
+        AddAudioValidationError(nameof(vm.AudioFileEnUpload), vm.AudioFileEnUpload);
+        AddAudioValidationError(nameof(vm.AudioFileJaUpload), vm.AudioFileJaUpload);
+    }
+
+    private void AddAudioValidationError(string fieldName, IFormFile? audioFile)
+    {
+        var audioError = _poiService.ValidateAudioFile(audioFile);
+        if (!string.IsNullOrWhiteSpace(audioError))
+            ModelState.AddModelError(fieldName, audioError);
     }
 }

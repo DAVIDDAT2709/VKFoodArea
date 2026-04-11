@@ -9,8 +9,13 @@
         string.Equals(x.TriggerSource, "auto", StringComparison.OrdinalIgnoreCase));
     var qrCount = items.Count(x => string.Equals(x.TriggerSource, "qr", StringComparison.OrdinalIgnoreCase));
     var topPois = items
-        .GroupBy(x => x.PoiName)
-        .Select(x => new { PoiName = x.Key, Count = x.Count() })
+        .GroupBy(x => x.PoiId)
+        .Select(x => new
+        {
+            PoiId = x.Key,
+            PoiName = x.OrderByDescending(item => item.PlayedAt).First().PoiName,
+            Count = x.Count()
+        })
         .OrderByDescending(x => x.Count)
         .ThenBy(x => x.PoiName)
         .Take(4)
@@ -85,6 +90,7 @@
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
+                            <p>POI #@item.PoiId</p>
                         </div>
                         <span class="soft-pill">@item.Count lượt</span>
                     </div>
@@ -112,6 +118,7 @@
                 <thead>
                     <tr>
                         <th>POI</th>
+                        <th>User</th>
                         <th>Ngôn ngữ</th>
                         <th>Nguồn</th>
                         <th>Chế độ</th>
@@ -124,7 +131,9 @@
                     <tr>
                         <td>
                             <div class="table-title">@item.PoiName</div>
+                            <div class="table-meta">#@item.PoiId</div>
                         </td>
+                        <td><span class="soft-pill">@(string.IsNullOrWhiteSpace(item.UserKey) ? "anonymous" : item.UserKey)</span></td>
                         <td><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
                         <td><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
                         <td>@item.Mode.ToUpperInvariant()</td>

@@ -20,4 +20,5 @@ public interface IPoiService
 
     Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string? qrCode);
     string? ValidateImageFile(IFormFile? imageFile);
+    string? ValidateAudioFile(IFormFile? audioFile);
 }

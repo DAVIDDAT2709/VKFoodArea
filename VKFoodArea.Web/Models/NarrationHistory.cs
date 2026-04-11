@@ -24,5 +24,9 @@ public class NarrationHistory
     [Required, StringLength(20)]
     public string Mode { get; set; } = "tts";
 
+    public int? DurationSeconds { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+
     public DateTime PlayedAt { get; set; } = DateTime.Now;
 }

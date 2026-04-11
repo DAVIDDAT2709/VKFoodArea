@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 
 namespace VKFoodArea.Web.Controllers;
 
+[Authorize]
 public class HomeController : Controller
 {
     private readonly IHomeService _homeService;

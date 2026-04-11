@@ -120,12 +120,17 @@ public class QrCodeItemService : IQrCodeItemService
         if (string.IsNullOrWhiteSpace(code))
             return "Mã QR không hợp lệ.";
 
-        var poiExists = await _context.Pois
+        var poi = await _context.Pois
             .AsNoTracking()
-            .AnyAsync(x => x.Id == vm.PoiId);
+            .Where(x => x.Id == vm.PoiId)
+            .Select(x => new { x.Id, x.IsActive })
+            .FirstOrDefaultAsync();
 
-        if (!poiExists)
+        if (poi is null)
             return "POI không tồn tại.";
+
+        if (vm.IsActive && !poi.IsActive)
+            return "QR dang hoat dong phai lien ket voi POI dang hoat dong.";
 
         var existsInQrItems = await _context.QrCodeItems
             .AnyAsync(x =>

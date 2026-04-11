@@ -1,0 +1,107 @@
+@model VKFoodArea.Web.ViewModels.AppUserAccountDetailsViewModel
+@{
+    ViewData["Title"] = "Chi tiet App user";
+    var user = Model.User;
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>@(string.IsNullOrWhiteSpace(user.FullName) ? user.Username : user.FullName)</h2>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
+    </div>
+</section>
+
+<section class="dashboard-grid page-section">
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Thong tin user</h2>
+        </div>
+        <div class="summary-list">
+            <div class="summary-row">
+                <span>Username</span>
+                <strong>@user.Username</strong>
+            </div>
+            <div class="summary-row">
+                <span>Email</span>
+                <strong>@(string.IsNullOrWhiteSpace(user.Email) ? "-" : user.Email)</strong>
+            </div>
+            <div class="summary-row">
+                <span>User key</span>
+                <strong class="mono">@user.UserKey</strong>
+            </div>
+            <div class="summary-row">
+                <span>Trang thai</span>
+                <strong>@(user.IsActive ? "Active" : "Locked")</strong>
+            </div>
+        </div>
+    </article>
+
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Cau hinh nghe</h2>
+        </div>
+        <div class="summary-list">
+            <div class="summary-row">
+                <span>Ngon ngu</span>
+                <strong>@user.NarrationLanguage.ToUpperInvariant()</strong>
+            </div>
+            <div class="summary-row">
+                <span>Che do</span>
+                <strong>@user.NarrationPlaybackMode</strong>
+            </div>
+            <div class="summary-row">
+                <span>So luot nghe</span>
+                <strong>@user.ListenCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>Dong bo cuoi</span>
+                <strong>@user.LastSyncedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <h2>Lich su nghe gan day</h2>
+    </div>
+    @if (!Model.RecentNarrations.Any())
+    {
+        <div class="empty-state">
+            <p>User nay chua co lich su nghe tren Web.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table data-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>POI</th>
+                        <th>Ngon ngu</th>
+                        <th>Nguon</th>
+                        <th>Che do</th>
+                        <th>Thoi gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.RecentNarrations)
+                {
+                    <tr>
+                        <td>
+                            <div class="table-title">@item.PoiName</div>
+                            <div class="table-meta">#@item.PoiId</div>
+                        </td>
+                        <td><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
+                        <td><span class="status-pill status-pill--info">@item.TriggerSource.ToUpperInvariant()</span></td>
+                        <td>@item.Mode.ToUpperInvariant()</td>
+                        <td>@item.PlayedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
