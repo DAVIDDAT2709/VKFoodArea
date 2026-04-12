@@ -22,6 +22,16 @@ public class QrCodeItemsController : Controller
         return View(data);
     }
 
+    [AllowAnonymous]
+    [HttpGet("/qr/{code}")]
+    public IActionResult Resolve(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return BadRequest("Missing QR code.");
+
+        return Redirect($"/api/pois/by-qr?code={Uri.EscapeDataString(code)}");
+    }
+
     public async Task<IActionResult> Create()
     {
         var vm = await _qrCodeItemService.BuildCreateFormAsync();

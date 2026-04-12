@@ -640,7 +640,7 @@ public class NarrationService
             (string.Equals(absoluteUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
              string.Equals(absoluteUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
         {
-            using var response = await _httpClientFactory.CreateClient().GetAsync(absoluteUri, ct);
+            using var response = await _httpClientFactory.CreateClient("DemoHttp").GetAsync(absoluteUri, ct);
             response.EnsureSuccessStatusCode();
             await using var sourceStream = await response.Content.ReadAsStreamAsync(ct);
             return await CopyToMemoryAsync(sourceStream, ct);
@@ -657,7 +657,7 @@ public class NarrationService
             (string.Equals(mediaUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
              string.Equals(mediaUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
         {
-            using var response = await _httpClientFactory.CreateClient().GetAsync(mediaUri, ct);
+            using var response = await _httpClientFactory.CreateClient("DemoHttp").GetAsync(mediaUri, ct);
             if (response.IsSuccessStatusCode)
             {
                 await using var sourceStream = await response.Content.ReadAsStreamAsync(ct);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Data;
+using VKFoodArea.Helpers;
 using VKFoodArea.Models;
 
 namespace VKFoodArea.Repositories;
@@ -27,7 +28,7 @@ public class PoiRepository
 
     public Task<Poi?> GetByQrCodeAsync(string qrCode, CancellationToken ct = default)
     {
-        var normalized = (qrCode ?? string.Empty).Trim().ToLowerInvariant();
+        var normalized = QrCodePayload.Normalize(qrCode);
 
         return _db.Pois
             .AsNoTracking()

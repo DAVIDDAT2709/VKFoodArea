@@ -57,22 +57,30 @@
               Margin="16,0,16,22"
               Padding="16"
               BackgroundColor="#AA000000"
-              ColumnDefinitions="*,Auto,Auto"
+              ColumnDefinitions="*,Auto,Auto,Auto"
               ColumnSpacing="10">
             <Label x:Name="ScannerHintLabel"
                    TextColor="White"
                    VerticalOptions="Center"
                    FontSize="14" />
 
-            <Button x:Name="TorchButton"
+            <Button x:Name="ApiButton"
                     Grid.Column="1"
+                    Text="API"
+                    Clicked="OnApiClicked"
+                    BackgroundColor="#0F766E"
+                    TextColor="White"
+                    CornerRadius="12" />
+
+            <Button x:Name="TorchButton"
+                    Grid.Column="2"
                     Clicked="OnTorchClicked"
                     BackgroundColor="#111827"
                     TextColor="White"
                     CornerRadius="12" />
 
             <Button x:Name="CloseButton"
-                    Grid.Column="2"
+                    Grid.Column="3"
                     Clicked="OnCloseClicked"
                     BackgroundColor="#DC2626"
                     TextColor="White"

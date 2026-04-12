@@ -4,6 +4,9 @@
     var items = Model.ToList();
     var activeCount = items.Count(x => x.IsActive);
     var coveredPoiCount = items.Select(x => x.PoiId).Distinct().Count();
+    var forwardedScheme = Context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
+    var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
+    var baseUrl = $"{scheme}://{Context.Request.Host}";
 }
 
 <section class="page-header page-section">
@@ -12,6 +15,27 @@
     </div>
     <div class="page-actions">
         <a asp-action="Create" class="btn btn-primary">Tạo QR mới</a>
+    </div>
+</section>
+
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <h2>QR demo flow</h2>
+    </div>
+    <p class="text-muted mb-2">
+        Demo steps: run Web through ngrok, enter the ngrok URL in the App QR scanner, then create a my.sepay QR with one of the payloads below.
+    </p>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">API test</label>
+            <input class="form-control font-monospace" readonly value="@($"{baseUrl}/api/pois/by-qr?code=poi:khanh-hoi-01")" />
+            <div class="form-text">Replace the sample code with the real QR code to test in browser.</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">QR URL when my.sepay requires URL</label>
+            <input class="form-control font-monospace" readonly value="@($"{baseUrl}/qr/poi:khanh-hoi-01")" />
+            <div class="form-text">The App can scan either the short token or this URL.</div>
+        </div>
     </div>
 </section>
 
@@ -51,6 +75,7 @@
             <table class="table data-table align-middle mb-0">
                 <thead>
                     <tr>
+                        <th>Payload demo</th>
                         <th>Mã QR</th>
                         <th>Tiêu đề</th>
                         <th>POI liên kết</th>
@@ -63,6 +88,12 @@
                 @foreach (var item in items)
                 {
                     <tr>
+                        <td>
+                            <div class="small text-muted">my.sepay text:</div>
+                            <code>@item.Code</code>
+                            <div class="small text-muted mt-1">URL:</div>
+                            <code>@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")</code>
+                        </td>
                         <td class="mono">@item.Code</td>
                         <td>
                             <div class="table-title">@item.Title</div>

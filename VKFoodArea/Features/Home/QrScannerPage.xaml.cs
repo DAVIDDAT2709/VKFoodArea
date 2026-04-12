@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maui.ApplicationModel;
 using ZXing.Net.Maui;
+using VKFoodArea.Helpers;
 using VKFoodArea.Models;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
@@ -13,6 +14,7 @@ public partial class QrScannerPage : ContentPage
     private readonly NarrationService _narrationService;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
+    private readonly ApiBaseUrlService _apiBaseUrlService;
 
     private bool _isHandlingResult;
     private bool _isTorchOn;
@@ -22,7 +24,8 @@ public partial class QrScannerPage : ContentPage
         PoiRepository poiRepository,
         NarrationService narrationService,
         AppTextService text,
-        NarrationUiStateService narrationUiState)
+        NarrationUiStateService narrationUiState,
+        ApiBaseUrlService apiBaseUrlService)
     {
         InitializeComponent();
 
@@ -31,6 +34,7 @@ public partial class QrScannerPage : ContentPage
         _narrationService = narrationService;
         _text = text;
         _narrationUiState = narrationUiState;
+        _apiBaseUrlService = apiBaseUrlService;
 
         QrReader.Options = new BarcodeReaderOptions
         {
@@ -79,7 +83,8 @@ public partial class QrScannerPage : ContentPage
         if (_isHandlingResult)
             return;
 
-        var value = e.Results?.FirstOrDefault()?.Value?.Trim();
+        var rawValue = e.Results?.FirstOrDefault()?.Value?.Trim();
+        var value = QrCodePayload.Normalize(rawValue);
         if (string.IsNullOrWhiteSpace(value))
             return;
 
@@ -114,12 +119,16 @@ public partial class QrScannerPage : ContentPage
                 return;
             }
 
-            await MainThread.InvokeOnMainThreadAsync(() =>
-                Navigation.PushAsync(new PoiDetailPage(
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                _narrationUiState.SetContext(poi);
+                await Navigation.PushAsync(new PoiDetailPage(
                     poi,
                     _narrationService,
                     _text,
-                    _narrationUiState)));
+                    _narrationUiState));
+                await _narrationService.PlayPoiAsync(poi, triggerSource: "qr");
+            });
 
             _isHandlingResult = false;
         }
@@ -149,6 +158,27 @@ public partial class QrScannerPage : ContentPage
         _isTorchOn = !_isTorchOn;
         QrReader.IsTorchOn = _isTorchOn;
         TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
+    }
+
+    private async void OnApiClicked(object sender, EventArgs e)
+    {
+        var value = await DisplayPromptAsync(
+            "API demo",
+            "Nhap URL ngrok cua Web, bo trong de ve mac dinh.",
+            "Luu",
+            _text["Common.Close"],
+            initialValue: _apiBaseUrlService.BaseUrl,
+            keyboard: Keyboard.Url);
+
+        if (value is null)
+            return;
+
+        var result = _apiBaseUrlService.SaveDemoBaseUrl(value);
+        ApplyLocalizedText();
+        await DisplayAlertAsync(
+            result.Success ? "API demo" : _text["Common.Error"],
+            result.Message,
+            _text["Common.Ok"]);
     }
 
     private async void OnCloseClicked(object sender, EventArgs e)
@@ -183,6 +213,9 @@ public partial class QrScannerPage : ContentPage
         merged.TtsScriptZh = webPoi.TtsScriptZh;
         merged.TtsScriptJa = webPoi.TtsScriptJa;
         merged.TtsScriptDe = webPoi.TtsScriptDe;
+        merged.AudioFileVi = webPoi.AudioFileVi;
+        merged.AudioFileEn = webPoi.AudioFileEn;
+        merged.AudioFileJa = webPoi.AudioFileJa;
         return merged;
     }
 
@@ -210,7 +243,10 @@ public partial class QrScannerPage : ContentPage
             TtsScriptEn = poi.TtsScriptEn,
             TtsScriptZh = poi.TtsScriptZh,
             TtsScriptJa = poi.TtsScriptJa,
-            TtsScriptDe = poi.TtsScriptDe
+            TtsScriptDe = poi.TtsScriptDe,
+            AudioFileVi = poi.AudioFileVi,
+            AudioFileEn = poi.AudioFileEn,
+            AudioFileJa = poi.AudioFileJa
         };
     }
 
@@ -218,7 +254,7 @@ public partial class QrScannerPage : ContentPage
     {
         Title = _text["Qr.PageTitle"];
         ScannerTitleLabel.Text = _text["Qr.HeaderTitle"];
-        ScannerSupportLabel.Text = _text["Qr.SupportText"];
+        ScannerSupportLabel.Text = $"{_text["Qr.SupportText"]}\nAPI: {_apiBaseUrlService.BaseUrl}";
         ScannerHintLabel.Text = _text["Qr.Hint"];
         TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
         CloseButton.Text = _text["Common.Close"];

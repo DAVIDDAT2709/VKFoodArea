@@ -1,15 +1,16 @@
-namespace VKFoodArea.Web.Helpers;
+namespace VKFoodArea.Helpers;
 
-public static class QrCodeHelper
+public static class QrCodePayload
 {
-    public static string Normalize(string? code)
+    public static string Normalize(string? value)
     {
-        return ExtractPayload(code).Trim().ToLowerInvariant();
+        var normalized = Extract(value).Trim().ToLowerInvariant();
+        return normalized;
     }
 
-    public static string ExtractPayload(string? code)
+    public static string Extract(string? value)
     {
-        var normalized = (code ?? string.Empty).Trim();
+        var normalized = (value ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(normalized))
             return string.Empty;
 

@@ -39,7 +39,9 @@ public class SoundSettingsService
         }
 
         var language = AppLanguageService.NormalizeLanguage(
-            user?.NarrationLanguage ?? _appSettingsService.NarrationLanguage);
+            user?.NarrationLanguage
+            ?? _appSettingsService.NarrationLanguage
+            ?? _appLanguageService.CurrentLanguage);
         var playbackMode = NormalizePlaybackMode(
             user?.NarrationPlaybackMode ?? _appSettingsService.NarrationOutputMode);
 

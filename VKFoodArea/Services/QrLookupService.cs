@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using VKFoodArea.Helpers;
 using VKFoodArea.Models;
 
 namespace VKFoodArea.Services;
@@ -17,7 +18,7 @@ public class QrLookupService
 
     public async Task<Poi?> FindPoiFromWebByQrAsync(string qrCode, CancellationToken ct = default)
     {
-        var normalized = (qrCode ?? string.Empty).Trim();
+        var normalized = QrCodePayload.Normalize(qrCode);
         if (string.IsNullOrWhiteSpace(normalized))
             return null;
 

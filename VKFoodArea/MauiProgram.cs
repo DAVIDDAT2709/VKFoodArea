@@ -7,6 +7,7 @@ using VKFoodArea.Data;
 using VKFoodArea.Features.Auth;
 using VKFoodArea.Features.Home;
 using VKFoodArea.Features.Settings;
+using VKFoodArea.Features.Startup;
 using VKFoodArea.Features.User;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
@@ -47,35 +48,18 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppLanguageService>();
         builder.Services.AddSingleton<AppTextService>();
         builder.Services.AddSingleton<AppRootNavigationService>();
+        builder.Services.AddSingleton<AppDbInitializationService>();
         builder.Services.AddSingleton<LanguageSelectionFlowService>();
         builder.Services.AddSingleton<ApiBaseUrlService>();
         builder.Services.AddSingleton<NarrationUiStateService>();
         builder.Services.AddSingleton<SessionStoreService>();
 
-        builder.Services.AddHttpClient<QrLookupService>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(8);
-        });
-
-        builder.Services.AddHttpClient<NarrationSyncService>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(8);
-        });
-
-        builder.Services.AddHttpClient<AppUserSyncService>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(8);
-        });
-
-        builder.Services.AddHttpClient<MovementLogSyncService>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(8);
-        });
-
-        builder.Services.AddHttpClient<PoiSyncService>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(8);
-        });
+        builder.Services.AddHttpClient("DemoHttp", ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<QrLookupService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<NarrationSyncService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<AppUserSyncService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<MovementLogSyncService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<PoiSyncService>(ConfigureDemoHttpClient);
 
         builder.Services.AddTransient<NarrationService>();
         builder.Services.AddTransient<AccountService>();
@@ -102,17 +86,18 @@ public static class MauiProgram
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<AccountProfilePage>();
         builder.Services.AddTransient<UserPage>();
+        builder.Services.AddTransient<StartupPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
 
-        var app = builder.Build();
+        return builder.Build();
+    }
 
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        AppDataInitializer.InitializeAsync(db).GetAwaiter().GetResult();
-
-        return app;
+    private static void ConfigureDemoHttpClient(HttpClient client)
+    {
+        client.Timeout = TimeSpan.FromSeconds(8);
+        client.DefaultRequestHeaders.TryAddWithoutValidation("ngrok-skip-browser-warning", "true");
     }
 }

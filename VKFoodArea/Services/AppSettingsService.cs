@@ -6,6 +6,7 @@ public class AppSettingsService
 {
     private const string LanguageKey = "narration_language";
     private const string OutputModeKey = "narration_output_mode";
+    private const string ApiBaseUrlKey = "api_base_url";
 
     public string NarrationLanguage
     {
@@ -17,5 +18,11 @@ public class AppSettingsService
     {
         get => Preferences.Default.Get(OutputModeKey, "TTS");
         set => Preferences.Default.Set(OutputModeKey, value);
+    }
+
+    public string ApiBaseUrl
+    {
+        get => Preferences.Default.Get(ApiBaseUrlKey, string.Empty);
+        set => Preferences.Default.Set(ApiBaseUrlKey, value);
     }
 }
