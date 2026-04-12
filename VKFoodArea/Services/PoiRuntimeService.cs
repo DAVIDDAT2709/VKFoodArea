@@ -41,6 +41,10 @@ public class PoiRuntimeService
     private string _lastGeofenceReason = string.Empty;
     private DateTimeOffset _lastMovementSyncedAt = DateTimeOffset.MinValue;
     private Location? _lastMovementSyncedLocation;
+    private static readonly TimeSpan AutoNarrationCooldown = TimeSpan.FromSeconds(8);
+private readonly object _autoNarrationSync = new();
+private DateTimeOffset _lastAutoNarrationAt = DateTimeOffset.MinValue;
+private int? _lastAutoNarratedPoiId;
 
     public event EventHandler? StateChanged;
 
@@ -277,10 +281,18 @@ public class PoiRuntimeService
         }
 
         RaiseStateChanged();
-        _ = PushMovementLogIfNeededAsync(location, trackingProfile.Mode, CancellationToken.None);
+_ = PushMovementLogIfNeededAsync(location, trackingProfile.Mode, CancellationToken.None);
 
-        if (poiToPlay is not null)
-            await _narrationService.PlayPoiAsync(poiToPlay.Id, "auto", ct: ct);
+if (poiToPlay is { } poi)
+{
+    if (_narrationService.IsManualPlaybackActive())
+        return;
+
+    if (!ShouldAutoPlayPoi(poi.Id))
+        return;
+
+    await _narrationService.PlayPoiAsync(poi.Id, "auto", ct: ct);
+}
     }
 
     private void ApplySnapshot(
@@ -420,7 +432,23 @@ public class PoiRuntimeService
             return true;
         }
     }
+private bool ShouldAutoPlayPoi(int poiId)
+{
+    var now = DateTimeOffset.UtcNow;
 
+    lock (_autoNarrationSync)
+    {
+        if (_lastAutoNarratedPoiId == poiId &&
+            now - _lastAutoNarrationAt < AutoNarrationCooldown)
+        {
+            return false;
+        }
+
+        _lastAutoNarratedPoiId = poiId;
+        _lastAutoNarrationAt = now;
+        return true;
+    }
+}
     private void RaiseStateChanged()
         => StateChanged?.Invoke(this, EventArgs.Empty);
 }

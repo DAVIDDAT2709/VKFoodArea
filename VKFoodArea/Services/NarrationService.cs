@@ -41,8 +41,9 @@ public class NarrationService
     private static readonly object _requestLock = new();
     private static CancellationTokenSource? _requestCts;
     private static int? _currentPoiId;
+    private static string? _currentTriggerSource;
 
-    private static readonly TimeSpan SwitchPoiDelay = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan SwitchPoiDelay = TimeSpan.FromMilliseconds(400);
 
 #if ANDROID
     private static readonly SemaphoreSlim _androidTtsLock = new(1, 1);
@@ -136,6 +137,7 @@ public class NarrationService
                 return;
 
             _currentPoiId = poi.Id;
+            _currentTriggerSource = triggerSource;
             _uiState.SetPlayback(true, poi, playbackPlan.EffectiveMode, playbackPlan.SpokenLanguage);
             PublishPlaybackState(true, poi.Name, playbackPlan.EffectiveMode, playbackPlan.SpokenLanguage);
 
@@ -161,6 +163,7 @@ public class NarrationService
             if (_currentPoiId == poi.Id)
             {
                 _currentPoiId = null;
+                _currentTriggerSource = null;
                 shouldClearPlaybackState = true;
             }
 
@@ -203,6 +206,7 @@ public class NarrationService
             requestToCancel = _requestCts;
             _requestCts = null;
             _currentPoiId = null;
+            _currentTriggerSource = null;
         }
 
         if (requestToCancel is not null)
@@ -262,6 +266,14 @@ public class NarrationService
             return _currentPoiId == poiId && _requestCts is not null;
         }
     }
+    public bool IsManualPlaybackActive()
+{
+    lock (_requestLock)
+    {
+        return _requestCts is not null &&
+               string.Equals(_currentTriggerSource, "manual", StringComparison.OrdinalIgnoreCase);
+    }
+}
 
     private async Task LogNarrationAsync(
         Poi poi,
@@ -1160,7 +1172,6 @@ public sealed class NarrationPlaybackStateChangedEventArgs : EventArgs
         Mode = mode;
         Language = language;
     }
-
     public bool IsPlaying { get; }
     public string? PoiName { get; }
     public string? Mode { get; }

@@ -12,6 +12,8 @@ namespace VKFoodArea.Features.Home;
 
 public class HomeViewModel : INotifyPropertyChanged
 {
+    private DateTimeOffset _lastNarrationActionAt = DateTimeOffset.MinValue;
+    private static readonly TimeSpan NarrationActionDebounce = TimeSpan.FromMilliseconds(800);
     private readonly PoiService _poiService;
     private readonly PoiRuntimeService _poiRuntimeService;
     private readonly NarrationService _narrationService;
@@ -35,6 +37,16 @@ public class HomeViewModel : INotifyPropertyChanged
     private readonly List<Poi> _allPois = [];
     private List<Poi> _defaultPois = [];
     private string _currentSearchKeyword = string.Empty;
+    private bool ShouldIgnoreNarrationAction()
+{
+    var now = DateTimeOffset.UtcNow;
+
+    if (now - _lastNarrationActionAt < NarrationActionDebounce)
+        return true;
+
+    _lastNarrationActionAt = now;
+    return false;
+}
 
     public ObservableCollection<Poi> NearbyPois { get; } = new();
     public ObservableCollection<Poi> DisplayedPois { get; } = new();
@@ -450,9 +462,9 @@ public class HomeViewModel : INotifyPropertyChanged
         => _narrationUiState.IsPlaying && _narrationUiState.PoiId == poiId;
 
     public async Task PlayPoiAudioAsync(Poi? poi)
-    {
-        if (poi is null)
-            return;
+{
+    if (poi is null || ShouldIgnoreNarrationAction())
+        return;
 
         if (IsPoiNarrationPlaying(poi.Id))
         {
@@ -518,8 +530,11 @@ public class HomeViewModel : INotifyPropertyChanged
     }
 
     public async Task StopNarrationAsync()
-    {
-        await _narrationService.StopAsync();
+{
+    if (ShouldIgnoreNarrationAction())
+        return;
+
+    await _narrationService.StopAsync();
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
