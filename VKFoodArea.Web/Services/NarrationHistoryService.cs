@@ -151,33 +151,31 @@ public class NarrationHistoryService : INarrationHistoryService
 
     private async Task<Poi?> ResolvePoiAsync(NarrationHistoryCreateApiViewModel vm)
     {
-    // Id trong app local có thể khác Id thật của web sau khi sync,
-    // nên phải ưu tiên nhận diện bằng QR hoặc tên quán trước.
-    var normalizedQrCode = QrCodeHelper.Normalize(vm.QrCode);
-    if (!string.IsNullOrWhiteSpace(normalizedQrCode))
-    {
-        var poiByQr = await _context.Pois
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
-                x.IsActive &&
-                !string.IsNullOrWhiteSpace(x.QrCode) &&
-                x.QrCode.ToLower() == normalizedQrCode);
+        var normalizedQrCode = QrCodeHelper.Normalize(vm.QrCode);
+        if (!string.IsNullOrWhiteSpace(normalizedQrCode))
+        {
+            var poiByQr = await _context.Pois
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.IsActive &&
+                    !string.IsNullOrWhiteSpace(x.QrCode) &&
+                    x.QrCode.ToLower() == normalizedQrCode);
 
-        if (poiByQr is not null)
-            return poiByQr;
-    }
+            if (poiByQr is not null)
+                return poiByQr;
+        }
 
-    var normalizedPoiName = (vm.PoiName ?? string.Empty).Trim();
-    if (!string.IsNullOrWhiteSpace(normalizedPoiName))
-    {
-        var poiByName = await _context.Pois
-            .AsNoTracking()
-            .Where(x => x.IsActive)
-            .FirstOrDefaultAsync(x => x.Name == normalizedPoiName);
+        var normalizedPoiName = (vm.PoiName ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedPoiName))
+        {
+            var poiByName = await _context.Pois
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .FirstOrDefaultAsync(x => x.Name == normalizedPoiName);
 
-        if (poiByName is not null)
-            return poiByName;
-    }
+            if (poiByName is not null)
+                return poiByName;
+        }
 
     if (vm.PoiId > 0)
     {

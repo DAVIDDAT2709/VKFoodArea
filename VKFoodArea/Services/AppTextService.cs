@@ -7,6 +7,7 @@ public sealed partial class AppTextService
 {
     private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> LanguageMaps =
         BuildLanguageMaps();
+    private static readonly UTF8Encoding StrictUtf8 = new(false, true);
 
     private readonly AppLanguageService _languageService;
 
@@ -104,11 +105,18 @@ public sealed partial class AppTextService
 
         try
         {
-            var repaired = Encoding.UTF8.GetString(GetWindows1252Bytes(value));
+            if (!TryGetWindows1252Bytes(value, out var bytes))
+                return value;
 
-            return repaired.Contains('�', StringComparison.Ordinal)
+            var repaired = StrictUtf8.GetString(bytes);
+
+            return repaired.Contains('\uFFFD', StringComparison.Ordinal)
                 ? value
                 : repaired;
+        }
+        catch (DecoderFallbackException)
+        {
+            return value;
         }
         catch
         {
@@ -144,13 +152,13 @@ public sealed partial class AppTextService
                value.Contains('\u00E3');
     }
 
-    private static byte[] GetWindows1252Bytes(string value)
+    private static bool TryGetWindows1252Bytes(string value, out byte[] bytes)
     {
-        var bytes = new byte[value.Length];
+        bytes = new byte[value.Length];
 
         for (var index = 0; index < value.Length; index++)
         {
-            bytes[index] = value[index] switch
+            var mapped = value[index] switch
             {
                 '\u20AC' => 0x80,
                 '\u201A' => 0x82,
@@ -179,12 +187,20 @@ public sealed partial class AppTextService
                 '\u0153' => 0x9C,
                 '\u017E' => 0x9E,
                 '\u0178' => 0x9F,
-                <= '\u00FF' => (byte)value[index],
-                _ => (byte)'?'
+                <= '\u00FF' => (int)value[index],
+                _ => -1
             };
+
+            if (mapped < 0)
+            {
+                bytes = Array.Empty<byte>();
+                return false;
+            }
+
+            bytes[index] = (byte)mapped;
         }
 
-        return bytes;
+        return true;
     }
 
     private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> BuildLanguageMaps()

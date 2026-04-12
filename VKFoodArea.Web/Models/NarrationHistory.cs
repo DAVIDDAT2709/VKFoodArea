@@ -19,7 +19,7 @@ public class NarrationHistory
     public string Language { get; set; } = "vi";
 
     [Required, StringLength(20)]
-    public string TriggerSource { get; set; } = "manual"; // gps | qr | manual
+    public string TriggerSource { get; set; } = "manual";
 
     [Required, StringLength(20)]
     public string Mode { get; set; } = "tts";

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Media;
 using Plugin.Maui.Audio;
+using System.Text;
 using VKFoodArea.Data;
 using VKFoodArea.Models;
 
@@ -15,6 +16,7 @@ using AndroidQueueMode = Android.Speech.Tts.QueueMode;
 using AndroidTextToSpeech = Android.Speech.Tts.TextToSpeech;
 using AndroidUtteranceProgressListener = Android.Speech.Tts.UtteranceProgressListener;
 using AndroidVoice = Android.Speech.Tts.Voice;
+using AndroidLanguageAvailableResult = Android.Speech.Tts.LanguageAvailableResult;
 #endif
 
 namespace VKFoodArea.Services;
@@ -40,7 +42,6 @@ public class NarrationService
     private static CancellationTokenSource? _requestCts;
     private static int? _currentPoiId;
 
-    // chống spam cùng một quán trong 5 giây
     private static readonly TimeSpan SwitchPoiDelay = TimeSpan.FromSeconds(3);
 
 #if ANDROID
@@ -99,7 +100,6 @@ public class NarrationService
         if (poi is null || !poi.IsActive)
             return;
 
-        // Chỉ chặn spam khi bấm lại cùng một quán trong 5 giây
         if (IsCurrentPoiPlaying(poi.Id))
             return;
 
@@ -108,13 +108,11 @@ public class NarrationService
 
         try
         {
-            // Nếu đang phát quán khác thì dừng ngay và chờ 3 giây trước khi phát quán mới
             if (_currentPoiId.HasValue && _currentPoiId.Value != poi.Id)
             {
                 await StopCurrentPlaybackOnlyAsync();
                 await Task.Delay(SwitchPoiDelay, requestToken);
             }
-            // Nếu đang là chính quán này và không bị chặn spam thì vẫn bỏ qua để không phát chồng
             else if (_currentPoiId.HasValue && _currentPoiId.Value == poi.Id)
             {
                 return;
@@ -336,11 +334,16 @@ public class NarrationService
         try
         {
 #if ANDROID
-            await SpeakWithAndroidTtsAsync(text, normalizedLanguage, playbackCts.Token);
+            try
+            {
+                await SpeakSegmentsWithAndroidTtsAsync(text, normalizedLanguage, playbackCts.Token);
+            }
+            catch (Exception) when (!playbackCts.IsCancellationRequested)
+            {
+                await SpeakSegmentsWithMauiTtsAsync(text, normalizedLanguage, playbackCts.Token);
+            }
 #else
-            var locale = await TryGetLocaleAsync(normalizedLanguage);
-            var options = BuildMauiSpeechOptions(locale, normalizedLanguage);
-            await TextToSpeech.Default.SpeakAsync(text, options, playbackCts.Token);
+            await SpeakSegmentsWithMauiTtsAsync(text, normalizedLanguage, playbackCts.Token);
 #endif
         }
         catch (OperationCanceledException) when (playbackCts.IsCancellationRequested)
@@ -460,11 +463,62 @@ public class NarrationService
 
         return new SpeechOptions
         {
-            Pitch = normalizedLanguage == "vi" ? 0.90f : 1.0f,
+            Pitch = normalizedLanguage == "vi" ? 0.92f : 1.0f,
             Volume = 1.0f,
-            Rate = normalizedLanguage == "vi" ? 0.93f : 1.0f,
+            Rate = normalizedLanguage == "vi" ? 0.84f : 0.95f,
             Locale = locale
         };
+    }
+
+    private static async Task SpeakSegmentsWithMauiTtsAsync(string text, string language, CancellationToken ct)
+    {
+        var segments = SplitSpeechText(text);
+        if (segments.Count == 0)
+            return;
+
+        var locale = await TryGetLocaleAsync(language);
+        var options = BuildMauiSpeechOptions(locale, language);
+
+        foreach (var segment in segments)
+        {
+            ct.ThrowIfCancellationRequested();
+            await TextToSpeech.Default.SpeakAsync(segment, options, ct);
+            await Task.Delay(TimeSpan.FromMilliseconds(120), ct);
+        }
+    }
+
+    private static IReadOnlyList<string> SplitSpeechText(string text)
+    {
+        const int maxSegmentLength = 220;
+        var normalizedText = NormalizeScript(text);
+        if (string.IsNullOrWhiteSpace(normalizedText))
+            return [];
+
+        var segments = new List<string>();
+        var builder = new StringBuilder();
+
+        foreach (var character in normalizedText)
+        {
+            builder.Append(character);
+
+            if (IsSpeechBoundary(character) || builder.Length >= maxSegmentLength)
+                FlushSpeechSegment(builder, segments);
+        }
+
+        FlushSpeechSegment(builder, segments);
+        return segments;
+    }
+
+    private static bool IsSpeechBoundary(char character)
+        => character is '.' or '!' or '?' or ';' or ':' or '\n' or '\r' or '。' or '！' or '？';
+
+    private static void FlushSpeechSegment(StringBuilder builder, ICollection<string> segments)
+    {
+        var segment = builder.ToString().Trim();
+        builder.Clear();
+
+        if (!string.IsNullOrWhiteSpace(segment))
+            segments.Add(segment);
     }
 
     private static void CancelPlayback(CancellationTokenSource? cts)
@@ -725,12 +779,27 @@ public class NarrationService
     }
 
 #if ANDROID
+    private static async Task SpeakSegmentsWithAndroidTtsAsync(string text, string language, CancellationToken ct)
+    {
+        var segments = SplitSpeechText(text);
+        if (segments.Count == 0)
+            return;
+
+        foreach (var segment in segments)
+        {
+            ct.ThrowIfCancellationRequested();
+            await SpeakWithAndroidTtsAsync(segment, language, ct);
+            await Task.Delay(TimeSpan.FromMilliseconds(120), ct);
+        }
+    }
+
     private static async Task SpeakWithAndroidTtsAsync(string text, string language, CancellationToken ct)
     {
         var tts = await GetAndroidTtsAsync(ct);
         var profile = GetAndroidSpeechProfile(language);
 
-        ConfigureAndroidVoice(tts, profile);
+        if (!ConfigureAndroidVoice(tts, profile))
+            throw new InvalidOperationException("No usable Android TTS voice is available.");
 
         var utteranceId = Guid.NewGuid().ToString("N");
         var utteranceTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -788,24 +857,39 @@ public class NarrationService
         }
     }
 
-    private static void ConfigureAndroidVoice(AndroidTextToSpeech tts, AndroidSpeechProfile profile)
+    private static bool ConfigureAndroidVoice(AndroidTextToSpeech tts, AndroidSpeechProfile profile)
     {
         tts.SetSpeechRate(profile.Rate);
         tts.SetPitch(profile.Pitch);
 
         if (TrySetPreferredVoice(tts, profile))
-            return;
+            return true;
 
         foreach (var locale in profile.PreferredLocales)
         {
             var availability = tts.SetLanguage(locale);
-            if (availability is Android.Speech.Tts.LanguageAvailableResult.Available
-                or Android.Speech.Tts.LanguageAvailableResult.CountryAvailable
-                or Android.Speech.Tts.LanguageAvailableResult.CountryVarAvailable)
+            if (IsLanguageAvailable(availability))
             {
-                return;
+                return true;
             }
         }
+
+        return TrySetFallbackLanguage(tts);
+    }
+
+    private static bool TrySetFallbackLanguage(AndroidTextToSpeech tts)
+    {
+        if (IsLanguageAvailable(tts.SetLanguage(AndroidLocale.Default)))
+            return true;
+
+        return IsLanguageAvailable(tts.SetLanguage(CreateAndroidLocale("en-US")));
+    }
+
+    private static bool IsLanguageAvailable(AndroidLanguageAvailableResult availability)
+    {
+        return availability is AndroidLanguageAvailableResult.Available
+            or AndroidLanguageAvailableResult.CountryAvailable
+            or AndroidLanguageAvailableResult.CountryVarAvailable;
     }
 
     private static bool TrySetPreferredVoice(AndroidTextToSpeech tts, AndroidSpeechProfile profile)

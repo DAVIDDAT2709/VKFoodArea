@@ -44,7 +44,7 @@
                     BackgroundColor="#E8FFFA"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 18">
-                <Label Text="MÃ QR"
+                <Label Text="QR"
                        HorizontalOptions="Center"
                        VerticalOptions="Center"
                        FontAttributes="Bold"
