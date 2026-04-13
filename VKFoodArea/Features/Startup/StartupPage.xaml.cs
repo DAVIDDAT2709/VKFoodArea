@@ -9,6 +9,7 @@ public partial class StartupPage : ContentPage
     private readonly AppDbInitializationService _dbInitializationService;
     private readonly AuthService _authService;
     private readonly AppRootNavigationService _rootNavigationService;
+    private readonly AppLinkService _appLinkService;
     private readonly AppTextService _text;
     private bool _started;
 
@@ -16,12 +17,14 @@ public partial class StartupPage : ContentPage
         AppDbInitializationService dbInitializationService,
         AuthService authService,
         AppRootNavigationService rootNavigationService,
+        AppLinkService appLinkService,
         AppTextService text)
     {
         InitializeComponent();
         _dbInitializationService = dbInitializationService;
         _authService = authService;
         _rootNavigationService = rootNavigationService;
+        _appLinkService = appLinkService;
         _text = text;
     }
 
@@ -40,7 +43,10 @@ public partial class StartupPage : ContentPage
             var hasSession = await _authService.TryRestoreSessionAsync();
 
             if (hasSession)
+            {
                 await _rootNavigationService.SetRootAsync<HomeDesignPage>();
+                await _appLinkService.TryHandlePendingAsync();
+            }
             else
                 await _rootNavigationService.SetRootAsync<LoginPage>();
         }
@@ -51,4 +57,3 @@ public partial class StartupPage : ContentPage
         }
     }
 }
-

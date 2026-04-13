@@ -367,11 +367,15 @@ public class HomeViewModel : INotifyPropertyChanged
 
     private string ResolveRuntimeStatusDetail(PoiRuntimeSnapshot snapshot)
     {
+        var tourStatus = BuildTourStatus(snapshot.ActiveTourSession);
+
         if (!snapshot.IsInitialized)
-            return _text["Home.MapStatusDefault"];
+            return CombineStatusSegments(tourStatus, _text["Home.MapStatusDefault"]);
 
         if (!snapshot.HasLocationPermission)
-            return _text.Format("Status.LocationPermissionMissing", snapshot.Pois.Count);
+            return CombineStatusSegments(
+                tourStatus,
+                _text.Format("Status.LocationPermissionMissing", snapshot.Pois.Count));
 
         if (!string.IsNullOrWhiteSpace(snapshot.LastGeofenceReason))
         {
@@ -379,14 +383,17 @@ public class HomeViewModel : INotifyPropertyChanged
                 ? _text["Home.NearestUnknown"]
                 : _text.Format("Home.NearestPrefix", snapshot.NearestPoi.Name);
 
-            return
+            return CombineStatusSegments(
+                tourStatus,
                 $"{snapshot.CurrentLocation.Latitude:F5}, {snapshot.CurrentLocation.Longitude:F5} | " +
-                $"{nearestPoiText} | {snapshot.LastGeofenceReason}";
+                $"{nearestPoiText} | {snapshot.LastGeofenceReason}");
         }
 
-        return snapshot.IsGpsListening
+        var runtimeStatus = snapshot.IsGpsListening
             ? _text.Format("Status.GpsActive", snapshot.Pois.Count)
             : _text.Format("Status.GpsCannotStart", snapshot.Pois.Count);
+
+        return CombineStatusSegments(tourStatus, runtimeStatus);
     }
 
     public async Task SearchPoisAsync(string? keyword, bool closeSuggestions = false)
@@ -658,6 +665,27 @@ public class HomeViewModel : INotifyPropertyChanged
             return _text.Format("Status.SyncSummaryFallback", activePoiCount);
 
         return _text.Format("Status.SyncSummaryFallbackWithError", activePoiCount, syncResult.ErrorMessage);
+    }
+
+    private static string CombineStatusSegments(string? primary, string secondary)
+    {
+        return string.IsNullOrWhiteSpace(primary)
+            ? secondary
+            : $"{primary} | {secondary}";
+    }
+
+    private static string? BuildTourStatus(TourSession? session)
+    {
+        if (session is null)
+            return null;
+
+        if (session.IsFinished)
+            return $"Tour da xong: {session.TourName}";
+
+        if (session.CurrentStop?.Poi is { } currentPoi)
+            return $"Tour dang chay: {session.TourName} -> {currentPoi.Name}";
+
+        return $"Tour dang chay: {session.TourName}";
     }
 
     private string BuildStatusText(string detail)

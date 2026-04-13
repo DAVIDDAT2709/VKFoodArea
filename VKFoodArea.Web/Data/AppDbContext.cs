@@ -25,10 +25,15 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<QrCodeItem>()
-            .HasOne(x => x.Poi)
-            .WithMany(x => x.QrCodeItems)
-            .HasForeignKey(x => x.PoiId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .Property(x => x.TargetType)
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<QrCodeItem>()
+            .HasIndex(x => x.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<QrCodeItem>()
+            .HasIndex(x => new { x.TargetType, x.TargetId });
 
         modelBuilder.Entity<NarrationHistory>()
             .HasOne(x => x.Poi)

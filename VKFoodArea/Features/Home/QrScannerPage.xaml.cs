@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.ApplicationModel;
+using Microsoft.Extensions.DependencyInjection;
 using ZXing.Net.Maui;
 using VKFoodArea.Helpers;
 using VKFoodArea.Models;
@@ -15,6 +16,8 @@ public partial class QrScannerPage : ContentPage
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
     private readonly ApiBaseUrlService _apiBaseUrlService;
+    private readonly TourSessionService _tourSessionService;
+    private readonly IServiceProvider _serviceProvider;
 
     private bool _isHandlingResult;
     private bool _isTorchOn;
@@ -25,7 +28,9 @@ public partial class QrScannerPage : ContentPage
         NarrationService narrationService,
         AppTextService text,
         NarrationUiStateService narrationUiState,
-        ApiBaseUrlService apiBaseUrlService)
+        ApiBaseUrlService apiBaseUrlService,
+        TourSessionService tourSessionService,
+        IServiceProvider serviceProvider)
     {
         InitializeComponent();
 
@@ -35,6 +40,8 @@ public partial class QrScannerPage : ContentPage
         _text = text;
         _narrationUiState = narrationUiState;
         _apiBaseUrlService = apiBaseUrlService;
+        _tourSessionService = tourSessionService;
+        _serviceProvider = serviceProvider;
 
         QrReader.Options = new BarcodeReaderOptions
         {
@@ -85,6 +92,7 @@ public partial class QrScannerPage : ContentPage
 
         var rawValue = e.Results?.FirstOrDefault()?.Value?.Trim();
         var value = QrCodePayload.Normalize(rawValue);
+
         if (string.IsNullOrWhiteSpace(value))
             return;
 
@@ -93,42 +101,36 @@ public partial class QrScannerPage : ContentPage
 
         try
         {
-            var webPoi = await _qrLookupService.FindPoiFromWebByQrAsync(value);
             var localPoi = await _poiRepository.GetByQrCodeAsync(value);
-            var poi = MergePoiForDisplay(localPoi, webPoi);
+            QrResolveResult? resolved = null;
+            Exception? resolveException = null;
 
-            if (poi is null)
+            try
             {
-                var retry = await MainThread.InvokeOnMainThreadAsync(() =>
-                    DisplayAlertAsync(
-                        _text["Qr.NotFoundTitle"],
-                        _text.Format("Qr.NotFoundMessage", value),
-                        _text["Common.Again"],
-                        _text["Common.Close"]));
+                resolved = await _qrLookupService.ResolveAsync(value);
+            }
+            catch (Exception ex)
+            {
+                resolveException = ex;
+            }
 
-                if (retry)
-                {
-                    _isHandlingResult = false;
-                    QrReader.IsDetecting = true;
-                }
-                else
-                {
-                    await MainThread.InvokeOnMainThreadAsync(() => Navigation.PopAsync());
-                }
+            resolved ??= BuildLocalPoiFallback(value, localPoi);
 
+            if (resolved is null)
+            {
+                if (resolveException is not null)
+                    throw resolveException;
+
+                await HandleNotFoundAsync(value);
                 return;
             }
 
-            await MainThread.InvokeOnMainThreadAsync(async () =>
+            var handled = await HandleResolvedTargetAsync(localPoi, resolved);
+            if (!handled)
             {
-                _narrationUiState.SetContext(poi);
-                await Navigation.PushAsync(new PoiDetailPage(
-                    poi,
-                    _narrationService,
-                    _text,
-                    _narrationUiState));
-                await _narrationService.PlayPoiAsync(poi, triggerSource: "qr");
-            });
+                await HandleNotFoundAsync(value);
+                return;
+            }
 
             _isHandlingResult = false;
         }
@@ -151,6 +153,64 @@ public partial class QrScannerPage : ContentPage
                 await MainThread.InvokeOnMainThreadAsync(() => Navigation.PopAsync());
             }
         }
+    }
+
+    private async Task<bool> HandleResolvedTargetAsync(Poi? localPoi, QrResolveResult resolved)
+    {
+        switch (QrTargetTypes.Normalize(resolved.TargetType))
+        {
+            case QrTargetTypes.Tour:
+                if (resolved.Tour is null)
+                    return false;
+
+                _tourSessionService.Start(resolved.Tour);
+
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await Navigation.PushAsync(_serviceProvider.GetRequiredService<TourSessionPage>());
+                });
+
+                return true;
+
+            default:
+                var poi = MergePoiForDisplay(localPoi, resolved.Poi);
+                if (poi is null)
+                    return false;
+
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    _narrationUiState.SetContext(poi);
+
+                    await Navigation.PushAsync(new PoiDetailPage(
+                        poi,
+                        _narrationService,
+                        _text,
+                        _narrationUiState));
+
+                    await _narrationService.PlayPoiAsync(poi, triggerSource: "qr");
+                });
+
+                return true;
+        }
+    }
+
+    private async Task HandleNotFoundAsync(string value)
+    {
+        var retry = await MainThread.InvokeOnMainThreadAsync(() =>
+            DisplayAlertAsync(
+                _text["Qr.NotFoundTitle"],
+                _text.Format("Qr.NotFoundMessage", value),
+                _text["Common.Again"],
+                _text["Common.Close"]));
+
+        if (retry)
+        {
+            _isHandlingResult = false;
+            QrReader.IsDetecting = true;
+            return;
+        }
+
+        await MainThread.InvokeOnMainThreadAsync(() => Navigation.PopAsync());
     }
 
     private void OnTorchClicked(object sender, EventArgs e)
@@ -186,6 +246,21 @@ public partial class QrScannerPage : ContentPage
         await Navigation.PopAsync();
     }
 
+    private static QrResolveResult? BuildLocalPoiFallback(string qrCode, Poi? localPoi)
+    {
+        if (localPoi is null)
+            return null;
+
+        return new QrResolveResult
+        {
+            TargetType = QrTargetTypes.Poi,
+            TargetId = localPoi.Id,
+            MatchedCode = qrCode,
+            Source = "local",
+            Poi = ClonePoi(localPoi)
+        };
+    }
+
     private static Poi? MergePoiForDisplay(Poi? localPoi, Poi? webPoi)
     {
         if (localPoi is null)
@@ -206,8 +281,10 @@ public partial class QrScannerPage : ContentPage
         merged.Latitude = webPoi.Latitude;
         merged.Longitude = webPoi.Longitude;
         merged.RadiusMeters = webPoi.RadiusMeters;
+        merged.Priority = webPoi.Priority;
         merged.QrCode = webPoi.QrCode;
         merged.IsActive = webPoi.IsActive;
+        merged.MapUrl = webPoi.MapUrl;
         merged.TtsScriptVi = webPoi.TtsScriptVi;
         merged.TtsScriptEn = webPoi.TtsScriptEn;
         merged.TtsScriptZh = webPoi.TtsScriptZh;
@@ -254,7 +331,8 @@ public partial class QrScannerPage : ContentPage
     {
         Title = _text["Qr.PageTitle"];
         ScannerTitleLabel.Text = _text["Qr.HeaderTitle"];
-        ScannerSupportLabel.Text = $"{_text["Qr.SupportText"]}\nAPI: {_apiBaseUrlService.BaseUrl}";
+        ScannerSupportLabel.Text =
+    $"Quet QR tai diem dung de nghe thuyet minh ngay.\nAPI: {_apiBaseUrlService.BaseUrl}";
         ScannerHintLabel.Text = _text["Qr.Hint"];
         TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
         CloseButton.Text = _text["Common.Close"];

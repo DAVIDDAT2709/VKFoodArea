@@ -9,10 +9,12 @@ namespace VKFoodArea.Web.Controllers.Api;
 public class PoiApiController : ControllerBase
 {
     private readonly IPoiService _poiService;
+    private readonly IQrResolveService _qrResolveService;
 
-    public PoiApiController(IPoiService poiService)
+    public PoiApiController(IPoiService poiService, IQrResolveService qrResolveService)
     {
         _poiService = poiService;
+        _qrResolveService = qrResolveService;
     }
 
     [HttpGet]
@@ -38,35 +40,11 @@ public class PoiApiController : ControllerBase
         if (string.IsNullOrWhiteSpace(code))
             return BadRequest("Missing code.");
 
-        var poi = await _poiService.GetByQrCodeForApiAsync(code);
-        if (poi is null)
+        var resolved = await _qrResolveService.ResolveAsync(code);
+        if (resolved?.Poi is null || !string.Equals(resolved.TargetType, "poi", StringComparison.Ordinal))
             return NotFound();
 
-        return Ok(new
-        {
-            poi.Id,
-            poi.Name,
-            poi.Address,
-            poi.PhoneNumber,
-            poi.ImageUrl,
-            poi.Latitude,
-            poi.Longitude,
-            poi.RadiusMeters,
-            poi.Priority,
-            poi.Description,
-            poi.TtsScriptVi,
-            poi.TtsScriptEn,
-            poi.TtsScriptZh,
-            poi.TtsScriptJa,
-            poi.TtsScriptDe,
-            poi.AudioFileVi,
-            poi.AudioFileEn,
-            poi.AudioFileJa,
-            poi.QrCode,
-            poi.IsActive,
-            poi.MatchedQrCode,
-            poi.QrSource
-        });
+        return Ok(MapBaseResponse(resolved.Poi));
     }
 
     private static object MapBaseResponse(PoiDto poi) => new

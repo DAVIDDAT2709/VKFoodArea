@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.companyname.vkfoodarea",
+      "sha256_cert_fingerprints": [
+        "1E:1F:48:46:30:16:FA:66:C6:E3:8C:BF:49:0B:5D:11:E2:27:44:FB:8C:1E:AA:B5:DD:82:9F:4B:15:4F:9A:DE"
+      ]
+    }
+  }
+]

@@ -24,6 +24,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IPoiService, PoiService>();
+builder.Services.AddScoped<ITourService, TourService>();
+builder.Services.AddScoped<IQrResolveService, QrResolveService>();
 builder.Services.AddScoped<IPoiImageStorageService, PoiImageStorageService>();
 builder.Services.AddScoped<IPoiAudioStorageService, PoiAudioStorageService>();
 builder.Services.AddScoped<IQrCodeItemService, QrCodeItemService>();

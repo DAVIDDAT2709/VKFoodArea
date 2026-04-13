@@ -16,13 +16,13 @@ public class QrLookupService
         _apiBaseUrlService = apiBaseUrlService;
     }
 
-    public async Task<Poi?> FindPoiFromWebByQrAsync(string qrCode, CancellationToken ct = default)
+    public async Task<QrResolveResult?> ResolveAsync(string qrCode, CancellationToken ct = default)
     {
         var normalized = QrCodePayload.Normalize(qrCode);
         if (string.IsNullOrWhiteSpace(normalized))
             return null;
 
-        var url = $"{_apiBaseUrlService.BaseUrl}api/pois/by-qr?code={Uri.EscapeDataString(normalized)}";
+        var url = $"{_apiBaseUrlService.BaseUrl}api/resolve-qr?code={Uri.EscapeDataString(normalized)}";
 
         using var response = await _httpClient.GetAsync(url, ct);
 
@@ -31,10 +31,51 @@ public class QrLookupService
 
         response.EnsureSuccessStatusCode();
 
-        var dto = await response.Content.ReadFromJsonAsync<RemotePoiDto>(cancellationToken: ct);
+        var dto = await response.Content.ReadFromJsonAsync<RemoteQrResolveDto>(cancellationToken: ct);
         if (dto is null)
             return null;
 
+        return new QrResolveResult
+        {
+            TargetType = QrTargetTypes.Normalize(dto.TargetType),
+            TargetId = dto.TargetId,
+            MatchedCode = dto.MatchedCode,
+            Source = dto.Source,
+            Poi = dto.Poi is null ? null : MapPoi(dto.Poi),
+            Tour = dto.Tour is null ? null : MapTour(dto.Tour)
+        };
+    }
+
+    public async Task<Poi?> FindPoiFromWebByQrAsync(string qrCode, CancellationToken ct = default)
+    {
+        var resolved = await ResolveAsync(qrCode, ct);
+        return resolved?.Poi;
+    }
+
+    private Tour MapTour(RemoteTourDto dto)
+    {
+        return new Tour
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            Description = dto.Description,
+            IsActive = dto.IsActive,
+            Stops = dto.Stops
+                .OrderBy(x => x.DisplayOrder)
+                .Select(x => new TourStop
+                {
+                    Id = x.Id,
+                    PoiId = x.PoiId,
+                    DisplayOrder = x.DisplayOrder,
+                    Note = x.Note,
+                    Poi = MapPoi(x.Poi)
+                })
+                .ToList()
+        };
+    }
+
+    private Poi MapPoi(RemotePoiDto dto)
+    {
         return new Poi
         {
             Id = dto.Id,

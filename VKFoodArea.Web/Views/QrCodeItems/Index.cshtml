@@ -1,9 +1,10 @@
-@model IEnumerable<VKFoodArea.Web.Models.QrCodeItem>
+@model IEnumerable<VKFoodArea.Web.ViewModels.QrCodeItemListItemViewModel>
 @{
     ViewData["Title"] = "Quản lý QR code";
     var items = Model.ToList();
     var activeCount = items.Count(x => x.IsActive);
-    var coveredPoiCount = items.Select(x => x.PoiId).Distinct().Count();
+    var coveredPoiCount = items.Count(x => string.Equals(x.TargetType, "poi", StringComparison.OrdinalIgnoreCase));
+    var coveredTourCount = items.Count(x => string.Equals(x.TargetType, "tour", StringComparison.OrdinalIgnoreCase));
     var forwardedScheme = Context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
     var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
     var baseUrl = $"{scheme}://{Context.Request.Host}";
@@ -20,15 +21,25 @@
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <h2>QR demo flow</h2>
+        <h2>Hướng dẫn demo QR</h2>
+        <p class="text-muted mb-2">
+            Với đồ án này, người dùng mở ứng dụng trên điện thoại, vào màn hình Quét QR,
+            sau đó quét mã tại điểm dừng để nghe thuyết minh ngay, không cần GPS.
+        </p>
+        <p class="text-muted mb-2">
+            Nếu App chạy trên điện thoại thật và Web chạy trên laptop, cần nhập IP LAN
+            hoặc URL ngrok của Web vào màn hình quét QR trong App.
+        </p>
     </div>
     <p class="text-muted mb-2">
-        Demo steps: run Web through ngrok, enter the ngrok URL in the App QR scanner, then create a my.sepay QR with one of the payloads below.
+        Demo steps: run Web through ngrok, enter the ngrok URL in the App QR scanner, then create a my.sepay QR with one
+        of the payloads below.
     </p>
     <div class="row g-3">
         <div class="col-md-6">
             <label class="form-label">API test</label>
-            <input class="form-control font-monospace" readonly value="@($"{baseUrl}/api/pois/by-qr?code=poi:khanh-hoi-01")" />
+            <input class="form-control font-monospace" readonly
+                   value="@($"{baseUrl}/api/resolve-qr?code=poi:khanh-hoi-01")" />
             <div class="form-text">Replace the sample code with the real QR code to test in browser.</div>
         </div>
         <div class="col-md-6">
@@ -78,48 +89,50 @@
                         <th>Payload demo</th>
                         <th>Mã QR</th>
                         <th>Tiêu đề</th>
-                        <th>POI liên kết</th>
+                        <th>Target</th>
                         <th>Ngày tạo</th>
                         <th>Trạng thái</th>
                         <th class="text-end">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var item in items)
-                {
-                    <tr>
-                        <td>
-                            <div class="small text-muted">my.sepay text:</div>
-                            <code>@item.Code</code>
-                            <div class="small text-muted mt-1">URL:</div>
-                            <code>@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")</code>
-                        </td>
-                        <td class="mono">@item.Code</td>
-                        <td>
-                            <div class="table-title">@item.Title</div>
-                        </td>
-                        <td>
-                            <div class="table-title">@(item.Poi?.Name ?? "POI không tồn tại")</div>
-                        </td>
-                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            @if (item.IsActive)
-                            {
-                                <span class="status-pill status-pill--success">Đang hoạt động</span>
-                            }
-                            else
-                            {
-                                <span class="status-pill status-pill--muted">Đang ẩn</span>
-                            }
-                        </td>
-                        <td>
-                            <div class="table-actions justify-content-end">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
-                            </div>
-                        </td>
-                    </tr>
-                }
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="small text-muted">my.sepay text:</div>
+                                <code>@item.Code</code>
+                                <div class="small text-muted mt-1">URL:</div>
+                                <code>@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")</code>
+                            </td>
+                            <td class="mono">@item.Code</td>
+                            <td>
+                                <div class="table-title">@item.Title</div>
+                            </td>
+                            <td>
+                                <div class="table-title">@item.TargetName</div>
+                                <div class="small text-muted">@item.TargetType.ToUpperInvariant() #@item.TargetId</div>
+                            </td>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="status-pill status-pill--success">Đang hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill status-pill--muted">Đang ẩn</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="table-actions justify-content-end">
+                                    <a asp-action="Edit" asp-route-id="@item.Id"
+                                       class="btn btn-outline-secondary btn-sm">Sửa</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>

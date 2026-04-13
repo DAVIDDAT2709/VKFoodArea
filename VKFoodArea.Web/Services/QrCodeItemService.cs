@@ -16,14 +16,36 @@ public class QrCodeItemService : IQrCodeItemService
         _context = context;
     }
 
-    public async Task<List<QrCodeItem>> GetAllAsync()
+    public async Task<List<QrCodeItemListItemViewModel>> GetAllAsync()
     {
-        return await _context.QrCodeItems
+        var items = await _context.QrCodeItems
             .AsNoTracking()
-            .Include(x => x.Poi)
             .OrderByDescending(x => x.IsActive)
             .ThenByDescending(x => x.CreatedAt)
             .ToListAsync();
+
+        var poiLookup = await LoadPoiLookupAsync(items
+            .Where(x => QrTargetTypes.Normalize(x.TargetType) == QrTargetTypes.Poi)
+            .Select(x => x.TargetId));
+
+        var tourLookup = await LoadTourLookupAsync(items
+            .Where(x => QrTargetTypes.Normalize(x.TargetType) == QrTargetTypes.Tour)
+            .Select(x => x.TargetId));
+
+        return items
+            .Select(item => new QrCodeItemListItemViewModel
+            {
+                Id = item.Id,
+                Code = item.Code,
+                Title = item.Title,
+                TargetType = QrTargetTypes.Normalize(item.TargetType),
+                TargetId = item.TargetId,
+                TargetName = ResolveTargetName(item.TargetType, item.TargetId, poiLookup, tourLookup),
+                IsTargetActive = ResolveTargetActive(item.TargetType, item.TargetId, poiLookup, tourLookup),
+                IsActive = item.IsActive,
+                CreatedAt = item.CreatedAt
+            })
+            .ToList();
     }
 
     public async Task<QrCodeItemFormViewModel> BuildCreateFormAsync()
@@ -31,7 +53,10 @@ public class QrCodeItemService : IQrCodeItemService
         return new QrCodeItemFormViewModel
         {
             IsActive = true,
-            PoiOptions = await GetPoiOptionsAsync()
+            TargetType = QrTargetTypes.Poi,
+            TargetTypeOptions = BuildTargetTypeOptions(QrTargetTypes.Poi),
+            PoiOptions = await GetPoiOptionsAsync(),
+            TourOptions = await GetTourOptionsAsync()
         };
     }
 
@@ -44,36 +69,65 @@ public class QrCodeItemService : IQrCodeItemService
         if (entity is null)
             return null;
 
+        var targetType = QrTargetTypes.Normalize(entity.TargetType);
+
         return new QrCodeItemFormViewModel
         {
             Id = entity.Id,
             Code = entity.Code,
             Title = entity.Title,
-            PoiId = entity.PoiId,
+            TargetType = targetType,
+            PoiId = targetType == QrTargetTypes.Poi ? entity.TargetId : null,
+            TourId = targetType == QrTargetTypes.Tour ? entity.TargetId : null,
             IsActive = entity.IsActive,
-            PoiOptions = await GetPoiOptionsAsync()
+            TargetTypeOptions = BuildTargetTypeOptions(targetType),
+            PoiOptions = await GetPoiOptionsAsync(),
+            TourOptions = await GetTourOptionsAsync()
         };
     }
 
-    public async Task<QrCodeItem?> GetDeleteModelAsync(int id)
+    public async Task<QrCodeItemDeleteViewModel?> GetDeleteModelAsync(int id)
     {
-        return await _context.QrCodeItems
+        var entity = await _context.QrCodeItems
             .AsNoTracking()
-            .Include(x => x.Poi)
             .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (entity is null)
+            return null;
+
+        var poiLookup = await LoadPoiLookupAsync([entity.TargetId]);
+        var tourLookup = await LoadTourLookupAsync([entity.TargetId]);
+
+        return new QrCodeItemDeleteViewModel
+        {
+            Id = entity.Id,
+            Code = entity.Code,
+            Title = entity.Title,
+            TargetType = QrTargetTypes.Normalize(entity.TargetType),
+            TargetId = entity.TargetId,
+            TargetName = ResolveTargetName(entity.TargetType, entity.TargetId, poiLookup, tourLookup),
+            IsTargetActive = ResolveTargetActive(entity.TargetType, entity.TargetId, poiLookup, tourLookup),
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt
+        };
     }
 
     public async Task<(bool Success, string? Error)> CreateAsync(QrCodeItemFormViewModel vm)
     {
-        var validationError = await ValidateAsync(null, vm);
+        var target = await ResolveTargetAsync(vm);
+        if (!target.Success)
+            return (false, target.Error);
+
+        var validationError = await ValidateAsync(null, vm, target.TargetType, target.TargetId, target.IsTargetActive);
         if (!string.IsNullOrWhiteSpace(validationError))
             return (false, validationError);
 
         var entity = new QrCodeItem
         {
             Code = QrCodeHelper.Normalize(vm.Code),
-            Title = vm.Title.Trim(),
-            PoiId = vm.PoiId,
+            Title = (vm.Title ?? string.Empty).Trim(),
+            TargetType = target.TargetType,
+            TargetId = target.TargetId,
             IsActive = vm.IsActive
         };
 
@@ -89,13 +143,18 @@ public class QrCodeItemService : IQrCodeItemService
         if (entity is null)
             return (false, "Không tìm thấy QR code.");
 
-        var validationError = await ValidateAsync(id, vm);
+        var target = await ResolveTargetAsync(vm);
+        if (!target.Success)
+            return (false, target.Error);
+
+        var validationError = await ValidateAsync(id, vm, target.TargetType, target.TargetId, target.IsTargetActive);
         if (!string.IsNullOrWhiteSpace(validationError))
             return (false, validationError);
 
         entity.Code = QrCodeHelper.Normalize(vm.Code);
-        entity.Title = vm.Title.Trim();
-        entity.PoiId = vm.PoiId;
+        entity.Title = (vm.Title ?? string.Empty).Trim();
+        entity.TargetType = target.TargetType;
+        entity.TargetId = target.TargetId;
         entity.IsActive = vm.IsActive;
 
         await _context.SaveChangesAsync();
@@ -113,24 +172,26 @@ public class QrCodeItemService : IQrCodeItemService
         return true;
     }
 
-    private async Task<string?> ValidateAsync(int? currentId, QrCodeItemFormViewModel vm)
+    private async Task<string?> ValidateAsync(
+        int? currentId,
+        QrCodeItemFormViewModel vm,
+        string targetType,
+        int targetId,
+        bool isTargetActive)
     {
         var code = QrCodeHelper.Normalize(vm.Code);
 
         if (string.IsNullOrWhiteSpace(code))
             return "Mã QR không hợp lệ.";
 
-        var poi = await _context.Pois
-            .AsNoTracking()
-            .Where(x => x.Id == vm.PoiId)
-            .Select(x => new { x.Id, x.IsActive })
-            .FirstOrDefaultAsync();
+        if (!QrTargetTypes.IsValid(targetType))
+            return "Loại nội dung QR không hợp lệ.";
 
-        if (poi is null)
-            return "POI không tồn tại.";
+        if (targetId <= 0)
+            return "Nội dung đích không hợp lệ.";
 
-        if (vm.IsActive && !poi.IsActive)
-            return "QR dang hoat dong phai lien ket voi POI dang hoat dong.";
+        if (vm.IsActive && !isTargetActive)
+            return "QR đang hoạt động phải liên kết với nội dung đang hoạt động.";
 
         var existsInQrItems = await _context.QrCodeItems
             .AnyAsync(x =>
@@ -164,5 +225,117 @@ public class QrCodeItemService : IQrCodeItemService
                 Text = x.IsActive ? x.Name : $"{x.Name} (ẩn)"
             })
             .ToListAsync();
+    }
+
+    private async Task<(bool Success, string TargetType, int TargetId, bool IsTargetActive, string? Error)> ResolveTargetAsync(QrCodeItemFormViewModel vm)
+    {
+        var targetType = QrTargetTypes.Normalize(vm.TargetType);
+
+        if (targetType == QrTargetTypes.Tour)
+        {
+            if (!vm.TourId.HasValue || vm.TourId.Value <= 0)
+                return (false, targetType, 0, false, "Vui lòng chọn tour.");
+
+            var tour = await _context.Tours
+                .AsNoTracking()
+                .Where(x => x.Id == vm.TourId.Value)
+                .Select(x => new { x.Id, x.IsActive })
+                .FirstOrDefaultAsync();
+
+            return tour is null
+                ? (false, targetType, 0, false, "Tour không tồn tại.")
+                : (true, targetType, tour.Id, tour.IsActive, null);
+        }
+
+        if (!vm.PoiId.HasValue || vm.PoiId.Value <= 0)
+            return (false, QrTargetTypes.Poi, 0, false, "Vui lòng chọn POI.");
+
+        var poi = await _context.Pois
+            .AsNoTracking()
+            .Where(x => x.Id == vm.PoiId.Value)
+            .Select(x => new { x.Id, x.IsActive })
+            .FirstOrDefaultAsync();
+
+        return poi is null
+            ? (false, QrTargetTypes.Poi, 0, false, "POI không tồn tại.")
+            : (true, QrTargetTypes.Poi, poi.Id, poi.IsActive, null);
+    }
+
+    private async Task<List<SelectListItem>> GetTourOptionsAsync()
+    {
+        return await _context.Tours
+            .AsNoTracking()
+            .OrderByDescending(x => x.IsActive)
+            .ThenBy(x => x.Name)
+            .Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = x.IsActive ? x.Name : $"{x.Name} (ẩn)"
+            })
+            .ToListAsync();
+    }
+
+    private static List<SelectListItem> BuildTargetTypeOptions(string selected)
+    {
+        return
+        [
+            new SelectListItem("POI", QrTargetTypes.Poi, selected == QrTargetTypes.Poi),
+            new SelectListItem("Tour", QrTargetTypes.Tour, selected == QrTargetTypes.Tour)
+        ];
+    }
+
+    private async Task<Dictionary<int, (string Name, bool IsActive)>> LoadPoiLookupAsync(IEnumerable<int> ids)
+    {
+        var distinctIds = ids.Distinct().ToList();
+        if (distinctIds.Count == 0)
+            return new Dictionary<int, (string Name, bool IsActive)>();
+
+        return await _context.Pois
+            .AsNoTracking()
+            .Where(x => distinctIds.Contains(x.Id))
+            .ToDictionaryAsync(
+                x => x.Id,
+                x => (x.Name, x.IsActive));
+    }
+
+    private async Task<Dictionary<int, (string Name, bool IsActive)>> LoadTourLookupAsync(IEnumerable<int> ids)
+    {
+        var distinctIds = ids.Distinct().ToList();
+        if (distinctIds.Count == 0)
+            return new Dictionary<int, (string Name, bool IsActive)>();
+
+        return await _context.Tours
+            .AsNoTracking()
+            .Where(x => distinctIds.Contains(x.Id))
+            .ToDictionaryAsync(
+                x => x.Id,
+                x => (x.Name, x.IsActive));
+    }
+
+    private static string ResolveTargetName(
+        string? targetType,
+        int targetId,
+        IReadOnlyDictionary<int, (string Name, bool IsActive)> poiLookup,
+        IReadOnlyDictionary<int, (string Name, bool IsActive)> tourLookup)
+    {
+        var normalizedTargetType = QrTargetTypes.Normalize(targetType);
+        var lookup = normalizedTargetType == QrTargetTypes.Tour ? tourLookup : poiLookup;
+
+        return lookup.TryGetValue(targetId, out var item)
+            ? item.Name
+            : normalizedTargetType == QrTargetTypes.Tour
+                ? "Tour không tồn tại"
+                : "POI không tồn tại";
+    }
+
+    private static bool ResolveTargetActive(
+        string? targetType,
+        int targetId,
+        IReadOnlyDictionary<int, (string Name, bool IsActive)> poiLookup,
+        IReadOnlyDictionary<int, (string Name, bool IsActive)> tourLookup)
+    {
+        var normalizedTargetType = QrTargetTypes.Normalize(targetType);
+        var lookup = normalizedTargetType == QrTargetTypes.Tour ? tourLookup : poiLookup;
+        return lookup.TryGetValue(targetId, out var item) && item.IsActive;
     }
 }

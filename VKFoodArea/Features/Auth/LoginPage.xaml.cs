@@ -9,6 +9,7 @@ public partial class LoginPage : ContentPage
     private readonly IServiceProvider _serviceProvider;
     private readonly LanguageSelectionFlowService _languageSelectionFlowService;
     private readonly AppRootNavigationService _rootNavigationService;
+    private readonly AppLinkService _appLinkService;
     private readonly AppTextService _text;
     private string _selectedUserType = "domestic";
     private string _selectedLanguage = "en";
@@ -18,6 +19,7 @@ public partial class LoginPage : ContentPage
         IServiceProvider serviceProvider,
         LanguageSelectionFlowService languageSelectionFlowService,
         AppRootNavigationService rootNavigationService,
+        AppLinkService appLinkService,
         AppTextService text)
     {
         InitializeComponent();
@@ -25,6 +27,7 @@ public partial class LoginPage : ContentPage
         _serviceProvider = serviceProvider;
         _languageSelectionFlowService = languageSelectionFlowService;
         _rootNavigationService = rootNavigationService;
+        _appLinkService = appLinkService;
         _text = text;
     }
 
@@ -114,6 +117,7 @@ public partial class LoginPage : ContentPage
 
         SelectionOverlay.IsVisible = false;
         await _rootNavigationService.SetRootAsync<HomeDesignPage>();
+        await _appLinkService.TryHandlePendingAsync();
     }
 
     private void OnLanguageButtonClicked(object? sender, EventArgs e)

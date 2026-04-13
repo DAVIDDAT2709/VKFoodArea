@@ -1,4 +1,4 @@
-@model VKFoodArea.Web.Models.QrCodeItem
+@model VKFoodArea.Web.ViewModels.QrCodeItemDeleteViewModel
 @{
     ViewData["Title"] = "Xóa QR code";
 }
@@ -22,8 +22,8 @@
                 </div>
                 <div class="list-row">
                     <div class="list-row__content">
-                        <strong>POI liên kết</strong>
-                        <p>@(Model.Poi?.Name ?? "POI không tồn tại")</p>
+                        <strong>Target</strong>
+                        <p>@Model.TargetName (@Model.TargetType.ToUpperInvariant() #@Model.TargetId)</p>
                     </div>
                 </div>
                 <div class="list-row">

@@ -1,0 +1,150 @@
+@model VKFoodArea.Web.ViewModels.TourFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+<section class="card-surface">
+    <div class="section-heading">
+        <h2>Thong tin tour</h2>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check form-switch field-switch mt-4 pt-2">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+    </div>
+</section>
+
+<section class="card-surface">
+    <div class="section-heading">
+        <h2>Tour stop</h2>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="add-stop-button">Them stop</button>
+    </div>
+
+    <div id="tour-stops">
+        @for (var i = 0; i < Model.Stops.Count; i++)
+        {
+            <div class="row g-3 align-items-end mb-3 tour-stop-row" data-stop-row>
+                <div class="col-md-5">
+                    <input type="hidden" asp-for="Stops[i].Id" />
+                    <label asp-for="Stops[i].PoiId" class="form-label"></label>
+                    <select asp-for="Stops[i].PoiId" asp-items="Model.PoiOptions" class="form-select">
+                        <option value="">-- Chon POI --</option>
+                    </select>
+                    <span asp-validation-for="Stops[i].PoiId" class="text-danger"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="Stops[i].DisplayOrder" class="form-label"></label>
+                    <input asp-for="Stops[i].DisplayOrder" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Stops[i].Note" class="form-label"></label>
+                    <input asp-for="Stops[i].Note" class="form-control" />
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-stop>X</button>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<template id="tour-stop-template">
+    <div class="row g-3 align-items-end mb-3 tour-stop-row" data-stop-row>
+        <div class="col-md-5">
+            <input name="Stops[__index__].Id" type="hidden" value="" />
+            <label class="form-label" for="Stops___index___PoiId">POI</label>
+            <select class="form-select" id="Stops___index___PoiId" name="Stops[__index__].PoiId">
+                <option value="">-- Chon POI --</option>
+                @foreach (var poi in Model.PoiOptions)
+                {
+                    <option value="@poi.Value">@poi.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="Stops___index___DisplayOrder">Thu tu</label>
+            <input class="form-control" id="Stops___index___DisplayOrder" name="Stops[__index__].DisplayOrder" type="number" value="__order__" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="Stops___index___Note">Ghi chu</label>
+            <input class="form-control" id="Stops___index___Note" name="Stops[__index__].Note" type="text" value="" />
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-stop>X</button>
+        </div>
+    </div>
+</template>
+
+<script>
+    (function () {
+        const container = document.getElementById('tour-stops');
+        const addButton = document.getElementById('add-stop-button');
+        const template = document.getElementById('tour-stop-template');
+
+        function bindRemoveButtons() {
+            container.querySelectorAll('[data-remove-stop]').forEach(button => {
+                button.onclick = function () {
+                    const rows = container.querySelectorAll('[data-stop-row]');
+                    if (rows.length <= 1) {
+                        return;
+                    }
+
+                    button.closest('[data-stop-row]')?.remove();
+                    reindexRows();
+                };
+            });
+        }
+
+        function reindexRows() {
+            const rows = container.querySelectorAll('[data-stop-row]');
+            rows.forEach((row, index) => {
+                row.querySelectorAll('input, select, label, span').forEach(element => {
+                    ['name', 'id', 'for'].forEach(attribute => {
+                        const value = element.getAttribute(attribute);
+                        if (!value) {
+                            return;
+                        }
+
+                        element.setAttribute(attribute, value.replace(/Stops\[\d+\]|Stops__\d+__/g, match => {
+                            if (match.startsWith('Stops[')) {
+                                return `Stops[${index}]`;
+                            }
+
+                            return `Stops__${index}__`;
+                        }));
+                    });
+                });
+
+                const orderInput = row.querySelector('input[name$=".DisplayOrder"]');
+                if (orderInput && !orderInput.value) {
+                    orderInput.value = String(index + 1);
+                }
+            });
+        }
+
+        addButton?.addEventListener('click', () => {
+            const nextIndex = container.querySelectorAll('[data-stop-row]').length;
+            const html = template.innerHTML
+                .replaceAll('__index__', String(nextIndex))
+                .replaceAll('__order__', String(nextIndex + 1));
+            container.insertAdjacentHTML('beforeend', html);
+            bindRemoveButtons();
+        });
+
+        bindRemoveButtons();
+        reindexRows();
+    })();
+</script>

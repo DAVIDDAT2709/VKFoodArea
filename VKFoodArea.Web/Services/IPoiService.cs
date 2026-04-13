@@ -16,7 +16,6 @@ public interface IPoiService
 
     Task<List<PoiDto>> GetActiveForApiAsync();
     Task<PoiDto?> GetByIdForApiAsync(int id);
-    Task<PoiDto?> GetByQrCodeForApiAsync(string qrCode);
 
     Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string? qrCode);
     string? ValidateImageFile(IFormFile? imageFile);

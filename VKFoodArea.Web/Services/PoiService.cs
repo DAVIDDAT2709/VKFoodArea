@@ -148,7 +148,7 @@ public class PoiService : IPoiService
             .ToListAsync();
 
         return pois
-            .Select(x => ToDto(x, x.QrCode, "poi-default"))
+            .Select(x => ApiDtoMapper.ToPoiDto(x, x.QrCode, "poi-default"))
             .ToList();
     }
 
@@ -161,46 +161,7 @@ public class PoiService : IPoiService
 
         return poi is null
             ? null
-            : ToDto(poi, poi.QrCode, "poi-default");
-    }
-
-    public async Task<PoiDto?> GetByQrCodeForApiAsync(string qrCode)
-    {
-        var normalized = QrCodeHelper.Normalize(qrCode);
-
-        if (string.IsNullOrWhiteSpace(normalized))
-            return null;
-
-        var qrItemMatch = await _context.QrCodeItems
-            .AsNoTracking()
-            .Include(x => x.Poi)
-            .ThenInclude(poi => poi!.Translations)
-            .Include(x => x.Poi)
-            .ThenInclude(poi => poi!.AudioAssets)
-            .Where(x =>
-                x.IsActive &&
-                !string.IsNullOrWhiteSpace(x.Code) &&
-                x.Code.ToLower() == normalized &&
-                x.Poi != null &&
-                x.Poi.IsActive)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (qrItemMatch?.Poi is not null)
-            return ToDto(qrItemMatch.Poi, qrItemMatch.Code, "qr-item");
-
-        var poiMatch = await BuildPoiContentQuery()
-            .AsNoTracking()
-            .Where(x =>
-                x.IsActive &&
-                !string.IsNullOrWhiteSpace(x.QrCode) &&
-                x.QrCode.ToLower() == normalized)
-            .FirstOrDefaultAsync();
-
-        if (poiMatch is null)
-            return null;
-
-        return ToDto(poiMatch, poiMatch.QrCode, "poi-default");
+            : ApiDtoMapper.ToPoiDto(poi, poi.QrCode, "poi-default");
     }
 
     private IQueryable<Poi> BuildPoiContentQuery()
@@ -402,35 +363,6 @@ public class PoiService : IPoiService
             shortened = shortened[..lastSpace];
 
         return $"{shortened}...";
-    }
-
-    private static PoiDto ToDto(Poi poi, string matchedQrCode, string qrSource)
-    {
-        return new PoiDto
-        {
-            Id = poi.Id,
-            Name = poi.Name,
-            Address = poi.Address,
-            PhoneNumber = poi.PhoneNumber,
-            ImageUrl = poi.ImageUrl,
-            Description = poi.Description,
-            Latitude = poi.Latitude,
-            Longitude = poi.Longitude,
-            RadiusMeters = poi.RadiusMeters,
-            Priority = poi.Priority,
-            QrCode = poi.QrCode,
-            IsActive = poi.IsActive,
-            TtsScriptVi = GetTranslationScript(poi, "vi", poi.TtsScriptVi),
-            TtsScriptEn = GetTranslationScript(poi, "en", poi.TtsScriptEn),
-            TtsScriptZh = GetTranslationScript(poi, "zh", poi.TtsScriptZh),
-            TtsScriptJa = GetTranslationScript(poi, "ja", poi.TtsScriptJa),
-            TtsScriptDe = GetTranslationScript(poi, "de", poi.TtsScriptDe),
-            AudioFileVi = GetAudioFile(poi, "vi", poi.AudioFileVi),
-            AudioFileEn = GetAudioFile(poi, "en", poi.AudioFileEn),
-            AudioFileJa = GetAudioFile(poi, "ja", poi.AudioFileJa),
-            MatchedQrCode = matchedQrCode,
-            QrSource = qrSource
-        };
     }
 
     private static string GetTranslationScript(Poi poi, string language, string fallback)

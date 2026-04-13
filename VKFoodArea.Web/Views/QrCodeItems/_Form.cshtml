@@ -18,13 +18,29 @@
             <input asp-for="Title" class="form-control" placeholder="Tên hiển thị" />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-4">
+            <label asp-for="TargetType" class="form-label"></label>
+            <select asp-for="TargetType" asp-items="Model.TargetTypeOptions" class="form-select" id="qr-target-type"></select>
+            <span asp-validation-for="TargetType" class="text-danger"></span>
+        </div>
+        <div class="col-md-4" data-target-panel="poi">
             <label asp-for="PoiId" class="form-label"></label>
             <select asp-for="PoiId" asp-items="Model.PoiOptions" class="form-select">
                 <option value="">-- Chọn POI --</option>
             </select>
             <span asp-validation-for="PoiId" class="text-danger"></span>
             <div class="form-text">QR active chi phat trong App neu POI lien ket cung dang active.</div>
+        </div>
+        <div class="col-md-4" data-target-panel="tour">
+            <label asp-for="TourId" class="form-label"></label>
+            <select asp-for="TourId" asp-items="Model.TourOptions" class="form-select">
+                <option value="">-- Chon tour --</option>
+            </select>
+            <span asp-validation-for="TourId" class="text-danger"></span>
+            <div class="form-text">Tour la lop dieu phoi: QR chi can resolve vao tour dang hoat dong.</div>
+        </div>
+        <div class="col-md-12">
+            <div class="form-text">QR duoc xu ly thong nhat qua targetType + targetId.</div>
         </div>
         <div class="col-md-4">
             <div class="form-check form-switch field-switch">
@@ -34,3 +50,22 @@
         </div>
     </div>
 </section>
+
+<script>
+    (function () {
+        const select = document.getElementById('qr-target-type');
+        const panels = document.querySelectorAll('[data-target-panel]');
+
+        function syncTargetPanels() {
+            const current = (select?.value || 'poi').toLowerCase();
+            panels.forEach(panel => {
+                panel.style.display = panel.getAttribute('data-target-panel') === current ? '' : 'none';
+            });
+        }
+
+        if (select) {
+            select.addEventListener('change', syncTargetPanels);
+            syncTargetPanels();
+        }
+    })();
+</script>

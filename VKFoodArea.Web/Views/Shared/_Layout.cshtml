@@ -29,6 +29,7 @@
             <nav class="app-nav" aria-label="Điều hướng chính">
                 <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">Tổng quan</a>
                 <a class="@NavClass("Pois")" asp-controller="Pois" asp-action="Index">Điểm POI</a>
+                <a class="@NavClass("Tours")" asp-controller="Tours" asp-action="Index">Tour</a>
                 <a class="@NavClass("Map")" asp-controller="Map" asp-action="Index">Map POI</a>
                 <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">QR code</a>
                 <a class="@NavClass("AppUsers")" asp-controller="AppUsers" asp-action="Index">App users</a>
@@ -50,6 +51,7 @@
                         </form>
                     }
                     <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Thêm POI</a>
+                    <a asp-controller="Tours" asp-action="Create" class="btn btn-outline-secondary">Thêm tour</a>
                     <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-secondary">Thêm QR</a>
                 </div>
             </header>

@@ -341,8 +341,13 @@ namespace VKFoodArea.Web.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PoiId")
+                    b.Property<int>("TargetId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -351,7 +356,10 @@ namespace VKFoodArea.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PoiId");
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("TargetType", "TargetId");
 
                     b.ToTable("QrCodeItems");
                 });
@@ -485,17 +493,6 @@ namespace VKFoodArea.Web.Migrations
                     b.Navigation("Poi");
                 });
 
-            modelBuilder.Entity("VKFoodArea.Web.Models.QrCodeItem", b =>
-                {
-                    b.HasOne("VKFoodArea.Web.Models.Poi", "Poi")
-                        .WithMany("QrCodeItems")
-                        .HasForeignKey("PoiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Poi");
-                });
-
             modelBuilder.Entity("VKFoodArea.Web.Models.TourStop", b =>
                 {
                     b.HasOne("VKFoodArea.Web.Models.Poi", "Poi")
@@ -520,8 +517,6 @@ namespace VKFoodArea.Web.Migrations
                     b.Navigation("AudioAssets");
 
                     b.Navigation("NarrationHistories");
-
-                    b.Navigation("QrCodeItems");
 
                     b.Navigation("Translations");
                 });

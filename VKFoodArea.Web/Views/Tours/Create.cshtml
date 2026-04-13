@@ -1,0 +1,23 @@
+@model VKFoodArea.Web.ViewModels.TourFormViewModel
+@{
+    ViewData["Title"] = "Tao tour";
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>Tao tour</h2>
+    </div>
+</section>
+
+<form asp-action="Create" method="post" class="stack-gap page-section">
+    <partial name="_Form" model="Model" />
+
+    <div class="page-actions">
+        <button type="submit" class="btn btn-primary">Luu tour</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai danh sach</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

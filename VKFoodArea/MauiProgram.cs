@@ -43,11 +43,13 @@ public static class MauiProgram
         builder.Services.AddSingleton<LocationTrackingPolicyService>();
         builder.Services.AddSingleton<PermissionService>();
         builder.Services.AddSingleton<PoiRuntimeService>();
+        builder.Services.AddSingleton<TourSessionService>();
 
         builder.Services.AddSingleton<AppSettingsService>();
         builder.Services.AddSingleton<AppLanguageService>();
         builder.Services.AddSingleton<AppTextService>();
         builder.Services.AddSingleton<AppRootNavigationService>();
+        builder.Services.AddSingleton<AppLinkService>();
         builder.Services.AddSingleton<AppDbInitializationService>();
         builder.Services.AddSingleton<LanguageSelectionFlowService>();
         builder.Services.AddSingleton<ApiBaseUrlService>();
@@ -85,6 +87,7 @@ public static class MauiProgram
         builder.Services.AddTransient<QrScannerPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<AccountProfilePage>();
+        builder.Services.AddTransient<TourSessionPage>();
         builder.Services.AddTransient<UserPage>();
         builder.Services.AddTransient<StartupPage>();
 

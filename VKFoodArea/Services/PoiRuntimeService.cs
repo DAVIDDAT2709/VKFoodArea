@@ -12,7 +12,8 @@ public sealed record PoiRuntimeSnapshot(
     bool IsGpsListening,
     LocationTrackingMode TrackingMode,
     string TrackingPolicyName,
-    string LastGeofenceReason);
+    string LastGeofenceReason,
+    TourSession? ActiveTourSession);
 
 public class PoiRuntimeService
 {
@@ -27,6 +28,7 @@ public class PoiRuntimeService
     private readonly LocationTrackingPolicyService _trackingPolicyService;
     private readonly MovementLogSyncService _movementLogSyncService;
     private readonly AuthService _authService;
+    private readonly TourSessionService _tourSessionService;
     private readonly SemaphoreSlim _stateLock = new(1, 1);
     private readonly object _snapshotSync = new();
     private readonly object _movementSync = new();
@@ -39,6 +41,7 @@ public class PoiRuntimeService
     private LocationTrackingMode _trackingMode = LocationTrackingMode.ForegroundNavigation;
     private string _trackingPolicyName = "foreground-active";
     private string _lastGeofenceReason = string.Empty;
+    private TourSession? _activeTourSession;
     private DateTimeOffset _lastMovementSyncedAt = DateTimeOffset.MinValue;
     private Location? _lastMovementSyncedLocation;
     private static readonly TimeSpan AutoNarrationCooldown = TimeSpan.FromSeconds(8);
@@ -60,7 +63,8 @@ private int? _lastAutoNarratedPoiId;
         PermissionService permissionService,
         LocationTrackingPolicyService trackingPolicyService,
         MovementLogSyncService movementLogSyncService,
-        AuthService authService)
+        AuthService authService,
+        TourSessionService tourSessionService)
     {
         _poiService = poiService;
         _locationTrackerService = locationTrackerService;
@@ -70,10 +74,13 @@ private int? _lastAutoNarratedPoiId;
         _trackingPolicyService = trackingPolicyService;
         _movementLogSyncService = movementLogSyncService;
         _authService = authService;
+        _tourSessionService = tourSessionService;
         _currentLocation = DefaultLocation;
+        _activeTourSession = _tourSessionService.GetCurrentSession();
 
         _locationTrackerService.LocationChanged += OnLocationChanged;
         _trackingPolicyService.ProfileChanged += OnTrackingProfileChanged;
+        _tourSessionService.StateChanged += OnTourSessionStateChanged;
     }
 
     public PoiRuntimeSnapshot GetSnapshot()
@@ -89,7 +96,8 @@ private int? _lastAutoNarratedPoiId;
                 _isGpsListening,
                 _trackingMode,
                 _trackingPolicyName,
-                _lastGeofenceReason);
+                _lastGeofenceReason,
+                _activeTourSession);
         }
     }
 
@@ -127,7 +135,8 @@ private int? _lastAutoNarratedPoiId;
                 isGpsListening: isGpsListening,
                 trackingMode: trackingProfile.Mode,
                 trackingPolicyName: trackingProfile.PolicyName,
-                geofenceReason: string.Empty);
+                geofenceReason: string.Empty,
+                activeTourSession: _tourSessionService.GetCurrentSession());
         }
         finally
         {
@@ -153,7 +162,8 @@ private int? _lastAutoNarratedPoiId;
                 isGpsListening: snapshot.IsGpsListening,
                 trackingMode: snapshot.TrackingMode,
                 trackingPolicyName: snapshot.TrackingPolicyName,
-                geofenceReason: string.Empty);
+                geofenceReason: string.Empty,
+                activeTourSession: snapshot.ActiveTourSession);
         }
         finally
         {
@@ -181,7 +191,8 @@ private int? _lastAutoNarratedPoiId;
                     isGpsListening: false,
                     trackingMode: trackingProfile.Mode,
                     trackingPolicyName: trackingProfile.PolicyName,
-                    geofenceReason: string.Empty);
+                    geofenceReason: string.Empty,
+                    activeTourSession: snapshot.ActiveTourSession);
             }
             finally
             {
@@ -215,7 +226,8 @@ private int? _lastAutoNarratedPoiId;
                 isGpsListening: isGpsListening,
                 trackingMode: trackingProfile.Mode,
                 trackingPolicyName: trackingProfile.PolicyName,
-                geofenceReason: string.Empty);
+                geofenceReason: string.Empty,
+                activeTourSession: snapshot.ActiveTourSession);
         }
         finally
         {
@@ -248,16 +260,62 @@ private int? _lastAutoNarratedPoiId;
         }
     }
 
+    private void OnTourSessionStateChanged(object? sender, EventArgs e)
+    {
+        lock (_snapshotSync)
+        {
+            _activeTourSession = _tourSessionService.GetCurrentSession();
+            _nearestPoi = FindPriorityPoi(_currentLocation, _pois, _activeTourSession);
+        }
+
+        RaiseStateChanged();
+    }
+
     private async Task HandleLocationChangedAsync(Location location, CancellationToken ct = default)
     {
         Poi? poiToPlay = null;
+        var shouldAdvanceTour = false;
         var trackingProfile = _trackingPolicyService.GetCurrentProfile();
 
         await _stateLock.WaitAsync(ct);
         try
         {
             var pois = await _poiService.GetAllPoisAsync(ct);
+            var activeTourSession = _tourSessionService.GetCurrentSession();
             var decision = _geofenceEngine.Evaluate(location.Latitude, location.Longitude, pois);
+            var geofenceReason = decision.Reason;
+
+            if (activeTourSession?.CurrentStop is { PoiId: > 0 } currentStop)
+            {
+                var stopPoi = pois.FirstOrDefault(x => x.Id == currentStop.PoiId) ?? currentStop.Poi;
+                if (stopPoi?.IsActive == true)
+                {
+                    var distanceToStopMeters = Location.CalculateDistance(
+                        location.Latitude,
+                        location.Longitude,
+                        stopPoi.Latitude,
+                        stopPoi.Longitude,
+                        DistanceUnits.Kilometers) * 1000;
+
+                    if (distanceToStopMeters <= stopPoi.RadiusMeters + 12)
+                    {
+                        poiToPlay = stopPoi;
+                        shouldAdvanceTour = true;
+                        geofenceReason = $"Tour stop reached: {stopPoi.Name}";
+                    }
+                    else
+                    {
+                        geofenceReason = $"Tour next stop: {stopPoi.Name} ({distanceToStopMeters:F0}m)";
+
+                        if (decision.ShouldTrigger && decision.PoiId.HasValue)
+                        {
+                            poiToPlay = pois.FirstOrDefault(x => x.Id == decision.PoiId.Value)
+                                        ?? await _poiService.GetPoiByIdAsync(decision.PoiId.Value, ct);
+                            geofenceReason = $"{decision.Reason} | Current stop: {stopPoi.Name}";
+                        }
+                    }
+                }
+            }
 
             ApplySnapshot(
                 location,
@@ -267,9 +325,10 @@ private int? _lastAutoNarratedPoiId;
                 isGpsListening: true,
                 trackingMode: trackingProfile.Mode,
                 trackingPolicyName: trackingProfile.PolicyName,
-                geofenceReason: decision.Reason);
+                geofenceReason: geofenceReason,
+                activeTourSession: activeTourSession);
 
-            if (decision.ShouldTrigger && decision.PoiId.HasValue)
+            if (poiToPlay is null && decision.ShouldTrigger && decision.PoiId.HasValue)
             {
                 poiToPlay = pois.FirstOrDefault(x => x.Id == decision.PoiId.Value)
                             ?? await _poiService.GetPoiByIdAsync(decision.PoiId.Value, ct);
@@ -281,18 +340,26 @@ private int? _lastAutoNarratedPoiId;
         }
 
         RaiseStateChanged();
-_ = PushMovementLogIfNeededAsync(location, trackingProfile.Mode, CancellationToken.None);
+        _ = PushMovementLogIfNeededAsync(location, trackingProfile.Mode, CancellationToken.None);
 
-if (poiToPlay is { } poi)
-{
-    if (_narrationService.IsManualPlaybackActive())
-        return;
+        if (poiToPlay is not { } poi)
+            return;
 
-    if (!ShouldAutoPlayPoi(poi.Id))
-        return;
+        if (_narrationService.IsManualPlaybackActive())
+            return;
 
-    await _narrationService.PlayPoiAsync(poi.Id, "auto", ct: ct);
-}
+        if (!ShouldAutoPlayPoi(poi.Id))
+            return;
+
+        await _narrationService.PlayPoiAsync(
+            poi.Id,
+            shouldAdvanceTour ? "tour" : "auto",
+            ct: ct);
+
+        if (shouldAdvanceTour)
+        {
+            _tourSessionService.CompleteCurrentStop();
+        }
     }
 
     private void ApplySnapshot(
@@ -303,9 +370,10 @@ if (poiToPlay is { } poi)
         bool isGpsListening,
         LocationTrackingMode trackingMode,
         string trackingPolicyName,
-        string geofenceReason)
+        string geofenceReason,
+        TourSession? activeTourSession)
     {
-        var nearestPoi = FindNearestPoi(location, pois);
+        var nearestPoi = FindPriorityPoi(location, pois, activeTourSession);
 
         lock (_snapshotSync)
         {
@@ -318,6 +386,7 @@ if (poiToPlay is { } poi)
             _trackingMode = trackingMode;
             _trackingPolicyName = trackingPolicyName;
             _lastGeofenceReason = geofenceReason;
+            _activeTourSession = activeTourSession;
         }
     }
 
@@ -358,7 +427,8 @@ if (poiToPlay is { } poi)
                 isGpsListening: isGpsListening,
                 trackingMode: trackingProfile.Mode,
                 trackingPolicyName: trackingProfile.PolicyName,
-                geofenceReason: string.Empty);
+                geofenceReason: string.Empty,
+                activeTourSession: snapshot.ActiveTourSession);
         }
         finally
         {
@@ -368,8 +438,14 @@ if (poiToPlay is { } poi)
         RaiseStateChanged();
     }
 
-    private static Poi? FindNearestPoi(Location location, IEnumerable<Poi> pois)
+    private static Poi? FindPriorityPoi(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
     {
+        var currentStopPoi = activeTourSession?.CurrentStop?.Poi;
+        if (currentStopPoi?.Id > 0)
+        {
+            return pois.FirstOrDefault(x => x.Id == currentStopPoi.Id) ?? currentStopPoi;
+        }
+
         return pois
             .Select(poi => new
             {

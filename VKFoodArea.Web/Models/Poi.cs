@@ -30,7 +30,6 @@ public class Poi
     public string QrCode { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 
-    public List<QrCodeItem> QrCodeItems { get; set; } = new();
     public List<NarrationHistory> NarrationHistories { get; set; } = new();
     public List<PoiTranslation> Translations { get; set; } = new();
     public List<PoiAudioAsset> AudioAssets { get; set; } = new();

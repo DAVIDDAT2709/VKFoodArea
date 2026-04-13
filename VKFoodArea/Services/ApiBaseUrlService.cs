@@ -1,4 +1,5 @@
 using Microsoft.Maui.Devices;
+using VKFoodArea.Helpers;
 
 namespace VKFoodArea.Services;
 
@@ -16,10 +17,7 @@ public class ApiBaseUrlService
 
     public string BaseUrl => NormalizeBaseUrl(_settingsService.ApiBaseUrl, DefaultBaseUrl);
 
-    public string DefaultBaseUrl =>
-        DeviceInfo.Platform == DevicePlatform.Android
-            ? "http://10.0.2.2:5216/"
-            : "http://localhost:5216/";
+    public string DefaultBaseUrl => AppLinkConstants.PublicBaseUrl;
 
     public (bool Success, string Message) SaveDemoBaseUrl(string? value)
     {
@@ -64,6 +62,15 @@ public class ApiBaseUrlService
         var normalized = (value ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(normalized))
             return fallback;
+
+        if (Uri.TryCreate(normalized, UriKind.Absolute, out var uri))
+        {
+            var authorityOnly = uri.GetLeftPart(UriPartial.Authority);
+            normalized = authorityOnly.EndsWith("/", StringComparison.Ordinal)
+                ? authorityOnly
+                : $"{authorityOnly}/";
+            return normalized;
+        }
 
         if (!normalized.EndsWith("/", StringComparison.Ordinal))
             normalized += "/";
