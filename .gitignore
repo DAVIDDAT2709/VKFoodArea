@@ -3,6 +3,11 @@ obj/
 .vs/
 .dotnet/
 .nuget/
+App/
+Web/
+artifacts/
+tempbuild/
+tempout/
 bin_codex/
 obj_codex/
 obj_loginfix/
@@ -17,6 +22,7 @@ obj_loginfix/
 /.obj_web/
 /.verify_app/
 /.verify_web/
+/_verify/
 /verify_obj_app/
 /build-check/
 /lưu/
@@ -33,3 +39,7 @@ obj_loginfix/
 *.db
 *.db-shm
 *.db-wal
+*.csproj.user
+
+VKFoodArea/window_dump.xml
+VKFoodArea.Web/wwwroot/uploads/qr-images/
