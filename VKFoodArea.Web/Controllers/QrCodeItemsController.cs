@@ -165,6 +165,10 @@ public class QrCodeItemsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(QrCodeItemFormViewModel vm)
     {
+        var imageError = _qrCodeItemService.ValidateImageFile(vm.ImageFile);
+        if (!string.IsNullOrWhiteSpace(imageError))
+            ModelState.AddModelError(nameof(vm.ImageFile), imageError);
+
         if (!ModelState.IsValid)
         {
             vm = await RebuildFormAsync(vm);
@@ -197,6 +201,10 @@ public class QrCodeItemsController : Controller
     public async Task<IActionResult> Edit(int id, QrCodeItemFormViewModel vm)
     {
         if (id != vm.Id) return NotFound();
+
+        var imageError = _qrCodeItemService.ValidateImageFile(vm.ImageFile);
+        if (!string.IsNullOrWhiteSpace(imageError))
+            ModelState.AddModelError(nameof(vm.ImageFile), imageError);
 
         if (!ModelState.IsValid)
         {
@@ -242,6 +250,7 @@ public class QrCodeItemsController : Controller
         freshVm.Id = vm.Id;
         freshVm.Code = vm.Code;
         freshVm.Title = vm.Title;
+        freshVm.CurrentImageUrl = vm.CurrentImageUrl;
         freshVm.TargetType = vm.TargetType;
         freshVm.PoiId = vm.PoiId;
         freshVm.TourId = vm.TourId;

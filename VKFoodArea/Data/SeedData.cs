@@ -37,7 +37,7 @@ public static class SeedData
             TtsScriptJa = "あなたはオック・ヴーに近づいています。この店は豊富な貝料理と甘酸っぱいタマリンドソースで有名です。広い店内と親切なサービス、手頃な価格で、特に夜には多くの友人グループや家族連れで賑わいます。",
             TtsScriptDe = "Sie nähern sich dem Restaurant Oc Vu. Das Lokal ist bekannt für seine große Auswahl an Schneckengerichten und seine charakteristische süß-saure Tamarindensauce. Der großzügige Raum, der freundliche Service und die günstigen Preise machen es besonders abends zu einem beliebten Treffpunkt.",
             IsActive = true,
-            ImageUrl = "ocvu.png",
+            ImageUrl = "ocvu.jpg",
             QrCode = "poi:oc-vu"
         },
         new SeedPoiData

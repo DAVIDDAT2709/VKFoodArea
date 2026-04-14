@@ -1,8 +1,7 @@
 @model IEnumerable<VKFoodArea.Web.ViewModels.QrCodeItemListItemViewModel>
 @inject IConfiguration Configuration
 @{
-    ViewData["Title"] = "Quản lý QR code";
-    ViewData["Subtitle"] = "Điều phối toàn bộ mã QR cho POI và tour, đồng thời kiểm tra nhanh URL phát hành và target đang liên kết.";
+    ViewData["Title"] = "Mã QR";
     var items = Model.ToList();
     var activeCount = items.Count(x => x.IsActive);
     var coveredPoiCount = items.Count(x => string.Equals(x.TargetType, "poi", StringComparison.OrdinalIgnoreCase));
@@ -12,163 +11,106 @@
     var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
     var requestBaseUrl = $"{scheme}://{Context.Request.Host}".TrimEnd('/');
     var baseUrl = (string.IsNullOrWhiteSpace(configuredBaseUrl) ? requestBaseUrl : configuredBaseUrl).TrimEnd('/');
-    var isUsingConfiguredPublicUrl = !string.IsNullOrWhiteSpace(configuredBaseUrl);
-    var requestHost = Context.Request.Host.Host?.Trim().ToLowerInvariant() ?? string.Empty;
-    var isLocalRequestHost = requestHost == "localhost" || requestHost == "127.0.0.1";
 }
 
 <section class="page-header page-section">
-    <div class="headline-stack">
-        <span class="page-kicker">QR Routing</span>
-        <h2>Danh sách QR code</h2>
-        <p class="page-subtitle">Quản lý payload, target và URL công khai để đảm bảo app resolve đúng điểm đến hoặc tour.</p>
+    <div>
+        <h2>Mã QR</h2>
     </div>
     <div class="page-actions">
-        <a asp-action="Create" class="btn btn-primary">Tạo QR mới</a>
-    </div>
-</section>
-
-<section class="card-surface page-section card-surface--accent">
-    <div class="section-heading">
-        <div class="headline-stack">
-            <span class="section-kicker">Publishing</span>
-            <h2>Hướng dẫn demo QR</h2>
-            <p class="section-caption">Dùng khu vực này để kiểm tra nhanh base URL, payload mẫu và cách app tiêu thụ QR thực tế.</p>
-        </div>
-        <span class="soft-pill soft-pill--neutral">Base URL: @baseUrl</span>
-    </div>
-
-    <div class="stack-gap">
-        <p class="text-muted">
-            Với luồng demo hiện tại, người dùng chỉ cần mở app, vào màn hình quét QR và quét payload tương ứng để nghe thuyết minh ngay.
-        </p>
-        <p class="text-muted">
-            Nếu App chạy trên điện thoại thật còn CMS chạy trên máy tính, hãy nhập IP LAN hoặc URL ngrok của web vào phần cấu hình base URL trong app trước khi quét.
-        </p>
-    </div>
-
-    @if (isUsingConfiguredPublicUrl)
-    {
-        <div class="alert alert-success mt-3">
-            Public QR base URL đang dùng: <code>@baseUrl</code>
-        </div>
-    }
-    else if (isLocalRequestHost)
-    {
-        <div class="alert alert-warning mt-3">
-            Bạn đang mở CMS bằng <code>@requestBaseUrl</code>, nên QR URL sẽ ra local nếu chưa cấu hình
-            <code>PublicBaseUrl</code> trong <code>appsettings.Development.json</code>.
-        </div>
-    }
-
-    <div class="row g-3 mt-1">
-        <div class="col-md-6">
-            <label class="form-label">API test</label>
-            <input class="form-control font-monospace" readonly
-                   value="@($"{baseUrl}/api/resolve-qr?code=poi:khanh-hoi-01")" />
-            <div class="form-text">Thay sample code bằng mã QR thực tế để test nhanh trên browser.</div>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">QR URL public</label>
-            <input class="form-control font-monospace" readonly value="@($"{baseUrl}/qr/poi:khanh-hoi-01")" />
-            <div class="form-text">App có thể đọc trực tiếp token ngắn hoặc URL public này.</div>
-        </div>
+        <a asp-action="Create" class="btn btn-primary">Tạo mã QR</a>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
-        <span class="metric-card__label">Tổng QR</span>
+        <span class="metric-card__label">Tổng mã</span>
         <strong class="metric-card__value">@items.Count</strong>
-        <span class="metric-card__meta">Số lượng payload hiện đang được CMS lưu trữ.</span>
     </article>
     <article class="metric-card metric-card--green">
-        <span class="metric-card__label">QR hoạt động</span>
+        <span class="metric-card__label">Đang hoạt động</span>
         <strong class="metric-card__value">@activeCount</strong>
-        <span class="metric-card__meta">Các mã có thể resolve được trên app vào lúc này.</span>
     </article>
     <article class="metric-card metric-card--orange">
-        <span class="metric-card__label">Target POI</span>
+        <span class="metric-card__label">Liên kết POI</span>
         <strong class="metric-card__value">@coveredPoiCount</strong>
-        <span class="metric-card__meta">Số QR đang trỏ trực tiếp vào điểm POI.</span>
     </article>
     <article class="metric-card metric-card--red">
-        <span class="metric-card__label">Target tour</span>
+        <span class="metric-card__label">Liên kết Tour</span>
         <strong class="metric-card__value">@coveredTourCount</strong>
-        <span class="metric-card__meta">Số QR đang dùng để khởi động các tour dẫn hướng.</span>
     </article>
 </section>
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <div class="headline-stack">
-            <span class="section-kicker">Inventory</span>
-            <h2>QR hiện có</h2>
-            <p class="section-caption">Kiểm tra đồng thời payload demo, target liên kết và tình trạng phát hành của từng mã.</p>
-        </div>
+        <h2>Kho mã QR</h2>
     </div>
 
     @if (!items.Any())
     {
         <div class="empty-state">
-            <p>Chưa có dữ liệu QR.</p>
+            <p>Chưa có mã QR.</p>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table data-table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Payload demo</th>
-                        <th>Mã QR</th>
-                        <th>Tiêu đề</th>
-                        <th>Target</th>
-                        <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>
-                                <div class="table-meta">my.sepay text</div>
-                                <code>@item.Code</code>
-                                <div class="table-meta mt-2">URL public</div>
-                                <code>@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")</code>
-                            </td>
-                            <td class="mono">@item.Code</td>
-                            <td>
-                                <div class="table-title">@item.Title</div>
-                            </td>
-                            <td>
-                                <div class="table-title">@item.TargetName</div>
-                                <div class="table-meta">@item.TargetType.ToUpperInvariant() #@item.TargetId</div>
-                            </td>
-                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>
-                                @if (item.IsActive)
-                                {
-                                    <span class="status-pill status-pill--success">Đang hoạt động</span>
-                                }
-                                else
-                                {
-                                    <span class="status-pill status-pill--muted">Đang ẩn</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="table-actions justify-content-end">
-                                    <a asp-action="Edit" asp-route-id="@item.Id"
-                                       class="btn btn-outline-secondary btn-sm">Sửa</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="inventory-grid">
+            @foreach (var item in items)
+            {
+                <article class="inventory-card qr-card">
+                    <div class="inventory-card__media">
+                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" alt="Mã QR @item.Title" />
+                        }
+                        else
+                        {
+                            <div class="inventory-card__placeholder">QR</div>
+                        }
+                    </div>
+
+                    <div class="inventory-card__body">
+                        <div class="inventory-card__header">
+                            <div>
+                                <div class="inventory-card__title">@item.Title</div>
+                                <div class="inventory-card__meta">@item.TargetName</div>
+                            </div>
+                            @if (item.IsActive)
+                            {
+                                <span class="status-pill status-pill--success">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-pill--muted">Đang ẩn</span>
+                            }
+                        </div>
+
+                        <div class="inventory-card__stats">
+                            <div class="inventory-stat">
+                                <strong>Mã</strong>
+                                <span class="mono">@item.Code</span>
+                            </div>
+                            <div class="inventory-stat">
+                                <strong>Liên kết mở app</strong>
+                                <span class="mono">@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")</span>
+                            </div>
+                            <div class="inventory-stat">
+                                <strong>Đích đến</strong>
+                                <span>@item.TargetType.ToUpperInvariant() #@item.TargetId</span>
+                            </div>
+                            <div class="inventory-stat">
+                                <strong>Ngày tạo</strong>
+                                <span>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                        </div>
+
+                        <div class="inventory-card__actions">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
+                        </div>
+                    </div>
+                </article>
+            }
         </div>
     }
 </section>

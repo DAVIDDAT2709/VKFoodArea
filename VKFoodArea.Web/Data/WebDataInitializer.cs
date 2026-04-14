@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 using VKFoodArea.Data;
@@ -8,12 +9,13 @@ namespace VKFoodArea.Web.Data;
 
 public static class WebDataInitializer
 {
-    public static async Task InitializeAsync(AppDbContext db, bool seedDevelopmentAdmin)
+    public static async Task InitializeAsync(AppDbContext db, IWebHostEnvironment environment, bool seedDevelopmentAdmin)
     {
         await db.Database.MigrateAsync();
         await EnsureAdminUsersTableAsync(db);
         await EnsureNarrationHistoryUserKeyColumnAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
+        await EnsureQrCodeImageColumnAsync(db);
         await SyncPoiContentTablesAsync(db);
         await SeedDefaultAdminAsync(db, seedDevelopmentAdmin);
 
@@ -21,6 +23,7 @@ public static class WebDataInitializer
         {
             db.Pois.AddRange(SeedData.Pois.Select(MapPoi));
             await db.SaveChangesAsync();
+            await EnsurePoiImageUrlsAsync(db, environment);
             await SyncPoiContentTablesAsync(db);
             return;
         }
@@ -33,6 +36,7 @@ public static class WebDataInitializer
             await ImportMissingSeedPoisAsync(db);
         }
 
+        await EnsurePoiImageUrlsAsync(db, environment);
         await SyncPoiContentTablesAsync(db);
     }
 
@@ -107,11 +111,126 @@ public static class WebDataInitializer
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN AudioFileJa TEXT NOT NULL DEFAULT '';");
     }
 
+    private static async Task EnsureQrCodeImageColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "QrCodeItems", "ImageUrl"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE QrCodeItems ADD COLUMN ImageUrl TEXT NOT NULL DEFAULT '';");
+    }
+
+    private static async Task EnsurePoiImageUrlsAsync(AppDbContext db, IWebHostEnvironment environment)
+    {
+        var webRootPath = environment.WebRootPath ?? Path.Combine(environment.ContentRootPath, "wwwroot");
+        var webImagesDirectory = Path.Combine(webRootPath, "uploads", "poi-images");
+        var appImagesDirectory = Path.GetFullPath(Path.Combine(
+            environment.ContentRootPath,
+            "..",
+            "VKFoodArea",
+            "Resources",
+            "Images"));
+
+        Directory.CreateDirectory(webImagesDirectory);
+
+        var pois = await db.Pois.ToListAsync();
+        var hasChanges = false;
+
+        foreach (var poi in pois)
+        {
+            var resolvedImageUrl = await ResolvePoiImageUrlAsync(
+                poi.ImageUrl,
+                webImagesDirectory,
+                appImagesDirectory);
+
+            if (string.Equals(poi.ImageUrl, resolvedImageUrl, StringComparison.Ordinal))
+                continue;
+
+            poi.ImageUrl = resolvedImageUrl;
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+            await db.SaveChangesAsync();
+    }
+
+    private static async Task<string> ResolvePoiImageUrlAsync(
+        string? imageUrl,
+        string webImagesDirectory,
+        string appImagesDirectory)
+    {
+        var normalized = (imageUrl ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return string.Empty;
+
+        if (Uri.TryCreate(normalized, UriKind.Absolute, out _))
+            return normalized;
+
+        if (normalized.StartsWith("/", StringComparison.Ordinal))
+            return normalized;
+
+        var webRelativePath = normalized.Replace('\\', '/').TrimStart('/');
+        if (webRelativePath.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return $"/{webRelativePath}";
+
+        var fileName = await EnsureImageFileAvailableAsync(normalized, webImagesDirectory, appImagesDirectory);
+        return string.IsNullOrWhiteSpace(fileName)
+            ? normalized
+            : $"/uploads/poi-images/{fileName}";
+    }
+
+    private static async Task<string> EnsureImageFileAvailableAsync(
+        string fileReference,
+        string webImagesDirectory,
+        string appImagesDirectory)
+    {
+        var normalizedName = Path.GetFileName(fileReference);
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            return string.Empty;
+
+        var webFilePath = FindImageByFileName(webImagesDirectory, normalizedName);
+        if (!string.IsNullOrWhiteSpace(webFilePath))
+            return Path.GetFileName(webFilePath);
+
+        var appFilePath = FindImageByFileName(appImagesDirectory, normalizedName);
+        if (string.IsNullOrWhiteSpace(appFilePath))
+            return string.Empty;
+
+        var destinationPath = Path.Combine(webImagesDirectory, Path.GetFileName(appFilePath));
+        if (!File.Exists(destinationPath))
+        {
+            await using var sourceStream = File.OpenRead(appFilePath);
+            await using var destinationStream = File.Create(destinationPath);
+            await sourceStream.CopyToAsync(destinationStream);
+        }
+
+        return Path.GetFileName(destinationPath);
+    }
+
+    private static string? FindImageByFileName(string directory, string fileName)
+    {
+        if (!Directory.Exists(directory))
+            return null;
+
+        var exactPath = Path.Combine(directory, fileName);
+        if (File.Exists(exactPath))
+            return exactPath;
+
+        var requestedStem = Path.GetFileNameWithoutExtension(fileName);
+        return Directory.GetFiles(directory)
+            .FirstOrDefault(path =>
+                string.Equals(
+                    Path.GetFileNameWithoutExtension(path),
+                    requestedStem,
+                    StringComparison.OrdinalIgnoreCase));
+    }
+
     private static async Task SyncPoiContentTablesAsync(AppDbContext db)
     {
         var pois = await db.Pois
             .Include(x => x.Translations)
             .Include(x => x.AudioAssets)
+            .AsSplitQuery()
             .ToListAsync();
 
         foreach (var poi in pois)

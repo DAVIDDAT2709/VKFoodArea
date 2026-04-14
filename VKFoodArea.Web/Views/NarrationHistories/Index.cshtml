@@ -1,34 +1,12 @@
-@model IEnumerable<VKFoodArea.Web.Models.NarrationHistory>
+@model VKFoodArea.Web.ViewModels.NarrationHistoryIndexViewModel
 @{
     ViewData["Title"] = "Lịch sử nghe";
-    ViewData["Subtitle"] = "Theo dõi lượt phát, nguồn kích hoạt và hoạt động nghe gần nhất để kiểm tra trải nghiệm thực tế trên app.";
-    var currentSource = (ViewBag.CurrentSource as string ?? string.Empty).Trim().ToLowerInvariant();
-    var items = Model.ToList();
-    var todayCount = items.Count(x => x.PlayedAt >= DateTime.Today);
-    var gpsCount = items.Count(x =>
-        string.Equals(x.TriggerSource, "gps", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(x.TriggerSource, "auto", StringComparison.OrdinalIgnoreCase));
-    var qrCount = items.Count(x => string.Equals(x.TriggerSource, "qr", StringComparison.OrdinalIgnoreCase));
-    var topPois = items
-        .GroupBy(x => x.PoiId)
-        .Select(x => new
-        {
-            PoiId = x.Key,
-            PoiName = x.OrderByDescending(item => item.PlayedAt).First().PoiName,
-            Count = x.Count()
-        })
-        .OrderByDescending(x => x.Count)
-        .ThenBy(x => x.PoiName)
-        .Take(4)
-        .ToList();
-    var latestItemId = items.FirstOrDefault()?.Id ?? 0;
+    var items = Model.Items;
 }
 
 <section class="page-header page-section">
-    <div class="headline-stack">
-        <span class="page-kicker">Playback Logs</span>
+    <div>
         <h2>Lịch sử nghe</h2>
-        <p class="page-subtitle">Theo dõi dữ liệu phát theo thời gian thực để đối chiếu nhanh giữa app, QR và nội dung đang xuất bản.</p>
     </div>
 </section>
 
@@ -36,62 +14,81 @@
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng lượt nghe</span>
         <strong class="metric-card__value">@items.Count</strong>
-        <span class="metric-card__meta">Tổng số lượt phát hiện có trong tập dữ liệu đang xem.</span>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Hôm nay</span>
-        <strong class="metric-card__value">@todayCount</strong>
-        <span class="metric-card__meta">Mức sử dụng mới nhất để kiểm tra nhịp vận hành trong ngày.</span>
+        <strong class="metric-card__value">@Model.TodayCount</strong>
     </article>
     <article class="metric-card metric-card--orange">
         <span class="metric-card__label">GPS</span>
-        <strong class="metric-card__value">@gpsCount</strong>
-        <span class="metric-card__meta">Số lượt phát tự động từ vị trí hoặc geofence.</span>
+        <strong class="metric-card__value">@Model.GpsCount</strong>
     </article>
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">QR</span>
-        <strong class="metric-card__value">@qrCount</strong>
-        <span class="metric-card__meta">Số lượt phát đến từ kênh quét QR tại điểm dừng.</span>
+        <strong class="metric-card__value">@Model.QrCount</strong>
     </article>
 </section>
 
-<section class="page-grid page-section">
-    <article class="card-surface card-surface--accent">
-        <div class="section-heading">
-            <div class="headline-stack">
-                <span class="section-kicker">Filter</span>
-                <h2>Bộ lọc dữ liệu</h2>
-                <p class="section-caption">Khoanh vùng nhanh theo nguồn phát để so sánh hành vi sử dụng.</p>
-            </div>
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <h2>Tìm kiếm nâng cao</h2>
+    </div>
+
+    <form method="get" class="search-grid">
+        <div class="search-grid__wide">
+            <label class="form-label" for="query">Tên quán</label>
+            <input id="query" name="query" class="form-control" value="@Model.Query" placeholder="Nhập tên quán hoặc POI" />
         </div>
+        <div>
+            <label class="form-label" for="fromDate">Từ ngày</label>
+            <input id="fromDate" name="fromDate" type="date" class="form-control" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label class="form-label" for="toDate">Đến ngày</label>
+            <input id="toDate" name="toDate" type="date" class="form-control" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label class="form-label" for="language">Ngôn ngữ</label>
+            <select id="language" name="language" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="vi" selected="@(Model.Language == "vi")">VI</option>
+                <option value="en" selected="@(Model.Language == "en")">EN</option>
+                <option value="zh" selected="@(Model.Language == "zh")">ZH</option>
+                <option value="ja" selected="@(Model.Language == "ja")">JA</option>
+                <option value="de" selected="@(Model.Language == "de")">DE</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="mode">Kiểu phát</label>
+            <select id="mode" name="mode" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="tts" selected="@(Model.Mode == "tts")">TTS</option>
+                <option value="audio" selected="@(Model.Mode == "audio")">Audio</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="source">Nguồn</label>
+            <select id="source" name="source" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="gps" selected="@(Model.Source == "gps")">GPS</option>
+                <option value="qr" selected="@(Model.Source == "qr")">QR</option>
+                <option value="manual" selected="@(Model.Source == "manual")">Thủ công</option>
+            </select>
+        </div>
+        <div class="search-actions">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+    </form>
+</section>
 
-        <form method="get" class="stack-gap">
-            <div>
-                <label class="form-label" for="source">Nguồn phát</label>
-                <select id="source" name="source" class="form-select">
-                    <option value="" selected="@(string.IsNullOrWhiteSpace(currentSource) ? "selected" : null)">Tất cả</option>
-                    <option value="manual" selected="@(currentSource == "manual" ? "selected" : null)">Thủ công</option>
-                    <option value="gps" selected="@(currentSource == "gps" ? "selected" : null)">GPS</option>
-                    <option value="qr" selected="@(currentSource == "qr" ? "selected" : null)">QR</option>
-                </select>
-            </div>
-            <div class="page-actions">
-                <button type="submit" class="btn btn-primary">Áp dụng</button>
-                <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
-            </div>
-        </form>
-    </article>
-
+<section class="dashboard-grid page-section">
     <article class="card-surface">
         <div class="section-heading">
-            <div class="headline-stack">
-                <span class="section-kicker">Ranking</span>
-                <h2>Top POI</h2>
-                <p class="section-caption">Các điểm đang được phát nhiều nhất trong phạm vi dữ liệu hiện tại.</p>
-            </div>
+            <h2>Điểm được nghe nhiều</h2>
         </div>
 
-        @if (!topPois.Any())
+        @if (!Model.TopPois.Any())
         {
             <div class="empty-state">
                 <p>Chưa có dữ liệu.</p>
@@ -100,12 +97,12 @@
         else
         {
             <div class="list-stack">
-                @foreach (var item in topPois)
+                @foreach (var item in Model.TopPois)
                 {
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
-                            <p>POI #@item.PoiId</p>
+                            <p>@item.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
                         </div>
                         <span class="soft-pill">@item.Count lượt</span>
                     </div>
@@ -113,15 +110,32 @@
             </div>
         }
     </article>
+
+    <article class="card-surface">
+        <div class="section-heading">
+            <h2>Nguồn ghi nhận</h2>
+        </div>
+
+        <div class="summary-list">
+            <div class="summary-row">
+                <span>GPS</span>
+                <strong>@Model.GpsCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>QR</span>
+                <strong>@Model.QrCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>Thủ công</span>
+                <strong>@Model.ManualCount</strong>
+            </div>
+        </div>
+    </article>
 </section>
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <div class="headline-stack">
-            <span class="section-kicker">Realtime</span>
-            <h2>Chi tiết lượt nghe</h2>
-            <p class="section-caption">Bảng phát sinh mới nhất để kiểm tra trạng thái live giữa app và web.</p>
-        </div>
+        <h2>Dữ liệu nghe</h2>
     </div>
 
     @if (!items.Any())
@@ -136,11 +150,12 @@
             <table class="table data-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>POI</th>
-                        <th>User</th>
+                        <th>Quán</th>
                         <th>Ngôn ngữ</th>
+                        <th>Kiểu phát</th>
                         <th>Nguồn</th>
-                        <th>Chế độ</th>
+                        <th>Thời lượng</th>
+                        <th>Người dùng</th>
                         <th>Thời gian</th>
                     </tr>
                 </thead>
@@ -152,10 +167,11 @@
                             <div class="table-title">@item.PoiName</div>
                             <div class="table-meta">#@item.PoiId</div>
                         </td>
-                        <td><span class="soft-pill">@(string.IsNullOrWhiteSpace(item.UserKey) ? "anonymous" : item.UserKey)</span></td>
                         <td><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
-                        <td><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
                         <td>@item.Mode.ToUpperInvariant()</td>
+                        <td><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
+                        <td>@(item.DurationSeconds.HasValue ? $"{item.DurationSeconds.Value}s" : "-")</td>
+                        <td><span class="soft-pill">@(string.IsNullOrWhiteSpace(item.UserKey) ? "Ẩn danh" : item.UserKey)</span></td>
                         <td>@item.PlayedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
                     </tr>
                 }
@@ -165,77 +181,9 @@
     }
 </section>
 
-@section Scripts {
-    <script>
-        (() => {
-            const header = document.querySelector(".page-header.page-section");
-            if (!header) {
-                return;
-            }
-
-            let statusEl = document.getElementById("history-live-status");
-            if (!statusEl) {
-                const actions = document.createElement("div");
-                actions.className = "page-actions";
-
-                statusEl = document.createElement("span");
-                statusEl.id = "history-live-status";
-                statusEl.className = "soft-pill soft-pill--neutral";
-                actions.appendChild(statusEl);
-                header.appendChild(actions);
-            }
-
-            const source = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(currentSource));
-            let lastItemId = @latestItemId;
-
-            const setStatus = (text) => {
-                statusEl.textContent = text;
-            };
-
-            const poll = async () => {
-                try {
-                    const query = new URLSearchParams({ top: "1" });
-                    if (source) {
-                        query.set("source", source);
-                    }
-
-                    const response = await fetch(`/api/narration-histories?${query.toString()}`, {
-                        cache: "no-store",
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error("fetch_failed");
-                    }
-
-                    const data = await response.json();
-                    const newestId = Array.isArray(data) && data.length > 0
-                        ? Number(data[0].id || 0)
-                        : 0;
-
-                    if (newestId !== lastItemId) {
-                        setStatus("Có lượt nghe mới, đang cập nhật...");
-                        window.location.reload();
-                        return;
-                    }
-
-                    setStatus("Đang theo dõi realtime App/Web");
-                } catch {
-                    setStatus("Mất kết nối realtime, đang giữ dữ liệu hiện tại");
-                }
-            };
-
-            setStatus("Đang theo dõi realtime App/Web");
-            window.setInterval(poll, 5000);
-        })();
-    </script>
-}
-
 @functions {
-    private static string MapSource(string source) =>
-        source?.Trim().ToLowerInvariant() switch
+    private static string MapSource(string source)
+        => source?.Trim().ToLowerInvariant() switch
         {
             "gps" => "GPS",
             "auto" => "GPS",

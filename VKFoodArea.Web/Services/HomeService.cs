@@ -27,9 +27,13 @@ public class HomeService : IHomeService
         var gpsNarrationCount = await _context.NarrationHistories.CountAsync(x =>
             x.TriggerSource == "gps" ||
             x.TriggerSource == "auto");
+        var durationQuery = _context.NarrationHistories
+            .AsNoTracking()
+            .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0);
+        var averageListenSampleCount = await durationQuery.CountAsync();
         var averageListenSeconds = await _context.NarrationHistories
             .AsNoTracking()
-            .Where(x => x.DurationSeconds.HasValue)
+            .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0)
             .Select(x => (double?)x.DurationSeconds!.Value)
             .AverageAsync() ?? 0;
 
@@ -37,7 +41,6 @@ public class HomeService : IHomeService
         {
             PoiCount = await _context.Pois.CountAsync(),
             ActivePoiCount = activePois.Count,
-            DefaultQrCount = activePois.Count(x => !string.IsNullOrWhiteSpace(x.QrCode)),
             ActiveQrCount = await _context.QrCodeItems.CountAsync(x => x.IsActive),
             NarrationHistoryCount = narrationHistoryCount,
             TodayNarrationCount = await _context.NarrationHistories.CountAsync(x => x.PlayedAt >= today),
@@ -45,9 +48,9 @@ public class HomeService : IHomeService
             GpsNarrationCount = gpsNarrationCount,
             QrNarrationCount = await _context.NarrationHistories.CountAsync(x => x.TriggerSource == "qr"),
             ManualNarrationCount = await _context.NarrationHistories.CountAsync(x => x.TriggerSource == "manual"),
-            MovementLogCount = await _context.UserMovementLogs.CountAsync(),
             ActiveTourCount = await _context.Tours.CountAsync(x => x.IsActive),
             AverageListenSeconds = averageListenSeconds,
+            AverageListenSampleCount = averageListenSampleCount,
             RecentNarrations = await _context.NarrationHistories
                 .AsNoTracking()
                 .OrderByDescending(x => x.PlayedAt)
@@ -74,13 +77,11 @@ public class HomeService : IHomeService
                 value => value.ToUpperInvariant()),
             TopPois = await _context.NarrationHistories
                 .AsNoTracking()
-                .GroupBy(x => x.PoiId)
+                .GroupBy(x => new { x.PoiId, x.PoiName })
                 .Select(x => new TopPoiPerformanceViewModel
                 {
-                    PoiId = x.Key,
-                    PoiName = x.OrderByDescending(item => item.PlayedAt)
-                        .Select(item => item.PoiName)
-                        .FirstOrDefault() ?? string.Empty,
+                    PoiId = x.Key.PoiId,
+                    PoiName = x.Key.PoiName,
                     Count = x.Count(),
                     LatestPlayedAt = x.Max(item => item.PlayedAt)
                 })
@@ -142,8 +143,8 @@ public class HomeService : IHomeService
             "auto" => "GPS",
             "gps" => "GPS",
             "qr" => "QR",
-            "manual" => "MANUAL",
-            _ => "OTHER"
+            "manual" => "Thủ công",
+            _ => "Khác"
         };
     }
 }

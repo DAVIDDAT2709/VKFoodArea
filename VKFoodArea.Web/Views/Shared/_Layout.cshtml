@@ -1,7 +1,7 @@
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
-    var pageTitle = (string?)ViewData["Title"] ?? "Narration CMS";
-    var pageSubtitle = (string?)ViewData["Subtitle"] ?? "Điều hành nội dung, QR và trải nghiệm thuyết minh cho ứng dụng.";
+    var pageTitle = (string?)ViewData["Title"] ?? "VK Food Area";
+    var showDashboardTopbar = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase);
 
     string NavClass(string controller) =>
         string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
@@ -13,31 +13,25 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Narration CMS</title>
+    <title>@pageTitle - VK Food Area</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VKFoodArea.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <a class="skip-link" href="#main-content">Chuyển đến nội dung chính</a>
+    <a class="skip-link" href="#main-content">Đến nội dung chính</a>
 
     <div class="app-shell">
         <aside class="app-sidebar">
             <a class="brand-mark" asp-controller="Home" asp-action="Index">
-                <span class="brand-mark__badge">Control Room</span>
                 <strong class="brand-mark__title">VK Food Area</strong>
-                <strong class="brand-mark__meta">Narration CMS</strong>
-                <span class="brand-mark__status">Live workspace</span>
             </a>
 
-            <nav class="app-nav" aria-label="Điều hướng chính">
-                <span class="app-nav__section-label">Điều hướng chính</span>
-
+            <nav class="app-nav" aria-label="Menu quản trị">
                 <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">
                     <span class="app-nav__icon">DB</span>
                     <span class="app-nav__content">
                         <span class="app-nav__title">Tổng quan</span>
-                        <span class="app-nav__meta">Tình trạng hệ thống và vận hành</span>
                     </span>
                 </a>
 
@@ -45,7 +39,6 @@
                     <span class="app-nav__icon">POI</span>
                     <span class="app-nav__content">
                         <span class="app-nav__title">Điểm POI</span>
-                        <span class="app-nav__meta">Nội dung, GPS, audio và bản dịch</span>
                     </span>
                 </a>
 
@@ -53,31 +46,27 @@
                     <span class="app-nav__icon">TR</span>
                     <span class="app-nav__content">
                         <span class="app-nav__title">Tour</span>
-                        <span class="app-nav__meta">Điều phối lộ trình và điểm dừng</span>
                     </span>
                 </a>
 
                 <a class="@NavClass("Map")" asp-controller="Map" asp-action="Index">
                     <span class="app-nav__icon">MP</span>
                     <span class="app-nav__content">
-                        <span class="app-nav__title">Map POI</span>
-                        <span class="app-nav__meta">Kiểm tra vị trí và vùng kích hoạt</span>
+                        <span class="app-nav__title">Bản đồ POI</span>
                     </span>
                 </a>
 
                 <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">
                     <span class="app-nav__icon">QR</span>
                     <span class="app-nav__content">
-                        <span class="app-nav__title">QR code</span>
-                        <span class="app-nav__meta">Quản lý payload, target và kích hoạt</span>
+                        <span class="app-nav__title">Mã QR</span>
                     </span>
                 </a>
 
                 <a class="@NavClass("AdminUsers")" asp-controller="AdminUsers" asp-action="Index">
                     <span class="app-nav__icon">AD</span>
                     <span class="app-nav__content">
-                        <span class="app-nav__title">Admin users</span>
-                        <span class="app-nav__meta">Phân quyền và truy cập CMS</span>
+                        <span class="app-nav__title">Quản trị viên</span>
                     </span>
                 </a>
 
@@ -85,46 +74,40 @@
                     <span class="app-nav__icon">LG</span>
                     <span class="app-nav__content">
                         <span class="app-nav__title">Lịch sử nghe</span>
-                        <span class="app-nav__meta">Theo dõi lượt phát theo App và QR</span>
                     </span>
                 </a>
             </nav>
-
-            <section class="sidebar-note" aria-label="Trạng thái không gian làm việc">
-                <span class="soft-pill soft-pill--neutral">Workspace online</span>
-                <strong>Luồng quản trị đã sẵn sàng cho nội dung, QR và audio.</strong>
-                <p>Giữ sidebar này như bảng điều phối để kiểm tra nhanh các module quan trọng trong ngày.</p>
-            </section>
         </aside>
 
         <div class="app-main">
-            <header class="topbar">
-                <div class="topbar__content">
-                    <span class="topbar__eyebrow">VK Food Area CMS</span>
-                    <h1 class="topbar__title">@pageTitle</h1>
-                    <p class="topbar__subtitle">@pageSubtitle</p>
-                </div>
+            @if (showDashboardTopbar)
+            {
+                <header class="topbar">
+                    <div class="topbar__content">
+                        <h1 class="topbar__title">@pageTitle</h1>
+                    </div>
 
-                <div class="topbar__actions">
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
-                            <span class="soft-pill soft-pill--neutral">@User.Identity.Name</span>
-                            <button type="submit" class="btn btn-outline-secondary">Dang xuat</button>
-                        </form>
-                    }
-                    <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Them POI</a>
-                    <a asp-controller="Tours" asp-action="Create" class="btn btn-outline-secondary">Them tour</a>
-                    <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-secondary">Them QR</a>
-                </div>
-            </header>
+                    <div class="topbar__actions">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                                <span class="soft-pill soft-pill--neutral">@User.Identity.Name</span>
+                                <button type="submit" class="btn btn-outline-secondary">Đăng xuất</button>
+                            </form>
+                        }
+                        <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Thêm POI</a>
+                        <a asp-controller="Tours" asp-action="Create" class="btn btn-outline-secondary">Thêm Tour</a>
+                        <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-secondary">Thêm QR</a>
+                    </div>
+                </header>
+            }
 
             <div class="page-wrap">
                 @if (TempData["SuccessMessage"] is string message)
                 {
                     <div class="alert alert-success alert-dismissible fade show page-section" role="alert">
                         @message
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dong"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                     </div>
                 }
 
@@ -132,7 +115,7 @@
                 {
                     <div class="alert alert-danger alert-dismissible fade show page-section" role="alert">
                         @errorMessage
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dong"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                     </div>
                 }
 

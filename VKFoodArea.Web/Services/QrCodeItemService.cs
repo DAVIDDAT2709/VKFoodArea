@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Web.Data;
@@ -10,10 +11,14 @@ namespace VKFoodArea.Web.Services;
 public class QrCodeItemService : IQrCodeItemService
 {
     private readonly AppDbContext _context;
+    private readonly IQrCodeImageStorageService _qrCodeImageStorageService;
 
-    public QrCodeItemService(AppDbContext context)
+    public QrCodeItemService(
+        AppDbContext context,
+        IQrCodeImageStorageService qrCodeImageStorageService)
     {
         _context = context;
+        _qrCodeImageStorageService = qrCodeImageStorageService;
     }
 
     public async Task<List<QrCodeItemListItemViewModel>> GetAllAsync()
@@ -38,6 +43,7 @@ public class QrCodeItemService : IQrCodeItemService
                 Id = item.Id,
                 Code = item.Code,
                 Title = item.Title,
+                ImageUrl = item.ImageUrl,
                 TargetType = QrTargetTypes.Normalize(item.TargetType),
                 TargetId = item.TargetId,
                 TargetName = ResolveTargetName(item.TargetType, item.TargetId, poiLookup, tourLookup),
@@ -76,6 +82,7 @@ public class QrCodeItemService : IQrCodeItemService
             Id = entity.Id,
             Code = entity.Code,
             Title = entity.Title,
+            CurrentImageUrl = entity.ImageUrl,
             TargetType = targetType,
             PoiId = targetType == QrTargetTypes.Poi ? entity.TargetId : null,
             TourId = targetType == QrTargetTypes.Tour ? entity.TargetId : null,
@@ -112,6 +119,9 @@ public class QrCodeItemService : IQrCodeItemService
         };
     }
 
+    public string? ValidateImageFile(IFormFile? imageFile)
+        => _qrCodeImageStorageService.Validate(imageFile);
+
     public async Task<(bool Success, string? Error)> CreateAsync(QrCodeItemFormViewModel vm)
     {
         var target = await ResolveTargetAsync(vm);
@@ -122,10 +132,12 @@ public class QrCodeItemService : IQrCodeItemService
         if (!string.IsNullOrWhiteSpace(validationError))
             return (false, validationError);
 
+        var normalizedCode = QrCodeHelper.Normalize(vm.Code);
         var entity = new QrCodeItem
         {
-            Code = QrCodeHelper.Normalize(vm.Code),
+            Code = normalizedCode,
             Title = (vm.Title ?? string.Empty).Trim(),
+            ImageUrl = await SaveImageOrKeepExistingAsync(vm.ImageFile, null, normalizedCode),
             TargetType = target.TargetType,
             TargetId = target.TargetId,
             IsActive = vm.IsActive
@@ -151,8 +163,10 @@ public class QrCodeItemService : IQrCodeItemService
         if (!string.IsNullOrWhiteSpace(validationError))
             return (false, validationError);
 
-        entity.Code = QrCodeHelper.Normalize(vm.Code);
+        var normalizedCode = QrCodeHelper.Normalize(vm.Code);
+        entity.Code = normalizedCode;
         entity.Title = (vm.Title ?? string.Empty).Trim();
+        entity.ImageUrl = await SaveImageOrKeepExistingAsync(vm.ImageFile, entity.ImageUrl, normalizedCode);
         entity.TargetType = target.TargetType;
         entity.TargetId = target.TargetId;
         entity.IsActive = vm.IsActive;
@@ -188,7 +202,7 @@ public class QrCodeItemService : IQrCodeItemService
             return "Loại nội dung QR không hợp lệ.";
 
         if (targetId <= 0)
-            return "Nội dung đích không hợp lệ.";
+            return "Đích đến không hợp lệ.";
 
         if (vm.IsActive && !isTargetActive)
             return "QR đang hoạt động phải liên kết với nội dung đang hoạt động.";
@@ -208,7 +222,7 @@ public class QrCodeItemService : IQrCodeItemService
                 x.QrCode.ToLower() == code);
 
         if (existsInPois)
-            return "Mã QR trùng với mã QR mặc định của một POI.";
+            return "Mã QR đang trùng với mã QR mặc định của một POI cũ.";
 
         return null;
     }
@@ -248,7 +262,7 @@ public class QrCodeItemService : IQrCodeItemService
         }
 
         if (!vm.PoiId.HasValue || vm.PoiId.Value <= 0)
-            return (false, QrTargetTypes.Poi, 0, false, "Vui lòng chọn POI.");
+            return (false, QrTargetTypes.Poi, 0, false, "Vui lòng chọn điểm POI.");
 
         var poi = await _context.Pois
             .AsNoTracking()
@@ -257,7 +271,7 @@ public class QrCodeItemService : IQrCodeItemService
             .FirstOrDefaultAsync();
 
         return poi is null
-            ? (false, QrTargetTypes.Poi, 0, false, "POI không tồn tại.")
+            ? (false, QrTargetTypes.Poi, 0, false, "Điểm POI không tồn tại.")
             : (true, QrTargetTypes.Poi, poi.Id, poi.IsActive, null);
     }
 
@@ -337,5 +351,16 @@ public class QrCodeItemService : IQrCodeItemService
         var normalizedTargetType = QrTargetTypes.Normalize(targetType);
         var lookup = normalizedTargetType == QrTargetTypes.Tour ? tourLookup : poiLookup;
         return lookup.TryGetValue(targetId, out var item) && item.IsActive;
+    }
+
+    private async Task<string> SaveImageOrKeepExistingAsync(
+        IFormFile? imageFile,
+        string? currentImageUrl,
+        string normalizedCode)
+    {
+        if (imageFile is null)
+            return (currentImageUrl ?? string.Empty).Trim();
+
+        return await _qrCodeImageStorageService.SaveAsync(imageFile, normalizedCode);
     }
 }

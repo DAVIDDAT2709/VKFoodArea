@@ -31,10 +31,6 @@ public class PoisController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PoiFormViewModel vm)
     {
-        var qrError = await _poiService.ValidateDefaultQrCodeAsync(null, vm.QrCode);
-        if (!string.IsNullOrWhiteSpace(qrError))
-            ModelState.AddModelError(nameof(vm.QrCode), qrError);
-
         var imageError = _poiService.ValidateImageFile(vm.ImageFile);
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
@@ -65,10 +61,6 @@ public class PoisController : Controller
     {
         if (id != vm.Id)
             return NotFound();
-
-        var qrError = await _poiService.ValidateDefaultQrCodeAsync(id, vm.QrCode);
-        if (!string.IsNullOrWhiteSpace(qrError))
-            ModelState.AddModelError(nameof(vm.QrCode), qrError);
 
         var imageError = _poiService.ValidateImageFile(vm.ImageFile);
         if (!string.IsNullOrWhiteSpace(imageError))

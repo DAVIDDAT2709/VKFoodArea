@@ -24,60 +24,60 @@ public class PoiFormViewModel
     [StringLength(500)]
     public string? ImageUrl { get; set; }
 
-    [Display(Name = "Chọn ảnh từ máy tính")]
+    [Display(Name = "Ảnh từ máy tính")]
     public IFormFile? ImageFile { get; set; }
 
-    [Range(-90, 90, ErrorMessage = "Latitude không hợp lệ.")]
-    [Display(Name = "Latitude")]
+    [Range(-90, 90, ErrorMessage = "Vĩ độ không hợp lệ.")]
+    [Display(Name = "Vĩ độ")]
     public double Latitude { get; set; }
 
-    [Range(-180, 180, ErrorMessage = "Longitude không hợp lệ.")]
-    [Display(Name = "Longitude")]
+    [Range(-180, 180, ErrorMessage = "Kinh độ không hợp lệ.")]
+    [Display(Name = "Kinh độ")]
     public double Longitude { get; set; }
 
     [Range(1, 500, ErrorMessage = "Bán kính nên nằm trong khoảng 1-500m.")]
-    [Display(Name = "Bán kính geofence (m)")]
+    [Display(Name = "Bán kính (m)")]
     public double RadiusMeters { get; set; } = 30;
 
     [Range(1, 100, ErrorMessage = "Ưu tiên nên nằm trong khoảng 1-100.")]
-    [Display(Name = "Ưu tiên geofence")]
+    [Display(Name = "Ưu tiên")]
     public int Priority { get; set; } = 1;
 
     [Required(ErrorMessage = "Vui lòng nhập TTS tiếng Việt.")]
     [Display(Name = "TTS tiếng Việt")]
     public string TtsScriptVi { get; set; } = string.Empty;
 
-    [Display(Name = "TTS English")]
+    [Display(Name = "TTS tiếng Anh")]
     public string? TtsScriptEn { get; set; }
 
-    [Display(Name = "TTS 中文")]
+    [Display(Name = "TTS tiếng Trung")]
     public string? TtsScriptZh { get; set; }
 
-    [Display(Name = "TTS 日本語")]
+    [Display(Name = "TTS tiếng Nhật")]
     public string? TtsScriptJa { get; set; }
 
-    [Display(Name = "TTS Deutsch")]
+    [Display(Name = "TTS tiếng Đức")]
     public string? TtsScriptDe { get; set; }
 
     [StringLength(500)]
-    [Display(Name = "Audio tieng Viet")]
+    [Display(Name = "Audio tiếng Việt")]
     public string? AudioFileVi { get; set; }
 
     [StringLength(500)]
-    [Display(Name = "Audio English")]
+    [Display(Name = "Audio tiếng Anh")]
     public string? AudioFileEn { get; set; }
 
     [StringLength(500)]
-    [Display(Name = "Audio Japanese")]
+    [Display(Name = "Audio tiếng Nhật")]
     public string? AudioFileJa { get; set; }
 
-    [Display(Name = "Upload audio VI")]
+    [Display(Name = "Tải audio VI")]
     public IFormFile? AudioFileViUpload { get; set; }
 
-    [Display(Name = "Upload audio EN")]
+    [Display(Name = "Tải audio EN")]
     public IFormFile? AudioFileEnUpload { get; set; }
 
-    [Display(Name = "Upload audio JA")]
+    [Display(Name = "Tải audio JA")]
     public IFormFile? AudioFileJaUpload { get; set; }
 
     [StringLength(100)]

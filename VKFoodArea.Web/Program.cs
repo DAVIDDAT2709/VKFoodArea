@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using VKFoodArea.Web.Data;
 using VKFoodArea.Web.Services;
 
@@ -20,7 +21,10 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=vkfoodarea_web.db"));
+    options
+        .UseSqlite("Data Source=vkfoodarea_web.db")
+        .ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
@@ -29,6 +33,7 @@ builder.Services.AddScoped<ITourService, TourService>();
 builder.Services.AddScoped<IQrResolveService, QrResolveService>();
 builder.Services.AddScoped<IPoiImageStorageService, PoiImageStorageService>();
 builder.Services.AddScoped<IPoiAudioStorageService, PoiAudioStorageService>();
+builder.Services.AddScoped<IQrCodeImageStorageService, QrCodeImageStorageService>();
 builder.Services.AddScoped<IQrCodeItemService, QrCodeItemService>();
 builder.Services.AddScoped<INarrationHistoryService, NarrationHistoryService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
@@ -45,7 +50,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await WebDataInitializer.InitializeAsync(db, app.Environment.IsDevelopment());
+    await WebDataInitializer.InitializeAsync(db, app.Environment, app.Environment.IsDevelopment());
 }
 
 if (!app.Environment.IsDevelopment())

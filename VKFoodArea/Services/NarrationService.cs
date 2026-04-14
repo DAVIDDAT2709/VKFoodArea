@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Media;
 using Plugin.Maui.Audio;
+using System.Diagnostics;
 using System.Text;
 using VKFoodArea.Data;
 using VKFoodArea.Models;
@@ -106,6 +107,11 @@ public class NarrationService
 
         var requestCts = ReplaceRequestToken(ct);
         var requestToken = requestCts.Token;
+        var shouldPersistHistory = false;
+        var playedAtUtc = DateTime.UtcNow;
+        Stopwatch? playbackStopwatch = null;
+        string? playbackLanguage = null;
+        string? playbackMode = null;
 
         try
         {
@@ -141,7 +147,11 @@ public class NarrationService
             _uiState.SetPlayback(true, poi, playbackPlan.EffectiveMode, playbackPlan.SpokenLanguage);
             PublishPlaybackState(true, poi.Name, playbackPlan.EffectiveMode, playbackPlan.SpokenLanguage);
 
-            await LogNarrationAsync(poi, playbackPlan.SpokenLanguage, playbackPlan.EffectiveMode, triggerSource, requestToken);
+            shouldPersistHistory = true;
+            playedAtUtc = DateTime.UtcNow;
+            playbackStopwatch = Stopwatch.StartNew();
+            playbackLanguage = playbackPlan.SpokenLanguage;
+            playbackMode = playbackPlan.EffectiveMode;
             await PlayResolvedPlanAsync(playbackPlan, requestToken);
         }
         catch (OperationCanceledException)
@@ -157,6 +167,32 @@ public class NarrationService
             }
 
             requestCts.Dispose();
+
+            playbackStopwatch?.Stop();
+
+            if (shouldPersistHistory &&
+                !string.IsNullOrWhiteSpace(playbackLanguage) &&
+                !string.IsNullOrWhiteSpace(playbackMode))
+            {
+                try
+                {
+                    int? durationSeconds = playbackStopwatch is null
+                        ? null
+                        : Math.Max(1, (int)Math.Round(playbackStopwatch.Elapsed.TotalSeconds));
+
+                    await LogNarrationAsync(
+                        poi,
+                        playbackLanguage,
+                        playbackMode,
+                        triggerSource,
+                        playedAtUtc,
+                        durationSeconds,
+                        CancellationToken.None);
+                }
+                catch
+                {
+                }
+            }
 
             var shouldClearPlaybackState = false;
 
@@ -276,26 +312,28 @@ public class NarrationService
     }
 
     public bool IsManualPlaybackActive()
-{
-    lock (_requestLock)
     {
-        return _requestCts is not null &&
-               string.Equals(_currentTriggerSource, "manual", StringComparison.OrdinalIgnoreCase);
+        lock (_requestLock)
+        {
+            return _requestCts is not null &&
+                   string.Equals(_currentTriggerSource, "manual", StringComparison.OrdinalIgnoreCase);
+        }
     }
-}
 
     private async Task LogNarrationAsync(
         Poi poi,
         string language,
         string mode,
         string triggerSource,
+        DateTime playedAtUtc,
+        int? durationSeconds,
         CancellationToken ct)
     {
         _db.NarrationLogs.Add(new NarrationLog
         {
             UserId = _authService.GetCurrentUserId(),
             PoiId = poi.Id,
-            PlayedAt = DateTimeOffset.UtcNow,
+            PlayedAt = new DateTimeOffset(DateTime.SpecifyKind(playedAtUtc, DateTimeKind.Utc)),
             Mode = $"{mode}-{language}"
         });
 
@@ -309,6 +347,8 @@ public class NarrationService
             mode,
             _authService.GetCurrentUserSyncKey(),
             triggerSource,
+            playedAtUtc,
+            durationSeconds,
             ct);
     }
 

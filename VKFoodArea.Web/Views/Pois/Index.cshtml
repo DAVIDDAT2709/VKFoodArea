@@ -1,18 +1,18 @@
 @model IEnumerable<VKFoodArea.Web.Models.Poi>
 @{
-    ViewData["Title"] = "Quản lý POI";
-    ViewData["Subtitle"] = "Điều phối dữ liệu điểm đến, bán kính GPS, nội dung TTS và audio phát cho ứng dụng.";
+    ViewData["Title"] = "Điểm POI";
     var pois = Model.ToList();
     var activeCount = pois.Count(x => x.IsActive);
-    var defaultQrCount = pois.Count(x => !string.IsNullOrWhiteSpace(x.QrCode));
     var multilingualCount = pois.Count(x => GetLanguageCodes(x).Count >= 2);
+    var audioReadyCount = pois.Count(x =>
+        !string.IsNullOrWhiteSpace(x.AudioFileVi) ||
+        !string.IsNullOrWhiteSpace(x.AudioFileEn) ||
+        !string.IsNullOrWhiteSpace(x.AudioFileJa));
 }
 
 <section class="page-header page-section">
-    <div class="headline-stack">
-        <span class="page-kicker">POI Library</span>
-        <h2>Danh sách POI</h2>
-        <p class="page-subtitle">Quản lý toàn bộ điểm phát nội dung, kiểm tra GPS và rà soát nhanh phạm vi đa ngôn ngữ.</p>
+    <div>
+        <h2>Điểm POI</h2>
     </div>
     <div class="page-actions">
         <a asp-action="Create" class="btn btn-primary">Thêm địa điểm</a>
@@ -23,32 +23,24 @@
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng POI</span>
         <strong class="metric-card__value">@pois.Count</strong>
-        <span class="metric-card__meta">Toàn bộ điểm đang được quản lý trong CMS.</span>
     </article>
     <article class="metric-card metric-card--green">
-        <span class="metric-card__label">POI hoạt động</span>
+        <span class="metric-card__label">Đang hoạt động</span>
         <strong class="metric-card__value">@activeCount</strong>
-        <span class="metric-card__meta">Số điểm đang được app hiển thị và cho phép phát.</span>
     </article>
     <article class="metric-card metric-card--orange">
-        <span class="metric-card__label">POI có QR</span>
-        <strong class="metric-card__value">@defaultQrCount</strong>
-        <span class="metric-card__meta">Điểm đã gắn QR mặc định để phát nhanh tại chỗ.</span>
+        <span class="metric-card__label">Có audio</span>
+        <strong class="metric-card__value">@audioReadyCount</strong>
     </article>
     <article class="metric-card metric-card--red">
-        <span class="metric-card__label">POI đa ngôn ngữ</span>
+        <span class="metric-card__label">Đa ngôn ngữ</span>
         <strong class="metric-card__value">@multilingualCount</strong>
-        <span class="metric-card__meta">Điểm có từ hai ngôn ngữ TTS trở lên.</span>
     </article>
 </section>
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <div class="headline-stack">
-            <span class="section-kicker">Inventory</span>
-            <h2>POI hiện có</h2>
-            <p class="section-caption">Bảng điều hành nhanh để rà nội dung, tọa độ, QR và trạng thái phát của từng điểm.</p>
-        </div>
+        <h2>Danh sách POI</h2>
         <span class="soft-pill soft-pill--neutral">@activeCount / @pois.Count đang hoạt động</span>
     </div>
 
@@ -60,70 +52,32 @@
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table data-table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>POI</th>
-                        <th>GPS</th>
-                        <th>TTS tiếng Việt</th>
-                        <th>Nghe thử</th>
-                        <th>QR</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var poi in pois)
-                {
-                    var languages = GetLanguageCodes(poi);
-                    <tr>
-                        <td>
-                            <div class="table-title">@poi.Name</div>
-                            <div class="table-meta">@poi.Address</div>
-                            @if (!string.IsNullOrWhiteSpace(poi.PhoneNumber))
-                            {
-                                <div class="table-meta">SĐT: @poi.PhoneNumber</div>
-                            }
-                        </td>
-                        <td>
-                            <div class="mono">@poi.Latitude.ToString("0.######"), @poi.Longitude.ToString("0.######")</div>
-                            <div class="table-meta">Bán kính: @poi.RadiusMeters.ToString("0.#") m</div>
-                        </td>
-                        <td>
-                            <div class="truncate-text">@(string.IsNullOrWhiteSpace(poi.TtsScriptVi) ? "Chưa có nội dung." : poi.TtsScriptVi)</div>
-                            @if (languages.Any())
-                            {
-                                <div class="badge-cluster mt-2">
-                                    @foreach (var lang in languages)
-                                    {
-                                        <span class="lang-pill">@lang</span>
-                                    }
-                                </div>
-                            }
-                        </td>
-                        <td>
-                            <button type="button"
-                                    class="audio-preview-button"
-                                    data-audio="@VietnameseAudio(poi)"
-                                    data-text="@poi.TtsScriptVi"
-                                    data-title="@poi.Name"
-                                    aria-label="Nghe thử @poi.Name">
-                                <span class="audio-preview-button__icon" aria-hidden="true"></span>
-                                <span>Nghe</span>
-                            </button>
-                        </td>
-                        <td>
-                            @if (string.IsNullOrWhiteSpace(poi.QrCode))
-                            {
-                                <span class="status-pill status-pill--muted">Chưa có QR</span>
-                            }
-                            else
-                            {
-                                <div class="mono">@poi.QrCode</div>
-                            }
-                        </td>
-                        <td>
+        <div class="inventory-grid">
+            @foreach (var poi in pois)
+            {
+                var languages = GetLanguageCodes(poi);
+                <article class="inventory-card">
+                    <div class="inventory-card__media">
+                        @if (!string.IsNullOrWhiteSpace(poi.ImageUrl))
+                        {
+                            <img src="@ResolveImageUrl(poi.ImageUrl)" alt="@poi.Name" />
+                        }
+                        else
+                        {
+                            <div class="inventory-card__placeholder">POI</div>
+                        }
+                    </div>
+
+                    <div class="inventory-card__body">
+                        <div class="inventory-card__header">
+                            <div>
+                                <div class="inventory-card__title">@poi.Name</div>
+                                <div class="inventory-card__meta">@poi.Address</div>
+                                @if (!string.IsNullOrWhiteSpace(poi.PhoneNumber))
+                                {
+                                    <div class="inventory-card__meta">@poi.PhoneNumber</div>
+                                }
+                            </div>
                             @if (poi.IsActive)
                             {
                                 <span class="status-pill status-pill--success">Đang hoạt động</span>
@@ -132,17 +86,50 @@
                             {
                                 <span class="status-pill status-pill--muted">Đang ẩn</span>
                             }
-                        </td>
-                        <td>
-                            <div class="table-actions justify-content-end">
-                                <a asp-action="Edit" asp-route-id="@poi.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
-                                <a asp-action="Delete" asp-route-id="@poi.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
+                        </div>
+
+                        <div class="inventory-card__stats">
+                            <div class="inventory-stat">
+                                <strong>Tọa độ</strong>
+                                <span class="mono">@poi.Latitude.ToString("0.######"), @poi.Longitude.ToString("0.######")</span>
                             </div>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+                            <div class="inventory-stat">
+                                <strong>Bán kính</strong>
+                                <span>@poi.RadiusMeters.ToString("0.#") m</span>
+                            </div>
+                            <div class="inventory-stat">
+                                <strong>Ngôn ngữ</strong>
+                                <span>@(languages.Count == 0 ? "Chưa có" : string.Join(" · ", languages))</span>
+                            </div>
+                            <div class="inventory-stat">
+                                <strong>Ưu tiên</strong>
+                                <span>@poi.Priority</span>
+                            </div>
+                        </div>
+
+                        <div class="pill-cloud">
+                            @foreach (var lang in languages)
+                            {
+                                <span class="lang-pill">@lang</span>
+                            }
+                        </div>
+
+                        <div class="inventory-card__actions">
+                            <button type="button"
+                                    class="audio-preview-button"
+                                    data-audio="@VietnameseAudio(poi)"
+                                    data-text="@poi.TtsScriptVi"
+                                    data-title="@poi.Name"
+                                    aria-label="Nghe thử @poi.Name">
+                                <span class="audio-preview-button__icon" aria-hidden="true"></span>
+                                <span>Nghe thử</span>
+                            </button>
+                            <a asp-action="Edit" asp-route-id="@poi.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
+                            <a asp-action="Delete" asp-route-id="@poi.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
+                        </div>
+                    </div>
+                </article>
+            }
         </div>
     }
 </section>
@@ -163,6 +150,24 @@
 
     private static string VietnameseAudio(VKFoodArea.Web.Models.Poi poi)
         => string.IsNullOrWhiteSpace(poi.AudioFileVi) ? string.Empty : poi.AudioFileVi;
+
+    private static string ResolveImageUrl(string? imageUrl)
+    {
+        var normalized = (imageUrl ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return string.Empty;
+
+        if (Uri.TryCreate(normalized, UriKind.Absolute, out _))
+            return normalized;
+
+        if (normalized.StartsWith("/", StringComparison.Ordinal))
+            return normalized;
+
+        if (normalized.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return $"/{normalized.TrimStart('/')}";
+
+        return $"/uploads/poi-images/{System.IO.Path.GetFileName(normalized)}";
+    }
 }
 
 @section Scripts {

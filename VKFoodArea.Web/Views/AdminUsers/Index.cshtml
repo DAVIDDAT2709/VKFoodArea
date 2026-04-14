@@ -1,16 +1,13 @@
 @model IEnumerable<VKFoodArea.Web.Models.AdminUser>
 @{
-    ViewData["Title"] = "Quản lý admin";
-    ViewData["Subtitle"] = "Kiểm soát tài khoản quản trị, quyền truy cập và trạng thái đăng nhập của CMS.";
+    ViewData["Title"] = "Quản trị viên";
     var users = Model.ToList();
     var activeCount = users.Count(x => x.IsActive);
 }
 
 <section class="page-header page-section">
-    <div class="headline-stack">
-        <span class="page-kicker">Access Control</span>
-        <h2>Quản lý tài khoản CMS</h2>
-        <p class="page-subtitle">Rà soát nhanh toàn bộ tài khoản quản trị đang có quyền truy cập vào hệ thống.</p>
+    <div>
+        <h2>Quản trị viên</h2>
     </div>
     <div class="page-actions">
         <a asp-action="Create" class="btn btn-primary">Thêm admin</a>
@@ -21,17 +18,14 @@
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng admin</span>
         <strong class="metric-card__value">@users.Count</strong>
-        <span class="metric-card__meta">Số lượng tài khoản quản trị đang được cấu hình.</span>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Đang hoạt động</span>
         <strong class="metric-card__value">@activeCount</strong>
-        <span class="metric-card__meta">Các tài khoản hiện còn quyền đăng nhập CMS.</span>
     </article>
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">Đang khóa</span>
         <strong class="metric-card__value">@(users.Count - activeCount)</strong>
-        <span class="metric-card__meta">Tài khoản đã bị vô hiệu hóa để bảo toàn quyền truy cập.</span>
     </article>
 </section>
 
@@ -45,11 +39,7 @@
     else
     {
         <div class="section-heading">
-            <div class="headline-stack">
-                <span class="section-kicker">Directory</span>
-                <h2>Danh sách tài khoản</h2>
-                <p class="section-caption">Theo dõi vai trò, trạng thái và thời điểm đăng nhập gần nhất của từng admin.</p>
-            </div>
+            <h2>Danh sách tài khoản</h2>
         </div>
 
         <div class="table-responsive">
@@ -76,11 +66,11 @@
                         <td>
                             @if (item.IsActive)
                             {
-                                <span class="status-pill status-pill--success">Active</span>
+                                <span class="status-pill status-pill--success">Đang hoạt động</span>
                             }
                             else
                             {
-                                <span class="status-pill status-pill--muted">Locked</span>
+                                <span class="status-pill status-pill--muted">Đang khóa</span>
                             }
                         </td>
                         <td>@(item.LastLoginAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
