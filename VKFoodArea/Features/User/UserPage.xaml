@@ -33,7 +33,7 @@
                     <Label x:Name="FullNameLabel" FontSize="24" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="White" />
                     <Label x:Name="UsernameLabel" FontSize="13" TextColor="#E6FFFB" />
                 </VerticalStackLayout>
-                <Button Grid.Column="2" Text="⚙" Clicked="OnOpenProfileClicked" WidthRequest="40" HeightRequest="40" CornerRadius="20" BackgroundColor="#33FFFFFF" TextColor="White" />
+                <Button Grid.Column="2" Text="⚙" Clicked="OnOpenSettingsClicked" WidthRequest="40" HeightRequest="40" CornerRadius="20" BackgroundColor="#33FFFFFF" TextColor="White" />
             </Grid>
         </Border>
 
@@ -78,7 +78,7 @@
                     <VerticalStackLayout Spacing="12">
                         <Label x:Name="QuickActionsTitleLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
                         <Button x:Name="OpenSettingsButton" Clicked="OnOpenSettingsClicked" BackgroundColor="#129488" TextColor="White" CornerRadius="16" HeightRequest="48" FontAttributes="Bold" />
-                        <Button x:Name="LogoutButton" Clicked="OnLogoutClicked" BackgroundColor="#101415" TextColor="White" CornerRadius="16" HeightRequest="48" FontAttributes="Bold" />
+                        <Button x:Name="ChooseLanguageButton" Clicked="OnChooseLanguageClicked" BackgroundColor="#101415" TextColor="White" CornerRadius="16" HeightRequest="48" FontAttributes="Bold" />
                         <Label x:Name="FooterNoteLabel" FontSize="12" TextColor="#6A8781" />
                     </VerticalStackLayout>
                 </Border>

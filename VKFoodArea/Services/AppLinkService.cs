@@ -16,7 +16,6 @@ public class AppLinkService
     private readonly NarrationService _narrationService;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
-    private readonly AuthService _authService;
     private readonly AppRootNavigationService _rootNavigationService;
     private readonly TourSessionService _tourSessionService;
     private readonly IServiceProvider _serviceProvider;
@@ -30,7 +29,6 @@ public class AppLinkService
         NarrationService narrationService,
         AppTextService text,
         NarrationUiStateService narrationUiState,
-        AuthService authService,
         AppRootNavigationService rootNavigationService,
         TourSessionService tourSessionService,
         IServiceProvider serviceProvider)
@@ -40,7 +38,6 @@ public class AppLinkService
         _narrationService = narrationService;
         _text = text;
         _narrationUiState = narrationUiState;
-        _authService = authService;
         _rootNavigationService = rootNavigationService;
         _tourSessionService = tourSessionService;
         _serviceProvider = serviceProvider;
@@ -59,15 +56,9 @@ public class AppLinkService
 
     public async Task<bool> TryHandlePendingAsync(CancellationToken ct = default)
     {
-        if (_authService.CurrentUser is null)
-            return false;
-
         await _handleLock.WaitAsync(ct);
         try
         {
-            if (_authService.CurrentUser is null)
-                return false;
-
             Uri? pendingUri;
 
             lock (_pendingSync)

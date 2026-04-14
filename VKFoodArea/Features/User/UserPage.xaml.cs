@@ -1,8 +1,8 @@
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
-using VKFoodArea.Features.Auth;
 using VKFoodArea.Features.Home;
 using VKFoodArea.Features.Settings;
+using VKFoodArea.Features.Startup;
 using VKFoodArea.Models;
 using VKFoodArea.Services;
 
@@ -48,17 +48,17 @@ public partial class UserPage : ContentPage
         var currentLanguage = AppLanguageService.NormalizeLanguage(_languageService.CurrentLanguage);
         var currentMode = NormalizeNarrationMode(_settingsService.NarrationOutputMode);
         var isLoggedIn = user is not null;
-        var isActive = user?.IsActive ?? false;
+        var isActive = user?.IsActive ?? true;
 
         AvatarLabel.Text = BuildInitials(fullName);
         FullNameLabel.Text = fullName;
         UsernameLabel.Text = user is null
-            ? _text["User.NoAccount"]
+            ? _text["User.Guest"]
             : $"@{user.Username}";
 
         RoleBadgeLabel.Text = GetRoleDisplayLocalized(user?.Role);
         StatusBadgeLabel.Text = !isLoggedIn
-            ? _text["User.Guest"]
+            ? _text["User.Ready"]
             : isActive ? _text["User.Active"] : _text["User.Disabled"];
 
         CurrentLanguageValueLabel.Text = _text.GetLanguageDisplay(currentLanguage);
@@ -66,10 +66,10 @@ public partial class UserPage : ContentPage
         UserTypeValueLabel.Text = _text.GetUserTypeDisplay(_languageService.UserType);
         NarrationModeValueLabel.Text = _text.GetModeDisplay(currentMode);
 
-        UsernameValueLabel.Text = user?.Username ?? "--";
+        UsernameValueLabel.Text = user?.Username ?? _text["User.Guest"];
         RoleValueLabel.Text = GetRoleDisplayLocalized(user?.Role);
         StatusValueLabel.Text = !isLoggedIn
-            ? _text["User.NotLoggedIn"]
+            ? _text["User.Ready"]
             : isActive ? _text["User.Ready"] : _text["User.Locked"];
         FooterNoteLabel.Text = _text["User.FooterNote"];
     }
@@ -78,27 +78,6 @@ public partial class UserPage : ContentPage
     {
         var page = _serviceProvider.GetRequiredService<SettingsPage>();
         await Navigation.PushAsync(page);
-    }
-
-    private async void OnOpenProfileClicked(object sender, EventArgs e)
-    {
-        var page = _serviceProvider.GetRequiredService<AccountProfilePage>();
-        await Navigation.PushAsync(page);
-    }
-
-    private async void OnLogoutClicked(object sender, EventArgs e)
-    {
-        var confirmed = await DisplayAlertAsync(
-            _text["User.LogoutTitle"],
-            _text["User.LogoutMessage"],
-            _text["User.LogoutConfirm"],
-            _text["Common.Cancel"]);
-
-        if (!confirmed)
-            return;
-
-        _authService.Logout();
-        await _rootNavigationService.SetRootAsync<LoginPage>();
     }
 
     private async void OnGoHomeClicked(object sender, EventArgs e)
@@ -129,6 +108,12 @@ public partial class UserPage : ContentPage
     {
         var page = _serviceProvider.GetRequiredService<HistoryPage>();
         await Navigation.PushAsync(page);
+    }
+
+    private async void OnChooseLanguageClicked(object sender, EventArgs e)
+    {
+        _authService.Logout();
+        await _rootNavigationService.SetRootAsync<HomeEntryPage>();
     }
 
     private void OnUserClicked(object sender, EventArgs e)
@@ -216,7 +201,7 @@ public partial class UserPage : ContentPage
         StatusTitleLabel.Text = _text["User.Status"];
         QuickActionsTitleLabel.Text = _text["User.QuickActions"];
         OpenSettingsButton.Text = _text["User.SoundSettings"];
-        LogoutButton.Text = _text["User.Logout"];
+        ChooseLanguageButton.Text = _text["Settings.LanguagePickerTitle"];
         NavHomeButton.Text = _text["Nav.Home"];
         NavMapButton.Text = _text["Nav.Map"];
         NavHistoryButton.Text = _text["Nav.History"];
