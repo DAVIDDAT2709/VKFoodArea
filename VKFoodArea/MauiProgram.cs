@@ -65,6 +65,7 @@ public static class MauiProgram
         builder.Services.AddHttpClient<TourCatalogService>(ConfigureDemoHttpClient);
 
         builder.Services.AddTransient<NarrationService>();
+        builder.Services.AddTransient<TourNarrationService>();
         builder.Services.AddTransient<AccountService>();
         builder.Services.AddTransient<HistoryService>();
         builder.Services.AddTransient<PoiService>();

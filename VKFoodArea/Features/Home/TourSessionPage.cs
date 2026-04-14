@@ -8,6 +8,7 @@ public class TourSessionPage : ContentPage
 {
     private readonly TourSessionService _tourSessionService;
     private readonly NarrationService _narrationService;
+    private readonly TourNarrationService _tourNarrationService;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
 
@@ -16,6 +17,7 @@ public class TourSessionPage : ContentPage
     private readonly Label _statusLabel;
     private readonly Label _currentStopLabel;
     private readonly Label _currentStopNoteLabel;
+    private readonly Label _progressTitleLabel;
     private readonly VerticalStackLayout _completedStopsLayout;
     private readonly Button _openStopButton;
     private readonly Button _endTourButton;
@@ -23,33 +25,32 @@ public class TourSessionPage : ContentPage
     public TourSessionPage(
         TourSessionService tourSessionService,
         NarrationService narrationService,
+        TourNarrationService tourNarrationService,
         AppTextService text,
         NarrationUiStateService narrationUiState)
     {
         _tourSessionService = tourSessionService;
         _narrationService = narrationService;
+        _tourNarrationService = tourNarrationService;
         _text = text;
         _narrationUiState = narrationUiState;
-
-        Title = "Tour";
 
         _titleLabel = new Label { FontSize = 24, FontAttributes = FontAttributes.Bold };
         _descriptionLabel = new Label { FontSize = 14, Opacity = 0.8 };
         _statusLabel = new Label { FontSize = 14, FontAttributes = FontAttributes.Bold };
         _currentStopLabel = new Label { FontSize = 18, FontAttributes = FontAttributes.Bold };
         _currentStopNoteLabel = new Label { FontSize = 14, Opacity = 0.75 };
+        _progressTitleLabel = new Label { FontSize = 18, FontAttributes = FontAttributes.Bold };
         _completedStopsLayout = new VerticalStackLayout { Spacing = 8 };
 
         _openStopButton = new Button
         {
-            Text = "Mo stop hien tai",
             HorizontalOptions = LayoutOptions.Fill
         };
         _openStopButton.Clicked += OnOpenCurrentStopClicked;
 
         _endTourButton = new Button
         {
-            Text = "Ket thuc tour",
             HorizontalOptions = LayoutOptions.Fill,
             BackgroundColor = Colors.Transparent,
             BorderColor = Color.FromArgb("#c0392b"),
@@ -86,12 +87,7 @@ public class TourSessionPage : ContentPage
                             }
                         }
                     },
-                    new Label
-                    {
-                        Text = "Tien do tour",
-                        FontSize = 18,
-                        FontAttributes = FontAttributes.Bold
-                    },
+                    _progressTitleLabel,
                     _completedStopsLayout
                 }
             }
@@ -102,7 +98,9 @@ public class TourSessionPage : ContentPage
     {
         base.OnAppearing();
         _tourSessionService.StateChanged += OnTourSessionChanged;
+        ApplyLocalizedText();
         RefreshSessionUi();
+        _ = TryPlayIntroAsync();
     }
 
     protected override void OnDisappearing()
@@ -137,13 +135,45 @@ public class TourSessionPage : ContentPage
         await Navigation.PopAsync();
     }
 
+    private async Task TryPlayIntroAsync()
+    {
+        var session = _tourSessionService.GetCurrentSession();
+        var currentLanguage = _tourNarrationService.CurrentLanguage;
+
+        if (session is null ||
+            (session.IntroPlayedAt.HasValue &&
+             string.Equals(
+                 session.IntroPlayedLanguage,
+                 currentLanguage,
+                 StringComparison.OrdinalIgnoreCase)))
+            return;
+
+        _tourSessionService.MarkIntroPlayed(currentLanguage);
+
+        try
+        {
+            await _tourNarrationService.PlayIntroAsync(session);
+        }
+        catch
+        {
+        }
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["Tour.PageTitle"];
+        _openStopButton.Text = _text["Tour.OpenCurrentStop"];
+        _endTourButton.Text = _text["Tour.EndTour"];
+        _progressTitleLabel.Text = _text["Tour.SessionProgressTitle"];
+    }
+
     private void RefreshSessionUi()
     {
         var session = _tourSessionService.GetCurrentSession();
         if (session is null)
         {
-            _titleLabel.Text = "Khong co tour dang chay";
-            _descriptionLabel.Text = "Quet QR tour de bat dau.";
+            _titleLabel.Text = _text["Tour.SessionEmptyTitle"];
+            _descriptionLabel.Text = _text["Tour.SessionEmptySubtitle"];
             _statusLabel.Text = string.Empty;
             _currentStopLabel.Text = string.Empty;
             _currentStopNoteLabel.Text = string.Empty;
@@ -154,11 +184,11 @@ public class TourSessionPage : ContentPage
 
         var currentStop = session.CurrentStop;
         _titleLabel.Text = session.TourName;
-        _descriptionLabel.Text = session.TourDescription;
+        _descriptionLabel.Text = _tourNarrationService.ResolveDisplaySummary(session);
         _statusLabel.Text = session.IsFinished
-            ? $"Da hoan thanh tour luc {session.StartedAt.LocalDateTime:dd/MM HH:mm}"
-            : $"Dang chay tu {session.StartedAt.LocalDateTime:dd/MM HH:mm}";
-        _currentStopLabel.Text = currentStop?.Poi?.Name ?? "Da hoan thanh tat ca stop";
+            ? _text.Format("Tour.CompletedAt", session.StartedAt.LocalDateTime)
+            : _text.Format("Tour.StartedAt", session.StartedAt.LocalDateTime);
+        _currentStopLabel.Text = currentStop?.Poi?.Name ?? _text["Tour.AllStopsCompleted"];
         _currentStopNoteLabel.Text = currentStop?.Note ?? string.Empty;
         _openStopButton.IsVisible = currentStop?.Poi is not null;
 
@@ -186,7 +216,13 @@ public class TourSessionPage : ContentPage
                         },
                         new Label
                         {
-                            Text = string.IsNullOrWhiteSpace(stop.Note) ? (isDone ? "Da hoan thanh" : isCurrent ? "Stop hien tai" : "Dang cho") : stop.Note,
+                            Text = string.IsNullOrWhiteSpace(stop.Note)
+                                ? isDone
+                                    ? _text["Tour.StatusCompleted"]
+                                    : isCurrent
+                                        ? _text["Tour.StatusCurrentStop"]
+                                        : _text["Tour.StatusWaiting"]
+                                : stop.Note,
                             FontSize = 13,
                             Opacity = 0.8
                         }

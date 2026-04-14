@@ -711,18 +711,18 @@ public class HomeViewModel : INotifyPropertyChanged
             : $"{primary} | {secondary}";
     }
 
-    private static string? BuildTourStatus(TourSession? session)
+    private string? BuildTourStatus(TourSession? session)
     {
         if (session is null)
             return null;
 
         if (session.IsFinished)
-            return $"Tour da xong: {session.TourName}";
+            return _text.Format("Tour.HomeFinished", session.TourName);
 
         if (session.CurrentStop?.Poi is { } currentPoi)
-            return $"Tour dang chay: {session.TourName} -> {currentPoi.Name}";
+            return _text.Format("Tour.HomeRouting", session.TourName, currentPoi.Name);
 
-        return $"Tour dang chay: {session.TourName}";
+        return _text.Format("Tour.HomeRunning", session.TourName);
     }
 
     private string BuildStatusText(string detail)

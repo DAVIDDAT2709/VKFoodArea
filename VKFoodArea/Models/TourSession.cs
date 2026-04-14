@@ -5,7 +5,14 @@ public class TourSession
     public int TourId { get; set; }
     public string TourName { get; set; } = string.Empty;
     public string TourDescription { get; set; } = string.Empty;
+    public string TtsScriptVi { get; set; } = string.Empty;
+    public string TtsScriptEn { get; set; } = string.Empty;
+    public string TtsScriptZh { get; set; } = string.Empty;
+    public string TtsScriptJa { get; set; } = string.Empty;
+    public string TtsScriptDe { get; set; } = string.Empty;
     public DateTimeOffset StartedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? IntroPlayedAt { get; set; }
+    public string IntroPlayedLanguage { get; set; } = string.Empty;
     public bool IsFinished { get; set; }
     public int CurrentStopIndex { get; set; }
     public List<int> CompletedStopIds { get; set; } = new();

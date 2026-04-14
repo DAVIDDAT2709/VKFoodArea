@@ -446,7 +446,7 @@ public partial class HomeDesignPage : ContentPage
         PoiSearchBar.Placeholder = _text["Home.SearchPlaceholder"];
         SearchEmptyStateLabel.Text = _text["Home.SearchEmptyMessage"];
         QrButton.Text = _text["Home.QrButton"];
-        TourButton.Text = "TOUR";
+        TourButton.Text = _text["Home.TourButton"];
         FeaturedFoodsTitleLabel.Text = _text["Home.FeaturedFoods"];
         FeaturedPoisTitleLabel.Text = _text["Home.FeaturedPois"];
         HistoryActionButton.Text = _text["Common.History"];

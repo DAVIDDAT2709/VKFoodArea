@@ -41,6 +41,11 @@ internal static class ApiDtoMapper
             Id = tour.Id,
             Name = tour.Name,
             Description = tour.Description,
+            TtsScriptVi = tour.TtsScriptVi,
+            TtsScriptEn = tour.TtsScriptEn,
+            TtsScriptZh = tour.TtsScriptZh,
+            TtsScriptJa = tour.TtsScriptJa,
+            TtsScriptDe = tour.TtsScriptDe,
             IsActive = tour.IsActive,
             Stops = tour.Stops
                 .OrderBy(x => x.DisplayOrder)

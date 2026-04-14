@@ -29,6 +29,37 @@
 
 <section class="card-surface">
     <div class="section-heading">
+        <h2>TTS tour</h2>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <label asp-for="TtsScriptVi" class="form-label"></label>
+            <textarea asp-for="TtsScriptVi" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="TtsScriptVi" class="text-danger"></span>
+            <div class="form-text">Nhap noi dung TTS tieng Viet. He thong se tu dong sinh cac ngon ngu con lai khi luu.</div>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TtsScriptEn" class="form-label"></label>
+            <textarea asp-for="TtsScriptEn" class="form-control" rows="4" readonly></textarea>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TtsScriptZh" class="form-label"></label>
+            <textarea asp-for="TtsScriptZh" class="form-control" rows="4" readonly></textarea>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TtsScriptJa" class="form-label"></label>
+            <textarea asp-for="TtsScriptJa" class="form-control" rows="4" readonly></textarea>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TtsScriptDe" class="form-label"></label>
+            <textarea asp-for="TtsScriptDe" class="form-control" rows="4" readonly></textarea>
+        </div>
+    </div>
+</section>
+
+<section class="card-surface">
+    <div class="section-heading">
         <h2>Tour stop</h2>
         <button type="button" class="btn btn-outline-secondary btn-sm" id="add-stop-button">Them stop</button>
     </div>
@@ -93,6 +124,13 @@
         const container = document.getElementById('tour-stops');
         const addButton = document.getElementById('add-stop-button');
         const template = document.getElementById('tour-stop-template');
+        const viScript = document.getElementById('TtsScriptVi');
+        const translatedTextareas = [
+            document.getElementById('TtsScriptEn'),
+            document.getElementById('TtsScriptZh'),
+            document.getElementById('TtsScriptJa'),
+            document.getElementById('TtsScriptDe')
+        ];
 
         function bindRemoveButtons() {
             container.querySelectorAll('[data-remove-stop]').forEach(button => {
@@ -146,5 +184,13 @@
 
         bindRemoveButtons();
         reindexRows();
+
+        viScript?.addEventListener('input', () => {
+            translatedTextareas.forEach(textarea => {
+                if (textarea) {
+                    textarea.value = '';
+                }
+            });
+        });
     })();
 </script>

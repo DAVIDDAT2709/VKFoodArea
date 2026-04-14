@@ -11,6 +11,11 @@ internal static class RemoteContentMapper
             Id = dto.Id,
             Name = dto.Name,
             Description = dto.Description,
+            TtsScriptVi = dto.TtsScriptVi,
+            TtsScriptEn = dto.TtsScriptEn,
+            TtsScriptZh = dto.TtsScriptZh,
+            TtsScriptJa = dto.TtsScriptJa,
+            TtsScriptDe = dto.TtsScriptDe,
             IsActive = dto.IsActive,
             Stops = dto.Stops
                 .OrderBy(x => x.DisplayOrder)

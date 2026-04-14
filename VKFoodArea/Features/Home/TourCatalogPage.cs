@@ -9,11 +9,19 @@ public class TourCatalogPage : ContentPage
 {
     private readonly TourCatalogService _tourCatalogService;
     private readonly TourSessionService _tourSessionService;
+    private readonly TourNarrationService _tourNarrationService;
     private readonly IServiceProvider _serviceProvider;
+    private readonly AppTextService _text;
 
+    private readonly Label _headerTitleLabel;
+    private readonly Label _headerSubtitleLabel;
+    private readonly Label _activeSessionCardTitleLabel;
     private readonly Label _activeSessionTitleLabel;
     private readonly Label _activeSessionStatusLabel;
     private readonly Border _activeSessionCard;
+    private readonly Button _openCurrentButton;
+    private readonly Button _cancelCurrentButton;
+    private readonly Button _refreshButton;
     private readonly ActivityIndicator _loadingIndicator;
     private readonly Label _statusLabel;
     private readonly VerticalStackLayout _tourListLayout;
@@ -23,15 +31,35 @@ public class TourCatalogPage : ContentPage
     public TourCatalogPage(
         TourCatalogService tourCatalogService,
         TourSessionService tourSessionService,
-        IServiceProvider serviceProvider)
+        TourNarrationService tourNarrationService,
+        IServiceProvider serviceProvider,
+        AppTextService text)
     {
         _tourCatalogService = tourCatalogService;
         _tourSessionService = tourSessionService;
+        _tourNarrationService = tourNarrationService;
         _serviceProvider = serviceProvider;
+        _text = text;
 
-        Title = "Chon tour";
         BackgroundColor = Color.FromArgb("#F5F7F6");
 
+        _headerTitleLabel = new Label
+        {
+            FontSize = 24,
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#173330")
+        };
+        _headerSubtitleLabel = new Label
+        {
+            FontSize = 13,
+            TextColor = Color.FromArgb("#617A74")
+        };
+        _activeSessionCardTitleLabel = new Label
+        {
+            FontSize = 13,
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#1F6F64")
+        };
         _activeSessionTitleLabel = new Label
         {
             FontSize = 18,
@@ -44,19 +72,17 @@ public class TourCatalogPage : ContentPage
             TextColor = Color.FromArgb("#617A74")
         };
 
-        var openCurrentButton = new Button
+        _openCurrentButton = new Button
         {
-            Text = "Mo tour dang chay",
             BackgroundColor = Color.FromArgb("#1F6F64"),
             TextColor = Colors.White,
             CornerRadius = 14,
             Padding = new Thickness(14, 10)
         };
-        openCurrentButton.Clicked += OnOpenCurrentTourClicked;
+        _openCurrentButton.Clicked += OnOpenCurrentTourClicked;
 
-        var cancelCurrentButton = new Button
+        _cancelCurrentButton = new Button
         {
-            Text = "Ket thuc tour",
             BackgroundColor = Colors.Transparent,
             TextColor = Color.FromArgb("#B8452E"),
             BorderColor = Color.FromArgb("#E7B8AE"),
@@ -64,7 +90,7 @@ public class TourCatalogPage : ContentPage
             CornerRadius = 14,
             Padding = new Thickness(14, 10)
         };
-        cancelCurrentButton.Clicked += OnCancelCurrentTourClicked;
+        _cancelCurrentButton.Clicked += OnCancelCurrentTourClicked;
 
         _activeSessionCard = new Border
         {
@@ -79,13 +105,7 @@ public class TourCatalogPage : ContentPage
                 Spacing = 10,
                 Children =
                 {
-                    new Label
-                    {
-                        Text = "Tour hien tai",
-                        FontSize = 13,
-                        FontAttributes = FontAttributes.Bold,
-                        TextColor = Color.FromArgb("#1F6F64")
-                    },
+                    _activeSessionCardTitleLabel,
                     _activeSessionTitleLabel,
                     _activeSessionStatusLabel,
                     new HorizontalStackLayout
@@ -93,24 +113,23 @@ public class TourCatalogPage : ContentPage
                         Spacing = 10,
                         Children =
                         {
-                            openCurrentButton,
-                            cancelCurrentButton
+                            _openCurrentButton,
+                            _cancelCurrentButton
                         }
                     }
                 }
             }
         };
 
-        var refreshButton = new Button
+        _refreshButton = new Button
         {
-            Text = "Lam moi danh sach",
             BackgroundColor = Color.FromArgb("#EAF4F1"),
             TextColor = Color.FromArgb("#1F6F64"),
             CornerRadius = 14,
             Padding = new Thickness(14, 10),
             HorizontalOptions = LayoutOptions.Start
         };
-        refreshButton.Clicked += OnRefreshClicked;
+        _refreshButton.Clicked += OnRefreshClicked;
 
         _loadingIndicator = new ActivityIndicator
         {
@@ -141,21 +160,10 @@ public class TourCatalogPage : ContentPage
                 Spacing = 14,
                 Children =
                 {
-                    new Label
-                    {
-                        Text = "Danh sach tour tu web",
-                        FontSize = 24,
-                        FontAttributes = FontAttributes.Bold,
-                        TextColor = Color.FromArgb("#173330")
-                    },
-                    new Label
-                    {
-                        Text = "Chon goi tour de app nhan diem dung dau tien va dan GPS theo thu tu stop.",
-                        FontSize = 13,
-                        TextColor = Color.FromArgb("#617A74")
-                    },
+                    _headerTitleLabel,
+                    _headerSubtitleLabel,
                     _activeSessionCard,
-                    refreshButton,
+                    _refreshButton,
                     _loadingIndicator,
                     _statusLabel,
                     _tourListLayout
@@ -167,8 +175,20 @@ public class TourCatalogPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        ApplyLocalizedText();
         RefreshActiveSessionCard();
         await LoadToursAsync();
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = _text["Tour.PageTitle"];
+        _headerTitleLabel.Text = _text["Tour.CatalogTitle"];
+        _headerSubtitleLabel.Text = _text["Tour.CatalogSubtitle"];
+        _activeSessionCardTitleLabel.Text = _text["Tour.CurrentCardTitle"];
+        _openCurrentButton.Text = _text["Tour.OpenCurrent"];
+        _cancelCurrentButton.Text = _text["Tour.EndCurrent"];
+        _refreshButton.Text = _text["Tour.RefreshList"];
     }
 
     private async Task LoadToursAsync()
@@ -179,20 +199,20 @@ public class TourCatalogPage : ContentPage
         _isLoading = true;
         _loadingIndicator.IsVisible = true;
         _loadingIndicator.IsRunning = true;
-        _statusLabel.Text = "Dang tai tour tu web...";
+        _statusLabel.Text = _text["Tour.Loading"];
 
         try
         {
             var tours = await _tourCatalogService.GetActiveToursAsync();
             RenderTours(tours);
             _statusLabel.Text = tours.Count == 0
-                ? "Web chua co tour dang hoat dong."
-                : $"Da tai {tours.Count} tour dang hoat dong.";
+                ? _text["Tour.EmptyActive"]
+                : _text.Format("Tour.LoadedCount", tours.Count);
         }
         catch (Exception ex)
         {
             _tourListLayout.Children.Clear();
-            _statusLabel.Text = $"Khong tai duoc danh sach tour: {ex.Message}";
+            _statusLabel.Text = _text.Format("Tour.LoadError", ex.Message);
         }
         finally
         {
@@ -217,7 +237,7 @@ public class TourCatalogPage : ContentPage
                 StrokeShape = new RoundRectangle { CornerRadius = 18 },
                 Content = new Label
                 {
-                    Text = "Chua co tour nao de chon.",
+                    Text = _text["Tour.EmptyList"],
                     FontSize = 14,
                     TextColor = Color.FromArgb("#617A74")
                 }
@@ -236,23 +256,23 @@ public class TourCatalogPage : ContentPage
             .ToList();
 
         var routePreview = orderedStops.Count == 0
-            ? "Chua co lo trinh."
+            ? _text["Tour.NoRoute"]
             : string.Join(" -> ", orderedStops
                 .Select(x => x.Poi?.Name ?? $"POI #{x.PoiId}")
                 .Take(4));
 
         if (orderedStops.Count > 4)
-            routePreview = $"{routePreview} -> +{orderedStops.Count - 4} stop";
+            routePreview = _text.Format("Tour.RouteOverflow", routePreview, orderedStops.Count - 4);
 
         var firstStop = orderedStops.FirstOrDefault();
         var firstStopName = firstStop?.Poi?.Name
                             ?? (firstStop is not null
                                 ? $"POI #{firstStop.PoiId}"
-                                : "Chua co stop");
+                                : _text["Tour.FirstStopNone"]);
 
         var startButton = new Button
         {
-            Text = "Bat dau tour nay",
+            Text = _text["Tour.StartThisTour"],
             BackgroundColor = Color.FromArgb("#173330"),
             TextColor = Colors.White,
             CornerRadius = 14,
@@ -281,22 +301,20 @@ public class TourCatalogPage : ContentPage
                     },
                     new Label
                     {
-                        Text = string.IsNullOrWhiteSpace(tour.Description)
-                            ? "Khong co mo ta."
-                            : tour.Description,
+                        Text = ResolveTourSummary(tour),
                         FontSize = 13,
                         TextColor = Color.FromArgb("#617A74")
                     },
                     new Label
                     {
-                        Text = $"So stop: {orderedStops.Count} | Stop dau: {firstStopName}",
+                        Text = _text.Format("Tour.StopCountSummary", orderedStops.Count, firstStopName),
                         FontSize = 12,
                         FontAttributes = FontAttributes.Bold,
                         TextColor = Color.FromArgb("#1F6F64")
                     },
                     new Label
                     {
-                        Text = $"Lo trinh: {routePreview}",
+                        Text = _text.Format("Tour.RouteSummary", routePreview),
                         FontSize = 12,
                         TextColor = Color.FromArgb("#48635F")
                     },
@@ -304,6 +322,14 @@ public class TourCatalogPage : ContentPage
                 }
             }
         };
+    }
+
+    private string ResolveTourSummary(Tour tour)
+    {
+        var summary = _tourNarrationService.ResolveDisplaySummary(tour);
+        return string.IsNullOrWhiteSpace(summary)
+            ? _text["Tour.NoDescription"]
+            : summary;
     }
 
     private async Task StartTourAsync(Tour tour)
@@ -314,10 +340,10 @@ public class TourCatalogPage : ContentPage
             currentSession.TourId != tour.Id)
         {
             var replace = await DisplayAlertAsync(
-                "Doi tour",
-                $"Tour \"{currentSession.TourName}\" dang chay. Ban co muon doi sang \"{tour.Name}\" khong?",
-                "Dong y",
-                "Huy");
+                _text["Tour.ReplaceTitle"],
+                _text.Format("Tour.ReplaceMessage", currentSession.TourName, tour.Name),
+                _text["Tour.ReplaceConfirm"],
+                _text["Common.Cancel"]);
 
             if (!replace)
                 return;
@@ -342,8 +368,10 @@ public class TourCatalogPage : ContentPage
 
         _activeSessionTitleLabel.Text = session.TourName;
         _activeSessionStatusLabel.Text = session.IsFinished
-            ? "Tour nay da hoan thanh."
-            : $"Dang dan den: {session.CurrentStop?.Poi?.Name ?? $"POI #{session.CurrentStop?.PoiId}"}";
+            ? _text["Tour.ActiveFinished"]
+            : _text.Format(
+                "Tour.ActiveRouting",
+                session.CurrentStop?.Poi?.Name ?? $"POI #{session.CurrentStop?.PoiId}");
     }
 
     private async void OnRefreshClicked(object? sender, EventArgs e)
@@ -365,10 +393,10 @@ public class TourCatalogPage : ContentPage
             return;
 
         var confirmed = await DisplayAlertAsync(
-            "Ket thuc tour",
-            "Ban co chac muon dong tour hien tai khong?",
-            "Dong y",
-            "Huy");
+            _text["Tour.CancelTitle"],
+            _text["Tour.CancelMessage"],
+            _text["Tour.ReplaceConfirm"],
+            _text["Common.Cancel"]);
 
         if (!confirmed)
             return;

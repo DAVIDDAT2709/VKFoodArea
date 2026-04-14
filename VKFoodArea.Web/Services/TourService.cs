@@ -10,10 +10,12 @@ namespace VKFoodArea.Web.Services;
 public class TourService : ITourService
 {
     private readonly AppDbContext _context;
+    private readonly ITtsTranslationService _ttsTranslationService;
 
-    public TourService(AppDbContext context)
+    public TourService(AppDbContext context, ITtsTranslationService ttsTranslationService)
     {
         _context = context;
+        _ttsTranslationService = ttsTranslationService;
     }
 
     public async Task<List<Tour>> GetAllAsync()
@@ -56,6 +58,11 @@ public class TourService : ITourService
             Name = entity.Name,
             Description = entity.Description,
             IsActive = entity.IsActive,
+            TtsScriptVi = entity.TtsScriptVi,
+            TtsScriptEn = entity.TtsScriptEn,
+            TtsScriptZh = entity.TtsScriptZh,
+            TtsScriptJa = entity.TtsScriptJa,
+            TtsScriptDe = entity.TtsScriptDe,
             PoiOptions = await GetPoiOptionsAsync(),
             Stops = entity.Stops
                 .OrderBy(x => x.DisplayOrder)
@@ -81,6 +88,8 @@ public class TourService : ITourService
         if (preparedStops.Error is not null)
             return (false, preparedStops.Error);
 
+        await PopulateGeneratedFieldsAsync(vm);
+
         var entity = new Tour();
         MapToEntity(entity, vm, preparedStops.Stops);
 
@@ -102,6 +111,8 @@ public class TourService : ITourService
         var preparedStops = await PrepareStopsAsync(vm, id);
         if (preparedStops.Error is not null)
             return (false, preparedStops.Error);
+
+        await PopulateGeneratedFieldsAsync(vm);
 
         MapToEntity(entity, vm, preparedStops.Stops);
         await _context.SaveChangesAsync();
@@ -208,6 +219,11 @@ public class TourService : ITourService
     {
         entity.Name = (vm.Name ?? string.Empty).Trim();
         entity.Description = (vm.Description ?? string.Empty).Trim();
+        entity.TtsScriptVi = (vm.TtsScriptVi ?? string.Empty).Trim();
+        entity.TtsScriptEn = (vm.TtsScriptEn ?? string.Empty).Trim();
+        entity.TtsScriptZh = (vm.TtsScriptZh ?? string.Empty).Trim();
+        entity.TtsScriptJa = (vm.TtsScriptJa ?? string.Empty).Trim();
+        entity.TtsScriptDe = (vm.TtsScriptDe ?? string.Empty).Trim();
         entity.IsActive = vm.IsActive;
 
         entity.Stops.Clear();
@@ -220,6 +236,16 @@ public class TourService : ITourService
                 Note = stop.Note
             });
         }
+    }
+
+    private async Task PopulateGeneratedFieldsAsync(TourFormViewModel vm)
+    {
+        var translations = await _ttsTranslationService.GenerateFromVietnameseAsync(vm.TtsScriptVi ?? string.Empty);
+        vm.TtsScriptVi = translations.Vi;
+        vm.TtsScriptEn = translations.En;
+        vm.TtsScriptZh = translations.Zh;
+        vm.TtsScriptJa = translations.Ja;
+        vm.TtsScriptDe = translations.De;
     }
 
     private IQueryable<Tour> BuildTourQuery()

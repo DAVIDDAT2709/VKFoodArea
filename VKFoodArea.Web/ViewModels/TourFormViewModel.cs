@@ -19,6 +19,22 @@ public class TourFormViewModel
     [Display(Name = "Đang hoạt động")]
     public bool IsActive { get; set; } = true;
 
+    [Required(ErrorMessage = "Vui long nhap TTS tieng Viet cho tour.")]
+    [Display(Name = "TTS tieng Viet")]
+    public string TtsScriptVi { get; set; } = string.Empty;
+
+    [Display(Name = "TTS English")]
+    public string? TtsScriptEn { get; set; }
+
+    [Display(Name = "TTS Chinese")]
+    public string? TtsScriptZh { get; set; }
+
+    [Display(Name = "TTS Japanese")]
+    public string? TtsScriptJa { get; set; }
+
+    [Display(Name = "TTS Deutsch")]
+    public string? TtsScriptDe { get; set; }
+
     public List<TourStopInputViewModel> Stops { get; set; } = new();
     public List<SelectListItem> PoiOptions { get; set; } = new();
 }

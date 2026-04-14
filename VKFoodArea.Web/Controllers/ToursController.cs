@@ -102,6 +102,11 @@ public class ToursController : Controller
         freshVm.Name = vm.Name;
         freshVm.Description = vm.Description;
         freshVm.IsActive = vm.IsActive;
+        freshVm.TtsScriptVi = vm.TtsScriptVi;
+        freshVm.TtsScriptEn = vm.TtsScriptEn;
+        freshVm.TtsScriptZh = vm.TtsScriptZh;
+        freshVm.TtsScriptJa = vm.TtsScriptJa;
+        freshVm.TtsScriptDe = vm.TtsScriptDe;
         freshVm.Stops = vm.Stops.Count == 0
             ? freshVm.Stops
             : vm.Stops;

@@ -14,6 +14,7 @@ public static class WebDataInitializer
         await EnsureAdminUsersTableAsync(db);
         await EnsureNarrationHistoryUserKeyColumnAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
+        await EnsureTourNarrationColumnsAsync(db);
         await SyncPoiContentTablesAsync(db);
         await SeedDefaultAdminAsync(db, seedDevelopmentAdmin);
 
@@ -105,6 +106,27 @@ public static class WebDataInitializer
 
         if (!await HasColumnAsync(connection, "Pois", "AudioFileJa"))
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN AudioFileJa TEXT NOT NULL DEFAULT '';");
+    }
+
+    private static async Task EnsureTourNarrationColumnsAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "Tours", "TtsScriptVi"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tours ADD COLUMN TtsScriptVi TEXT NOT NULL DEFAULT '';");
+
+        if (!await HasColumnAsync(connection, "Tours", "TtsScriptEn"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tours ADD COLUMN TtsScriptEn TEXT NOT NULL DEFAULT '';");
+
+        if (!await HasColumnAsync(connection, "Tours", "TtsScriptZh"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tours ADD COLUMN TtsScriptZh TEXT NOT NULL DEFAULT '';");
+
+        if (!await HasColumnAsync(connection, "Tours", "TtsScriptJa"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tours ADD COLUMN TtsScriptJa TEXT NOT NULL DEFAULT '';");
+
+        if (!await HasColumnAsync(connection, "Tours", "TtsScriptDe"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tours ADD COLUMN TtsScriptDe TEXT NOT NULL DEFAULT '';");
     }
 
     private static async Task SyncPoiContentTablesAsync(AppDbContext db)

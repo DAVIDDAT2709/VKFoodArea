@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using VKFoodArea.Web.Data;
 using VKFoodArea.Web.Services;
 
@@ -20,7 +21,15 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=vkfoodarea_web.db"));
+    options
+        .UseSqlite(
+            "Data Source=vkfoodarea_web.db",
+            sqlite => sqlite.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+        .ConfigureWarnings(warnings =>
+        {
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning);
+            warnings.Ignore(RelationalEventId.MultipleCollectionIncludeWarning);
+        }));
 
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();

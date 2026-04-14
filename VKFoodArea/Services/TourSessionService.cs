@@ -36,7 +36,14 @@ public sealed class TourSessionService
             TourId = tour.Id,
             TourName = tour.Name,
             TourDescription = tour.Description,
+            TtsScriptVi = tour.TtsScriptVi,
+            TtsScriptEn = tour.TtsScriptEn,
+            TtsScriptZh = tour.TtsScriptZh,
+            TtsScriptJa = tour.TtsScriptJa,
+            TtsScriptDe = tour.TtsScriptDe,
             StartedAt = DateTimeOffset.UtcNow,
+            IntroPlayedAt = null,
+            IntroPlayedLanguage = string.Empty,
             Stops = orderedStops,
             CurrentStopIndex = orderedStops.Count == 0 ? -1 : 0,
             IsFinished = orderedStops.Count == 0
@@ -72,6 +79,21 @@ public sealed class TourSessionService
         }
 
         NotifyChanged();
+    }
+
+    public TourSession? MarkIntroPlayed(string language)
+    {
+        lock (_sync)
+        {
+            if (_currentSession is null)
+                return null;
+
+            _currentSession.IntroPlayedAt = DateTimeOffset.UtcNow;
+            _currentSession.IntroPlayedLanguage = AppLanguageService.NormalizeLanguage(language);
+            PersistLocked();
+            NotifyChanged();
+            return Clone(_currentSession);
+        }
     }
 
     private void Save(TourSession session)
