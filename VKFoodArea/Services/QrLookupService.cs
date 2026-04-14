@@ -41,8 +41,8 @@ public class QrLookupService
             TargetId = dto.TargetId,
             MatchedCode = dto.MatchedCode,
             Source = dto.Source,
-            Poi = dto.Poi is null ? null : MapPoi(dto.Poi),
-            Tour = dto.Tour is null ? null : MapTour(dto.Tour)
+            Poi = dto.Poi is null ? null : RemoteContentMapper.MapPoi(dto.Poi, _apiBaseUrlService),
+            Tour = dto.Tour is null ? null : RemoteContentMapper.MapTour(dto.Tour, _apiBaseUrlService)
         };
     }
 
@@ -50,54 +50,5 @@ public class QrLookupService
     {
         var resolved = await ResolveAsync(qrCode, ct);
         return resolved?.Poi;
-    }
-
-    private Tour MapTour(RemoteTourDto dto)
-    {
-        return new Tour
-        {
-            Id = dto.Id,
-            Name = dto.Name,
-            Description = dto.Description,
-            IsActive = dto.IsActive,
-            Stops = dto.Stops
-                .OrderBy(x => x.DisplayOrder)
-                .Select(x => new TourStop
-                {
-                    Id = x.Id,
-                    PoiId = x.PoiId,
-                    DisplayOrder = x.DisplayOrder,
-                    Note = x.Note,
-                    Poi = MapPoi(x.Poi)
-                })
-                .ToList()
-        };
-    }
-
-    private Poi MapPoi(RemotePoiDto dto)
-    {
-        return new Poi
-        {
-            Id = dto.Id,
-            Name = dto.Name,
-            Address = dto.Address,
-            PhoneNumber = dto.PhoneNumber,
-            ImageUrl = _apiBaseUrlService.ResolveImageUrl(dto.ImageUrl),
-            Description = dto.Description,
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude,
-            RadiusMeters = dto.RadiusMeters,
-            Priority = dto.Priority,
-            QrCode = dto.QrCode,
-            IsActive = dto.IsActive,
-            TtsScriptVi = dto.TtsScriptVi,
-            TtsScriptEn = dto.TtsScriptEn,
-            TtsScriptZh = dto.TtsScriptZh,
-            TtsScriptJa = dto.TtsScriptJa,
-            TtsScriptDe = dto.TtsScriptDe,
-            AudioFileVi = dto.AudioFileVi,
-            AudioFileEn = dto.AudioFileEn,
-            AudioFileJa = dto.AudioFileJa
-        };
     }
 }

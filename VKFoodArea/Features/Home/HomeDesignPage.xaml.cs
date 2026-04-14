@@ -414,6 +414,12 @@ public partial class HomeDesignPage : ContentPage
         await Navigation.PushAsync(page);
     }
 
+    private async void OnToursClicked(object sender, EventArgs e)
+    {
+        var page = _serviceProvider.GetRequiredService<TourCatalogPage>();
+        await Navigation.PushAsync(page);
+    }
+
     private async void OnUserClicked(object sender, EventArgs e)
     {
         var page = _serviceProvider.GetRequiredService<UserPage>();
@@ -440,6 +446,7 @@ public partial class HomeDesignPage : ContentPage
         PoiSearchBar.Placeholder = _text["Home.SearchPlaceholder"];
         SearchEmptyStateLabel.Text = _text["Home.SearchEmptyMessage"];
         QrButton.Text = _text["Home.QrButton"];
+        TourButton.Text = "TOUR";
         FeaturedFoodsTitleLabel.Text = _text["Home.FeaturedFoods"];
         FeaturedPoisTitleLabel.Text = _text["Home.FeaturedPois"];
         HistoryActionButton.Text = _text["Common.History"];

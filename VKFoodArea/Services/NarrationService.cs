@@ -266,6 +266,15 @@ public class NarrationService
             return _currentPoiId == poiId && _requestCts is not null;
         }
     }
+
+    public bool IsPoiPlaybackActive(int poiId)
+    {
+        lock (_requestLock)
+        {
+            return _currentPoiId == poiId && _requestCts is not null;
+        }
+    }
+
     public bool IsManualPlaybackActive()
 {
     lock (_requestLock)

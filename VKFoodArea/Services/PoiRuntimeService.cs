@@ -45,9 +45,9 @@ public class PoiRuntimeService
     private DateTimeOffset _lastMovementSyncedAt = DateTimeOffset.MinValue;
     private Location? _lastMovementSyncedLocation;
     private static readonly TimeSpan AutoNarrationCooldown = TimeSpan.FromSeconds(8);
-private readonly object _autoNarrationSync = new();
-private DateTimeOffset _lastAutoNarrationAt = DateTimeOffset.MinValue;
-private int? _lastAutoNarratedPoiId;
+    private readonly object _autoNarrationSync = new();
+    private DateTimeOffset _lastAutoNarrationAt = DateTimeOffset.MinValue;
+    private int? _lastAutoNarratedPoiId;
 
     public event EventHandler? StateChanged;
 
@@ -276,6 +276,7 @@ private int? _lastAutoNarratedPoiId;
         Poi? poiToPlay = null;
         var shouldAdvanceTour = false;
         var trackingProfile = _trackingPolicyService.GetCurrentProfile();
+        var hasPendingTourStop = false;
 
         await _stateLock.WaitAsync(ct);
         try
@@ -287,8 +288,9 @@ private int? _lastAutoNarratedPoiId;
 
             if (activeTourSession?.CurrentStop is { PoiId: > 0 } currentStop)
             {
+                hasPendingTourStop = true;
                 var stopPoi = pois.FirstOrDefault(x => x.Id == currentStop.PoiId) ?? currentStop.Poi;
-                if (stopPoi?.IsActive == true)
+                if (stopPoi is not null)
                 {
                     var distanceToStopMeters = Location.CalculateDistance(
                         location.Latitude,
@@ -306,13 +308,6 @@ private int? _lastAutoNarratedPoiId;
                     else
                     {
                         geofenceReason = $"Tour next stop: {stopPoi.Name} ({distanceToStopMeters:F0}m)";
-
-                        if (decision.ShouldTrigger && decision.PoiId.HasValue)
-                        {
-                            poiToPlay = pois.FirstOrDefault(x => x.Id == decision.PoiId.Value)
-                                        ?? await _poiService.GetPoiByIdAsync(decision.PoiId.Value, ct);
-                            geofenceReason = $"{decision.Reason} | Current stop: {stopPoi.Name}";
-                        }
                     }
                 }
             }
@@ -328,7 +323,10 @@ private int? _lastAutoNarratedPoiId;
                 geofenceReason: geofenceReason,
                 activeTourSession: activeTourSession);
 
-            if (poiToPlay is null && decision.ShouldTrigger && decision.PoiId.HasValue)
+            if (!hasPendingTourStop &&
+                poiToPlay is null &&
+                decision.ShouldTrigger &&
+                decision.PoiId.HasValue)
             {
                 poiToPlay = pois.FirstOrDefault(x => x.Id == decision.PoiId.Value)
                             ?? await _poiService.GetPoiByIdAsync(decision.PoiId.Value, ct);
@@ -346,6 +344,9 @@ private int? _lastAutoNarratedPoiId;
             return;
 
         if (_narrationService.IsManualPlaybackActive())
+            return;
+
+        if (_narrationService.IsPoiPlaybackActive(poi.Id))
             return;
 
         if (!ShouldAutoPlayPoi(poi.Id))
@@ -508,23 +509,25 @@ private int? _lastAutoNarratedPoiId;
             return true;
         }
     }
-private bool ShouldAutoPlayPoi(int poiId)
-{
-    var now = DateTimeOffset.UtcNow;
 
-    lock (_autoNarrationSync)
+    private bool ShouldAutoPlayPoi(int poiId)
     {
-        if (_lastAutoNarratedPoiId == poiId &&
-            now - _lastAutoNarrationAt < AutoNarrationCooldown)
-        {
-            return false;
-        }
+        var now = DateTimeOffset.UtcNow;
 
-        _lastAutoNarratedPoiId = poiId;
-        _lastAutoNarrationAt = now;
-        return true;
+        lock (_autoNarrationSync)
+        {
+            if (_lastAutoNarratedPoiId == poiId &&
+                now - _lastAutoNarrationAt < AutoNarrationCooldown)
+            {
+                return false;
+            }
+
+            _lastAutoNarratedPoiId = poiId;
+            _lastAutoNarrationAt = now;
+            return true;
+        }
     }
-}
+
     private void RaiseStateChanged()
         => StateChanged?.Invoke(this, EventArgs.Empty);
 }
