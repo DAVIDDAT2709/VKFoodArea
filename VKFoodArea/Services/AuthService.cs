@@ -165,8 +165,7 @@ public class AuthService
         if (string.IsNullOrWhiteSpace(identifier))
             return null;
 
-        using var sha = SHA256.Create();
-        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(identifier.Trim().ToLowerInvariant()));
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(identifier.Trim().ToLowerInvariant()));
         return Convert.ToHexString(bytes);
     }
 
@@ -302,8 +301,7 @@ public class AuthService
 
     private static string HashPassword(string password)
     {
-        using var sha = SHA256.Create();
-        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
         return Convert.ToBase64String(bytes);
     }
 }

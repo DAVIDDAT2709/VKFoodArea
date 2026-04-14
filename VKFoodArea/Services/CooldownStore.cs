@@ -14,8 +14,7 @@ public class CooldownStore
 
     public void MarkOutside(int poiId)
     {
-        if (_insideSince.ContainsKey(poiId))
-            _insideSince.Remove(poiId);
+        _insideSince.Remove(poiId);
     }
 
     public bool PassedDebounce(int poiId, TimeSpan debounce)

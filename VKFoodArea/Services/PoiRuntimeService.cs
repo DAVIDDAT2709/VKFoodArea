@@ -15,7 +15,7 @@ public sealed record PoiRuntimeSnapshot(
     string LastGeofenceReason,
     TourSession? ActiveTourSession);
 
-public class PoiRuntimeService
+public class PoiRuntimeService : IDisposable
 {
     private static readonly TimeSpan MovementSyncInterval = TimeSpan.FromSeconds(30);
     private const double MovementSyncMinDistanceMeters = 20;
@@ -32,6 +32,7 @@ public class PoiRuntimeService
     private readonly SemaphoreSlim _stateLock = new(1, 1);
     private readonly object _snapshotSync = new();
     private readonly object _movementSync = new();
+    private bool _disposed;
 
     private List<Poi> _pois = [];
     private Poi? _nearestPoi;
@@ -530,4 +531,17 @@ public class PoiRuntimeService
 
     private void RaiseStateChanged()
         => StateChanged?.Invoke(this, EventArgs.Empty);
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _locationTrackerService.LocationChanged -= OnLocationChanged;
+        _trackingPolicyService.ProfileChanged -= OnTrackingProfileChanged;
+        _tourSessionService.StateChanged -= OnTourSessionStateChanged;
+        _stateLock.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
