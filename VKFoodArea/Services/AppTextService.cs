@@ -110,7 +110,7 @@ public sealed partial class AppTextService
 
             var repaired = StrictUtf8.GetString(bytes);
 
-            return repaired.Contains('\uFFFD', StringComparison.Ordinal)
+            return repaired.Contains('\uFFFD')
                 ? value
                 : repaired;
         }
@@ -203,7 +203,7 @@ public sealed partial class AppTextService
         return true;
     }
 
-    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> BuildLanguageMaps()
+    private static Dictionary<string, IReadOnlyDictionary<string, string>> BuildLanguageMaps()
     {
         return new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.Ordinal)
         {
@@ -215,7 +215,7 @@ public sealed partial class AppTextService
         };
     }
 
-    private static IReadOnlyDictionary<string, string> MergeMap(
+    private static Dictionary<string, string> MergeMap(
         IReadOnlyDictionary<string, string> source,
         IReadOnlyDictionary<string, string> overrides)
     {
@@ -225,13 +225,5 @@ public sealed partial class AppTextService
             merged[pair.Key] = pair.Value;
 
         return merged;
-    }
-}
-
-internal static class StringMojibakeExtensions
-{
-    public static bool Contains(this string value, char character, StringComparison comparisonType)
-    {
-        return value.Contains(character.ToString(), comparisonType);
     }
 }

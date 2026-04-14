@@ -49,7 +49,7 @@ public class GeofenceEngine
             .OrderBy(x => x.Distance)
             .ToList();
 
-        if (!inRange.Any())
+        if (inRange.Count == 0)
         {
             return new GeofenceDecision
             {
@@ -106,7 +106,7 @@ public class GeofenceEngine
 
     private static PoiCandidate PickBestCandidate(List<PoiCandidate> inRange)
     {
-        var nearest = inRange.First();
+        var nearest = inRange[0];
 
         var tiedCandidates = inRange
             .Where(x => Math.Abs(x.Distance - nearest.Distance) <= PriorityTieThresholdMeters)
@@ -114,7 +114,7 @@ public class GeofenceEngine
             .ThenBy(x => x.Distance)
             .ToList();
 
-        return tiedCandidates.First();
+        return tiedCandidates[0];
     }
 
     private static double GetTriggerRadiusMeters(Poi poi) => poi.RadiusMeters + TriggerBufferMeters;

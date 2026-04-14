@@ -1,4 +1,3 @@
-using Microsoft.Maui.Devices;
 using VKFoodArea.Helpers;
 
 namespace VKFoodArea.Services;
@@ -48,7 +47,7 @@ public class ApiBaseUrlService
         if (Uri.TryCreate(normalized, UriKind.Absolute, out _))
             return normalized;
 
-        if (normalized.StartsWith("/", StringComparison.Ordinal))
+        if (normalized.StartsWith('/'))
             return new Uri(new Uri(BaseUrl), normalized.TrimStart('/')).ToString();
 
         if (normalized.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
@@ -66,13 +65,13 @@ public class ApiBaseUrlService
         if (Uri.TryCreate(normalized, UriKind.Absolute, out var uri))
         {
             var authorityOnly = uri.GetLeftPart(UriPartial.Authority);
-            normalized = authorityOnly.EndsWith("/", StringComparison.Ordinal)
+            normalized = authorityOnly.EndsWith('/')
                 ? authorityOnly
                 : $"{authorityOnly}/";
             return normalized;
         }
 
-        if (!normalized.EndsWith("/", StringComparison.Ordinal))
+        if (!normalized.EndsWith('/'))
             normalized += "/";
 
         return normalized;

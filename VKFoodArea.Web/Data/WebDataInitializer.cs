@@ -47,10 +47,12 @@ public static class WebDataInitializer
         var existingQrCodes = await db.Pois
             .AsNoTracking()
             .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
-            .Select(x => x.QrCode.Trim().ToLower())
+            .Select(x => x.QrCode)
             .ToListAsync();
 
-        var existingSet = existingQrCodes.ToHashSet(StringComparer.Ordinal);
+        var existingSet = existingQrCodes
+            .Select(NormalizeQrCode)
+            .ToHashSet(StringComparer.Ordinal);
         var missingPois = SeedData.Pois
             .Where(x => !existingSet.Contains(NormalizeQrCode(x.QrCode)))
             .Select(MapPoi)
@@ -211,7 +213,7 @@ public static class WebDataInitializer
         if (Uri.TryCreate(normalized, UriKind.Absolute, out _))
             return normalized;
 
-        if (normalized.StartsWith("/", StringComparison.Ordinal))
+        if (normalized.StartsWith('/'))
             return normalized;
 
         var webRelativePath = normalized.Replace('\\', '/').TrimStart('/');

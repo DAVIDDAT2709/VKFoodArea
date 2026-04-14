@@ -200,7 +200,7 @@ public class HistoryService
             item.PoiId > 0);
     }
 
-    private List<HistoryRecord> MergeRows(List<HistoryRecord> localRows, List<HistoryRecord>? remoteRows)
+    private static List<HistoryRecord> MergeRows(List<HistoryRecord> localRows, List<HistoryRecord>? remoteRows)
     {
         if (remoteRows is null || remoteRows.Count == 0)
             return localRows;
@@ -209,7 +209,7 @@ public class HistoryService
 
         foreach (var remoteRow in remoteRows)
         {
-            var hasDuplicate = localRows.Any(localRow =>
+            var hasDuplicate = localRows.Exists(localRow =>
                 string.Equals(localRow.PoiName, remoteRow.PoiName, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(localRow.Mode, remoteRow.Mode, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(localRow.Language, remoteRow.Language, StringComparison.OrdinalIgnoreCase) &&
