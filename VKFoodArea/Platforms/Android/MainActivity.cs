@@ -45,7 +45,12 @@ namespace VKFoodArea
             }
 
             if (MauiApplication.Current is App app)
+            {
                 app.ReceiveAppLink(uri);
+                return;
+            }
+
+            PendingAppLinkStore.Store(uri);
         }
     }
 }

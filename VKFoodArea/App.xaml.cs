@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using VKFoodArea.Features.Startup;
+using VKFoodArea.Helpers;
 using VKFoodArea.Services;
 
 namespace VKFoodArea;
@@ -29,6 +30,11 @@ public partial class App : Application
         _locationTrackingPolicyService.SetAppForeground(true);
         window.Resumed += OnWindowResumed;
         window.Stopped += OnWindowStopped;
+
+        var pendingUri = PendingAppLinkStore.Take();
+        if (pendingUri is not null)
+            ReceiveAppLink(pendingUri);
+
         return window;
     }
 

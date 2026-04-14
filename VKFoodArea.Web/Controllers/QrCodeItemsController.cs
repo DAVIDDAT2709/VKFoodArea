@@ -33,6 +33,7 @@ public class QrCodeItemsController : Controller
         var encodedCode = Uri.EscapeDataString(normalizedCode);
         var htmlCode = WebUtility.HtmlEncode(normalizedCode);
         var customSchemeUrl = $"vkfoodarea://qr/{encodedCode}";
+        var androidIntentUrl = $"intent://qr/{encodedCode}#Intent;scheme=vkfoodarea;package=com.companyname.vkfoodarea;end";
         var apiUrl = $"/api/resolve-qr?code={encodedCode}";
 
         var html = $$"""
@@ -127,16 +128,24 @@ public class QrCodeItemsController : Controller
 <body>
     <main>
         <h1>Dang mo VKFoodArea</h1>
-        <p>Neu dien thoai da cai app, lien ket nay se mo thang man hinh thuyet minh.</p>
+        <p>Neu dien thoai da cai app, lien ket nay se mo thang man hinh thuyet minh. Neu ban dang demo TTS, hay quet ma nay trong man hinh QR cua app hoac bam nut mo app ben duoi.</p>
         <p>Ma QR: <span class="code">{{htmlCode}}</span></p>
         <div class="actions">
-            <a class="button primary" href="{{customSchemeUrl}}">Mo ung dung</a>
+            <a id="open-app-button" class="button primary" href="{{customSchemeUrl}}" data-android-intent="{{androidIntentUrl}}">Mo ung dung</a>
             <a class="button secondary" href="{{apiUrl}}">Xem du lieu API</a>
         </div>
     </main>
     <script>
+        var openAppButton = document.getElementById('open-app-button');
+        var isAndroid = /android/i.test(window.navigator.userAgent || '');
+        var launchUrl = isAndroid
+            ? openAppButton.getAttribute('data-android-intent')
+            : '{{customSchemeUrl}}';
+
+        openAppButton.setAttribute('href', launchUrl);
+
         window.setTimeout(function () {
-            window.location.replace('{{customSchemeUrl}}');
+            window.location.replace(launchUrl);
         }, 250);
     </script>
 </body>

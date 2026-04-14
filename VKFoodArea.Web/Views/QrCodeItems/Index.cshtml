@@ -1,13 +1,19 @@
 @model IEnumerable<VKFoodArea.Web.ViewModels.QrCodeItemListItemViewModel>
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Quản lý QR code";
     var items = Model.ToList();
     var activeCount = items.Count(x => x.IsActive);
     var coveredPoiCount = items.Count(x => string.Equals(x.TargetType, "poi", StringComparison.OrdinalIgnoreCase));
     var coveredTourCount = items.Count(x => string.Equals(x.TargetType, "tour", StringComparison.OrdinalIgnoreCase));
+    var configuredBaseUrl = (Configuration["PublicBaseUrl"] ?? string.Empty).Trim();
     var forwardedScheme = Context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
     var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
-    var baseUrl = $"{scheme}://{Context.Request.Host}";
+    var requestBaseUrl = $"{scheme}://{Context.Request.Host}".TrimEnd('/');
+    var baseUrl = (string.IsNullOrWhiteSpace(configuredBaseUrl) ? requestBaseUrl : configuredBaseUrl).TrimEnd('/');
+    var isUsingConfiguredPublicUrl = !string.IsNullOrWhiteSpace(configuredBaseUrl);
+    var requestHost = Context.Request.Host.Host?.Trim().ToLowerInvariant() ?? string.Empty;
+    var isLocalRequestHost = requestHost == "localhost" || requestHost == "127.0.0.1";
 }
 
 <section class="page-header page-section">
@@ -35,6 +41,19 @@
         Demo steps: run Web through ngrok, enter the ngrok URL in the App QR scanner, then create a my.sepay QR with one
         of the payloads below.
     </p>
+    @if (isUsingConfiguredPublicUrl)
+    {
+        <div class="alert alert-success mb-3">
+            Public QR base URL: <code>@baseUrl</code>
+        </div>
+    }
+    else if (isLocalRequestHost)
+    {
+        <div class="alert alert-warning mb-3">
+            Bạn đang mở CMS bằng <code>@requestBaseUrl</code>, nên QR URL sẽ ra local nếu chưa cấu hình
+            <code>PublicBaseUrl</code> trong <code>appsettings.Development.json</code>.
+        </div>
+    }
     <div class="row g-3">
         <div class="col-md-6">
             <label class="form-label">API test</label>

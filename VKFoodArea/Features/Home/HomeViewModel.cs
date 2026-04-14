@@ -34,6 +34,7 @@ public class HomeViewModel : INotifyPropertyChanged
     private bool _showSearchSuggestions;
     private bool _showSearchEmptyState;
     private double _searchSuggestionHeight;
+    private TourSession? _activeTourSession;
     private readonly List<Poi> _allPois = [];
     private List<Poi> _defaultPois = [];
     private string _currentSearchKeyword = string.Empty;
@@ -350,7 +351,8 @@ public class HomeViewModel : INotifyPropertyChanged
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 CurrentLocation = snapshot.CurrentLocation;
-                ApplyPoiCatalog(snapshot.CurrentLocation, snapshot.Pois);
+                _activeTourSession = snapshot.ActiveTourSession;
+                ApplyPoiCatalog(snapshot.CurrentLocation, snapshot.Pois, snapshot.ActiveTourSession);
                 NearestPoi = snapshot.NearestPoi;
                 StatusText = BuildStatusText(statusDetail);
                 OnPropertyChanged(nameof(AllPois));
@@ -411,7 +413,7 @@ public class HomeViewModel : INotifyPropertyChanged
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            ReplaceCollection(DisplayedPois, response.Results);
+            ReplaceCollection(DisplayedPois, OrderPoisForDisplay(CurrentLocation, response.Results, _activeTourSession));
             ReplaceCollection(SearchSuggestions, response.Suggestions.Select(poi => new HomePoiSuggestion
             {
                 Poi = poi
@@ -439,8 +441,8 @@ public class HomeViewModel : INotifyPropertyChanged
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            ApplyPoiCatalog(CurrentLocation, pois);
-            UpdateNearestPoi(CurrentLocation, pois);
+            ApplyPoiCatalog(CurrentLocation, pois, _activeTourSession);
+            UpdateNearestPoi(CurrentLocation, pois, _activeTourSession);
             ReplaceCollection(SearchSuggestions, []);
             ShowSearchSuggestions = false;
             SearchSuggestionHeight = 0;
@@ -576,11 +578,11 @@ public class HomeViewModel : INotifyPropertyChanged
         SelectedOutputMode = OutputModeOptions.FirstOrDefault(x => x == savedMode) ?? "Auto";
     }
 
-    private void ApplyPoiCatalog(Location location, IEnumerable<Poi> pois)
+    private void ApplyPoiCatalog(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
     {
         _allPois.Clear();
         _allPois.AddRange(pois);
-        UpdateNearbyPois(location, _allPois);
+        UpdateNearbyPois(location, _allPois, activeTourSession);
 
         if (string.IsNullOrWhiteSpace(_currentSearchKeyword))
         {
@@ -589,15 +591,9 @@ public class HomeViewModel : INotifyPropertyChanged
         }
     }
 
-    private void UpdateNearbyPois(Location location, IEnumerable<Poi> pois)
+    private void UpdateNearbyPois(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
     {
-        var orderedPois = pois
-            .OrderBy(p => Location.CalculateDistance(
-                location.Latitude,
-                location.Longitude,
-                p.Latitude,
-                p.Longitude,
-                DistanceUnits.Kilometers))
+        var orderedPois = OrderPoisForDisplay(location, pois, activeTourSession)
             .Take(10)
             .ToList();
 
@@ -608,23 +604,9 @@ public class HomeViewModel : INotifyPropertyChanged
             NearbyPois.Add(poi);
     }
 
-    private void UpdateNearestPoi(Location location, IEnumerable<Poi> pois)
+    private void UpdateNearestPoi(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
     {
-        var nearest = pois
-            .Select(p => new
-            {
-                Poi = p,
-                Distance = Location.CalculateDistance(
-                    location.Latitude,
-                    location.Longitude,
-                    p.Latitude,
-                    p.Longitude,
-                    DistanceUnits.Kilometers)
-            })
-            .OrderBy(x => x.Distance)
-            .FirstOrDefault();
-
-        NearestPoi = nearest?.Poi;
+        NearestPoi = FindPriorityPoi(location, pois, activeTourSession);
     }
 
     private async Task RefreshPoisFromWebAsync()
@@ -665,6 +647,61 @@ public class HomeViewModel : INotifyPropertyChanged
             return _text.Format("Status.SyncSummaryFallback", activePoiCount);
 
         return _text.Format("Status.SyncSummaryFallbackWithError", activePoiCount, syncResult.ErrorMessage);
+    }
+
+    private static List<Poi> OrderPoisForDisplay(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
+    {
+        var orderedPois = pois
+            .OrderBy(p => Location.CalculateDistance(
+                location.Latitude,
+                location.Longitude,
+                p.Latitude,
+                p.Longitude,
+                DistanceUnits.Kilometers))
+            .ToList();
+
+        var currentStopPoiId = activeTourSession?.CurrentStop?.PoiId
+                               ?? activeTourSession?.CurrentStop?.Poi?.Id;
+
+        if (!currentStopPoiId.HasValue || currentStopPoiId.Value <= 0)
+            return orderedPois;
+
+        var currentStopIndex = orderedPois.FindIndex(x => x.Id == currentStopPoiId.Value);
+        if (currentStopIndex <= 0)
+            return orderedPois;
+
+        var currentStopPoi = orderedPois[currentStopIndex];
+        orderedPois.RemoveAt(currentStopIndex);
+        orderedPois.Insert(0, currentStopPoi);
+        return orderedPois;
+    }
+
+    private static Poi? FindPriorityPoi(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
+    {
+        var currentStopPoiId = activeTourSession?.CurrentStop?.PoiId
+                               ?? activeTourSession?.CurrentStop?.Poi?.Id;
+
+        if (currentStopPoiId.HasValue && currentStopPoiId.Value > 0)
+        {
+            var currentStopPoi = pois.FirstOrDefault(x => x.Id == currentStopPoiId.Value);
+            if (currentStopPoi is not null)
+                return currentStopPoi;
+        }
+
+        return pois
+            .Select(p => new
+            {
+                Poi = p,
+                Distance = Location.CalculateDistance(
+                    location.Latitude,
+                    location.Longitude,
+                    p.Latitude,
+                    p.Longitude,
+                    DistanceUnits.Kilometers)
+            })
+            .OrderBy(x => x.Distance)
+            .Select(x => x.Poi)
+            .FirstOrDefault();
     }
 
     private static string CombineStatusSegments(string? primary, string secondary)
