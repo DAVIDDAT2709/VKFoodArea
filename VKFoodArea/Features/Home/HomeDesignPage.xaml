@@ -18,7 +18,7 @@
         <VerticalStackLayout Grid.Row="0"
                              Padding="16,14,16,10"
                              Spacing="10">
-            <Grid ColumnDefinitions="*,Auto,Auto"
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto"
                   ColumnSpacing="8">
                 <VerticalStackLayout Spacing="2"
                                      VerticalOptions="Center">
@@ -45,7 +45,18 @@
                         FontSize="12"
                         FontAttributes="Bold" />
 
-                <Button Grid.Column="2"
+                <Button x:Name="TourButton"
+                        Grid.Column="2"
+                        Clicked="OnToursClicked"
+                        WidthRequest="60"
+                        HeightRequest="40"
+                        CornerRadius="12"
+                        BackgroundColor="#FFF4D6"
+                        TextColor="#9C6A16"
+                        FontSize="11"
+                        FontAttributes="Bold" />
+
+                <Button Grid.Column="3"
                         Text="⚙"
                         Clicked="OnSettingsClicked"
                         WidthRequest="40"

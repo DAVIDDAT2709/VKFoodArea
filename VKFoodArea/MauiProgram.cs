@@ -61,6 +61,7 @@ public static class MauiProgram
         builder.Services.AddHttpClient<AppUserSyncService>(ConfigureDemoHttpClient);
         builder.Services.AddHttpClient<MovementLogSyncService>(ConfigureDemoHttpClient);
         builder.Services.AddHttpClient<PoiSyncService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<TourCatalogService>(ConfigureDemoHttpClient);
 
         builder.Services.AddTransient<NarrationService>();
         builder.Services.AddTransient<AccountService>();
@@ -82,6 +83,7 @@ public static class MauiProgram
         builder.Services.AddTransient<FullMapPage>();
         builder.Services.AddTransient<PoiDetailPage>();
         builder.Services.AddTransient<QrScannerPage>();
+        builder.Services.AddTransient<TourCatalogPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<AccountProfilePage>();
         builder.Services.AddTransient<TourSessionPage>();
