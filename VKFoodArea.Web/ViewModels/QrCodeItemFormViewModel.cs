@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using VKFoodArea.Web.Models;
 
@@ -18,12 +19,20 @@ public class QrCodeItemFormViewModel
     [Display(Name = "Tiêu đề")]
     public string Title { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng chọn POI.")]
-    [Display(Name = "POI")]
+    [StringLength(500)]
+    public string? CurrentImageUrl { get; set; }
+
+    [Display(Name = "Ảnh QR")]
+    public IFormFile? ImageFile { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng chọn đích đến.")]
+    [Display(Name = "Loại đích đến")]
     public string TargetType { get; set; } = QrTargetTypes.Poi;
 
+    [Display(Name = "Điểm POI")]
     public int? PoiId { get; set; }
 
+    [Display(Name = "Tour")]
     public int? TourId { get; set; }
 
     [Display(Name = "Đang hoạt động")]

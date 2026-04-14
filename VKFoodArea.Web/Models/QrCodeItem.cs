@@ -12,6 +12,9 @@ public class QrCodeItem
     [Required, StringLength(120)]
     public string Title { get; set; } = string.Empty;
 
+    [StringLength(500)]
+    public string ImageUrl { get; set; } = string.Empty;
+
     [Required, StringLength(20)]
     public string TargetType { get; set; } = QrTargetTypes.Poi;
 

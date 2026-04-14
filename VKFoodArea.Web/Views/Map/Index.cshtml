@@ -1,97 +1,68 @@
 @model VKFoodArea.Web.ViewModels.AdminMapViewModel
 @{
-    ViewData["Title"] = "Analytics";
-    ViewData["Subtitle"] = "Theo dõi tuyến di chuyển ẩn danh, điểm nóng vị trí và hiệu quả nghe POI từ dữ liệu đồng bộ của app.";
+    ViewData["Title"] = "Bản đồ POI";
 
     var poisJson = System.Text.Json.JsonSerializer.Serialize(Model.ActivePois);
     var routesJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.Routes);
     var heatmapJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.HeatmapPoints);
-    var topPoi = Model.Analytics.TopPois.FirstOrDefault();
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <section class="page-header page-section">
-    <div class="headline-stack">
-        <span class="page-kicker">Analytics</span>
-        <h2>Ban do hanh vi nguoi dung</h2>
-        <p class="page-subtitle">@Model.Analytics.AnalyticsWindowLabel</p>
+    <div>
+        <h2>Bản đồ POI</h2>
     </div>
     <div class="page-actions">
-        <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Lich su nghe</a>
-        <a asp-controller="Pois" asp-action="Index" class="btn btn-primary">Danh sach POI</a>
+        <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Lịch sử nghe</a>
+        <a asp-controller="Pois" asp-action="Index" class="btn btn-primary">Danh sách POI</a>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
-        <span class="metric-card__label">Tuyen an danh</span>
-        <strong class="metric-card__value">@Model.Analytics.AnonymousRouteCount</strong>
-        <span class="metric-card__meta">So phien di chuyen co du diem de ve thanh route.</span>
+        <span class="metric-card__label">POI hoạt động</span>
+        <strong class="metric-card__value">@Model.ActivePois.Count</strong>
     </article>
     <article class="metric-card metric-card--green">
-        <span class="metric-card__label">Thiet bi ghi nhan</span>
-        <strong class="metric-card__value">@Model.Analytics.AnonymousVisitorCount</strong>
-        <span class="metric-card__meta">Tong so anonymous key dang co trong tap log dang phan tich.</span>
+        <span class="metric-card__label">Tuyến ẩn danh</span>
+        <strong class="metric-card__value">@Model.Analytics.AnonymousRouteCount</strong>
     </article>
     <article class="metric-card metric-card--orange">
-        <span class="metric-card__label">Heat points</span>
-        <strong class="metric-card__value">@Model.Analytics.HeatmapPoints.Count</strong>
-        <span class="metric-card__meta">Cum diem nong da duoc rut gon de doc mat do di chuyen nhanh hon.</span>
+        <span class="metric-card__label">Thiết bị ghi nhận</span>
+        <strong class="metric-card__value">@Model.Analytics.AnonymousVisitorCount</strong>
     </article>
     <article class="metric-card metric-card--red">
-        <span class="metric-card__label">TB nghe / POI</span>
-        <strong class="metric-card__value">@Math.Round(Model.Analytics.AverageListenSeconds)s</strong>
-        <span class="metric-card__meta">Thoi gian nghe trung binh cua moi luot thuyet minh da dong bo.</span>
-    </article>
-    <article class="metric-card metric-card--blue">
-        <span class="metric-card__label">Top POI</span>
-        <strong class="metric-card__value">@(topPoi?.Count ?? 0)</strong>
-        <span class="metric-card__meta">@(topPoi is null ? "Chua co luot nghe de xep hang." : $"{topPoi.PoiName}")</span>
-    </article>
-    <article class="metric-card metric-card--green">
-        <span class="metric-card__label">Movement logs</span>
-        <strong class="metric-card__value">@Model.Analytics.AnalyzedMovementLogCount / @Model.Analytics.TotalMovementLogs</strong>
-        <span class="metric-card__meta">Mau phan tich hien tai so voi tong log di chuyen da luu.</span>
+        <span class="metric-card__label">Điểm nóng</span>
+        <strong class="metric-card__value">@Model.Analytics.HeatmapPoints.Count</strong>
     </article>
 </section>
 
 <section class="dashboard-grid page-section">
     <article class="card-surface card-surface--accent">
         <div class="section-heading">
-            <div class="headline-stack">
-                <span class="section-kicker">Movement</span>
-                <h2>Route va heatmap</h2>
-                <p class="section-caption">POI active, duong di chuyen an danh va cac diem nong vi tri duoc phu len cung mot ban do.</p>
-            </div>
+            <h2>Bản đồ theo dõi</h2>
             <span class="soft-pill soft-pill--neutral">
                 @(Model.Analytics.LatestMovementAt.HasValue
-                    ? $"Cap nhat {Model.Analytics.LatestMovementAt.Value:dd/MM HH:mm}"
-                    : "Chua co movement log")
+                    ? $"Cập nhật {Model.Analytics.LatestMovementAt.Value:dd/MM HH:mm}"
+                    : Model.Analytics.AnalyticsWindowLabel)
             </span>
         </div>
-
-        @if (Model.Analytics.UnassignedMovementLogCount > 0)
-        {
-            <div class="map-insight-note">
-                Co @Model.Analytics.UnassignedMovementLogCount movement log cu chua co anonymous key. Cac diem nay van vao heatmap, nhung se khong duoc noi thanh route rieng.
-            </div>
-        }
 
         @if (!Model.HasMapData)
         {
             <div class="empty-state">
-                <p>Chua co du lieu de ve ban do analytics.</p>
+                <p>Chưa có dữ liệu để hiển thị trên bản đồ.</p>
             </div>
         }
         else
         {
-            <div id="admin-poi-map" class="admin-poi-map" aria-label="Ban do analytics"></div>
+            <div id="admin-poi-map" class="admin-poi-map" aria-label="Bản đồ POI"></div>
             <div id="admin-map-fallback" class="empty-state mt-3 d-none">
-                <p>Khong tai duoc map tile. Cac chi so va danh sach tong hop van hien o cot ben phai.</p>
+                <p>Không tải được nền bản đồ. Dữ liệu tổng hợp vẫn hiển thị ở cột bên phải.</p>
             </div>
             <div id="admin-heatmap-warning" class="map-insight-note d-none">
-                Heatmap plugin khong tai duoc. Route va marker POI van dang hien thi.
+                Không tải được lớp heatmap. Tuyến đi và marker POI vẫn hiển thị bình thường.
             </div>
         }
     </article>
@@ -99,17 +70,13 @@
     <div class="stacked-panels">
         <article class="card-surface">
             <div class="section-heading">
-                <div class="headline-stack">
-                    <span class="section-kicker">Ranking</span>
-                    <h2>Top dia diem duoc nghe nhieu nhat</h2>
-                    <p class="section-caption">Uu tien nhanh nhung diem dang co tan suat nghe cao de kiem tra noi dung va audio.</p>
-                </div>
+                <h2>Điểm được nghe nhiều</h2>
             </div>
 
             @if (!Model.Analytics.TopPois.Any())
             {
                 <div class="empty-state">
-                    <p>Chua co du lieu luot nghe.</p>
+                    <p>Chưa có dữ liệu lượt nghe.</p>
                 </div>
             }
             else
@@ -120,9 +87,9 @@
                         <div class="list-row">
                             <div class="list-row__content">
                                 <strong>@poi.PoiName</strong>
-                                <p>POI #@poi.PoiId · cap nhat @poi.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
+                                <p>Cập nhật @poi.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
                             </div>
-                            <span class="status-pill status-pill--info">@poi.Count luot</span>
+                            <span class="status-pill status-pill--info">@poi.Count lượt</span>
                         </div>
                     }
                 </div>
@@ -131,17 +98,13 @@
 
         <article class="card-surface">
             <div class="section-heading">
-                <div class="headline-stack">
-                    <span class="section-kicker">Routes</span>
-                    <h2>Tuyen di chuyen gan day</h2>
-                    <p class="section-caption">Moi tuyen duoc tach theo phien de tranh noi nham giua nhieu lan di chuyen khac nhau.</p>
-                </div>
+                <h2>Tuyến gần đây</h2>
             </div>
 
             @if (!Model.Analytics.Routes.Any())
             {
                 <div class="empty-state">
-                    <p>Chua co route du diem de hien thi.</p>
+                    <p>Chưa có dữ liệu tuyến đi.</p>
                 </div>
             }
             else
@@ -152,7 +115,7 @@
                         <div class="list-row">
                             <div class="list-row__content">
                                 <strong>@route.RouteLabel</strong>
-                                <p>@route.PointCount diem · @Math.Round(route.ApproxDistanceMeters)m · @Math.Round(route.DurationMinutes) phut</p>
+                                <p>@route.PointCount điểm · @Math.Round(route.ApproxDistanceMeters)m · @Math.Round(route.DurationMinutes) phút</p>
                                 <p>@route.StartedAt.ToString("dd/MM HH:mm") - @route.EndedAt.ToString("dd/MM HH:mm")</p>
                             </div>
                             <span class="status-pill status-pill--muted">@route.SourceSummary</span>
@@ -160,6 +123,25 @@
                     }
                 </div>
             }
+        </article>
+
+        <article class="card-surface">
+            <div class="section-heading">
+                <h2>TB nghe / POI</h2>
+            </div>
+
+            <div class="stat-box">
+                @if (Model.Analytics.AverageListenSeconds > 0)
+                {
+                    <strong class="stat-box__value">@Math.Round(Model.Analytics.AverageListenSeconds)s</strong>
+                    <span class="stat-box__hint">Tính từ các lượt nghe đã đồng bộ và có thời lượng.</span>
+                }
+                else
+                {
+                    <strong class="stat-box__value">--</strong>
+                    <span class="stat-box__hint">Chưa có dữ liệu thời lượng nghe.</span>
+                }
+            </div>
         </article>
     </div>
 </section>
@@ -207,8 +189,8 @@
                 marker.bindPopup(`
                     <strong>${escapeHtml(poi.Name)}</strong><br>
                     ${escapeHtml(poi.Address)}<br>
-                    Radius: ${formatNumber(poi.RadiusMeters)}m<br>
-                    Priority: ${formatNumber(poi.Priority)}
+                    Bán kính: ${formatNumber(poi.RadiusMeters)}m<br>
+                    Ưu tiên: ${formatNumber(poi.Priority)}
                 `);
                 poiLayer.addLayer(marker);
 
@@ -239,8 +221,8 @@
                 polyline.bindPopup(`
                     <strong>${escapeHtml(route.RouteLabel)}</strong><br>
                     ${escapeHtml(route.SourceSummary)}<br>
-                    ${formatNumber(route.PointCount)} diem · ${formatNumber(route.ApproxDistanceMeters)}m<br>
-                    ${formatNumber(route.DurationMinutes)} phut
+                    ${formatNumber(route.PointCount)} điểm · ${formatNumber(route.ApproxDistanceMeters)}m<br>
+                    ${formatNumber(route.DurationMinutes)} phút
                 `);
 
                 routeLayer.addLayer(polyline);
@@ -295,13 +277,13 @@
 
             const overlayLayers = {};
             if (poiLayer.getLayers().length > 0) {
-                overlayLayers["POI active"] = poiLayer;
+                overlayLayers["POI hoạt động"] = poiLayer;
             }
             if (routeLayer.getLayers().length > 0) {
-                overlayLayers["Tuyen an danh"] = routeLayer;
+                overlayLayers["Tuyến ẩn danh"] = routeLayer;
             }
             if (heatLayer) {
-                overlayLayers["Heatmap"] = heatLayer;
+                overlayLayers["Điểm nóng"] = heatLayer;
             }
 
             if (Object.keys(overlayLayers).length > 0) {

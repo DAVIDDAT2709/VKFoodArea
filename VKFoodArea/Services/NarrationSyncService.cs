@@ -23,6 +23,8 @@ public class NarrationSyncService
         string mode,
         string? userKey,
         string triggerSource = "manual",
+        DateTime? playedAt = null,
+        int? durationSeconds = null,
         CancellationToken ct = default)
     {
         try
@@ -37,7 +39,8 @@ public class NarrationSyncService
     Language = language,
     TriggerSource = NormalizeTriggerSource(triggerSource),
     Mode = mode.ToLowerInvariant(),
-    PlayedAt = DateTime.UtcNow
+    PlayedAt = playedAt ?? DateTime.UtcNow,
+    DurationSeconds = durationSeconds
 };
 
             var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories";

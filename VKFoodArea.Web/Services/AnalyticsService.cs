@@ -216,11 +216,11 @@ public class AnalyticsService : IAnalyticsService
     private static string BuildAnalyticsWindowLabel(int analyzedCount, int sampleSize)
     {
         if (analyzedCount == 0)
-            return "Chưa có movement log để phân tích.";
+            return "Chưa có dữ liệu di chuyển để hiển thị.";
 
         return analyzedCount >= sampleSize
-            ? $"Đang phân tích {sampleSize:N0} movement log gần nhất."
-            : $"Đang phân tích {analyzedCount:N0} movement log đã đồng bộ.";
+            ? $"Đang phân tích {sampleSize:N0} log di chuyển gần nhất."
+            : $"Đang phân tích {analyzedCount:N0} log di chuyển đã đồng bộ.";
     }
 
     private static string BuildRouteLabel(string userKey)
@@ -241,9 +241,9 @@ public class AnalyticsService : IAnalyticsService
     {
         return (source ?? "gps").Trim().ToLowerInvariant() switch
         {
-            "background" => "background",
-            "foreground" => "foreground",
-            _ => "gps"
+            "background" => "GPS nền",
+            "foreground" => "GPS trực tiếp",
+            _ => "GPS"
         };
     }
 

@@ -5,6 +5,7 @@
 <input asp-for="AudioFileVi" type="hidden" />
 <input asp-for="AudioFileEn" type="hidden" />
 <input asp-for="AudioFileJa" type="hidden" />
+<input asp-for="QrCode" type="hidden" />
 
 <div class="editor-layout">
     <section class="card-surface">
@@ -15,7 +16,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label asp-for="Name" class="form-label"></label>
-                <input asp-for="Name" class="form-control" placeholder="Ví dụ: Ốc Vũ" />
+                <input asp-for="Name" class="form-control" placeholder="Ví dụ: Ốc Sáu Nở" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="col-md-6">
@@ -32,7 +33,7 @@
                 <label asp-for="ImageFile" class="form-label"></label>
                 <input asp-for="ImageFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
                 <span asp-validation-for="ImageFile" class="text-danger"></span>
-                <div class="form-text">Ảnh sẽ được tự động copy vào `VKFoodArea/Resources/Images` và đồng thời lưu lên web để app hiển thị ngay.</div>
+                <div class="form-text">Ảnh sẽ được lưu trên web và dùng lại cho app.</div>
             </div>
             @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
             {
@@ -52,7 +53,7 @@
 
     <section class="card-surface">
         <div class="section-heading">
-            <h2>GPS và QR</h2>
+            <h2>Vị trí</h2>
         </div>
 
         <div class="row g-3">
@@ -76,11 +77,6 @@
                 <input asp-for="Priority" class="form-control" min="1" max="100" placeholder="1" />
                 <span asp-validation-for="Priority" class="text-danger"></span>
             </div>
-            <div class="col-md-8">
-                <label asp-for="QrCode" class="form-label"></label>
-                <input asp-for="QrCode" class="form-control" placeholder="Ví dụ: poi:oc-vu" />
-                <span asp-validation-for="QrCode" class="text-danger"></span>
-            </div>
             <div class="col-md-4">
                 <div class="form-check form-switch field-switch">
                     <input asp-for="IsActive" class="form-check-input" />
@@ -92,7 +88,7 @@
 
     <section class="card-surface">
         <div class="section-heading">
-            <h2>TTS</h2>
+            <h2>Nội dung TTS</h2>
         </div>
 
         <div class="row g-3">
@@ -106,22 +102,22 @@
                 <div class="readonly-grid">
                     <div>
                         <label asp-for="TtsScriptEn" class="form-label"></label>
-                        <textarea asp-for="TtsScriptEn" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <textarea asp-for="TtsScriptEn" class="form-control" rows="5" placeholder="Tự sinh sau khi lưu" readonly></textarea>
                         <span asp-validation-for="TtsScriptEn" class="text-danger"></span>
                     </div>
                     <div>
                         <label asp-for="TtsScriptZh" class="form-label"></label>
-                        <textarea asp-for="TtsScriptZh" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <textarea asp-for="TtsScriptZh" class="form-control" rows="5" placeholder="Tự sinh sau khi lưu" readonly></textarea>
                         <span asp-validation-for="TtsScriptZh" class="text-danger"></span>
                     </div>
                     <div>
                         <label asp-for="TtsScriptJa" class="form-label"></label>
-                        <textarea asp-for="TtsScriptJa" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <textarea asp-for="TtsScriptJa" class="form-control" rows="5" placeholder="Tự sinh sau khi lưu" readonly></textarea>
                         <span asp-validation-for="TtsScriptJa" class="text-danger"></span>
                     </div>
                     <div>
                         <label asp-for="TtsScriptDe" class="form-label"></label>
-                        <textarea asp-for="TtsScriptDe" class="form-control" rows="5" placeholder="Tự sinh sau khi SAVE" readonly></textarea>
+                        <textarea asp-for="TtsScriptDe" class="form-control" rows="5" placeholder="Tự sinh sau khi lưu" readonly></textarea>
                         <span asp-validation-for="TtsScriptDe" class="text-danger"></span>
                     </div>
                 </div>
@@ -131,7 +127,7 @@
 
     <section class="card-surface">
         <div class="section-heading">
-            <h2>Audio file</h2>
+            <h2>Tệp âm thanh</h2>
         </div>
 
         <div class="row g-3">
@@ -160,13 +156,16 @@
 @functions {
     private static bool CanPreview(string imageUrl)
         => imageUrl.StartsWith("/", StringComparison.Ordinal) ||
+           imageUrl.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase) ||
            imageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
            imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
 
     private static string ToPreviewUrl(string imageUrl)
         => imageUrl.StartsWith("/", StringComparison.Ordinal)
             ? imageUrl
-            : imageUrl;
+            : imageUrl.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase)
+                ? $"/{imageUrl.TrimStart('/')}"
+                : $"/uploads/poi-images/{System.IO.Path.GetFileName(imageUrl)}";
 
     private static Microsoft.AspNetCore.Html.IHtmlContent RenderAudioCurrent(string? audioUrl)
     {
@@ -181,7 +180,7 @@
         return new Microsoft.AspNetCore.Html.HtmlString(
             $"""
             <div class="audio-current">
-                <div class="form-text">Current file</div>
+                <div class="form-text">Tệp hiện tại</div>
                 <audio controls preload="none" src="{source}"></audio>
                 <div class="small text-muted mono">{encoded}</div>
             </div>

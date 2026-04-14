@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Web.Data;
 using VKFoodArea.Web.Helpers;
@@ -13,6 +15,77 @@ public class NarrationHistoryService : INarrationHistoryService
     public NarrationHistoryService(AppDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<NarrationHistoryIndexViewModel> GetIndexAsync(
+        string? query,
+        DateTime? fromDate,
+        DateTime? toDate,
+        string? language,
+        string? mode,
+        string? source)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var normalizedLanguage = NormalizeSimpleFilter(language);
+        var normalizedMode = NormalizeSimpleFilter(mode);
+        var normalizedSource = NormalizeTriggerSource(source);
+
+        var dataQuery = BuildFilteredQuery(normalizedSource);
+
+        if (!string.IsNullOrWhiteSpace(normalizedLanguage))
+            dataQuery = dataQuery.Where(x => x.Language == normalizedLanguage);
+
+        if (!string.IsNullOrWhiteSpace(normalizedMode))
+            dataQuery = dataQuery.Where(x => x.Mode == normalizedMode);
+
+        if (fromDate.HasValue)
+        {
+            var from = DateTime.SpecifyKind(fromDate.Value.Date, DateTimeKind.Unspecified);
+            dataQuery = dataQuery.Where(x => x.PlayedAt >= from);
+        }
+
+        if (toDate.HasValue)
+        {
+            var toExclusive = DateTime.SpecifyKind(toDate.Value.Date.AddDays(1), DateTimeKind.Unspecified);
+            dataQuery = dataQuery.Where(x => x.PlayedAt < toExclusive);
+        }
+
+        var items = await dataQuery.ToListAsync();
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            items = items
+                .Where(x => MatchesSearch(x.PoiName, normalizedQuery))
+                .ToList();
+        }
+
+        return new NarrationHistoryIndexViewModel
+        {
+            Query = normalizedQuery,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Language = normalizedLanguage,
+            Mode = normalizedMode,
+            Source = normalizedSource,
+            Items = items,
+            TodayCount = items.Count(x => x.PlayedAt >= DateTime.Today),
+            GpsCount = items.Count(x => x.TriggerSource == "gps" || x.TriggerSource == "auto"),
+            QrCount = items.Count(x => x.TriggerSource == "qr"),
+            ManualCount = items.Count(x => x.TriggerSource == "manual"),
+            TopPois = items
+                .GroupBy(x => new { x.PoiId, x.PoiName })
+                .Select(x => new TopPoiPerformanceViewModel
+                {
+                    PoiId = x.Key.PoiId,
+                    PoiName = x.Key.PoiName,
+                    Count = x.Count(),
+                    LatestPlayedAt = x.Max(item => item.PlayedAt)
+                })
+                .OrderByDescending(x => x.Count)
+                .ThenBy(x => x.PoiName)
+                .Take(5)
+                .ToList()
+        };
     }
 
     public async Task<List<NarrationHistory>> GetAllAsync(string? source)
@@ -45,9 +118,9 @@ public class NarrationHistoryService : INarrationHistoryService
 
     public async Task<NarrationHistoryApiViewModel?> CreateFromAppAsync(NarrationHistoryCreateApiViewModel vm)
     {
-        var language = (vm.Language ?? "vi").Trim().ToLowerInvariant();
+        var language = NormalizeSimpleFilter(vm.Language) ?? "vi";
         var triggerSource = NormalizeTriggerSource(vm.TriggerSource);
-        var mode = (vm.Mode ?? "tts").Trim().ToLowerInvariant();
+        var mode = NormalizeSimpleFilter(vm.Mode) ?? "tts";
         var poi = await ResolvePoiAsync(vm);
 
         if (poi is null)
@@ -177,32 +250,89 @@ public class NarrationHistoryService : INarrationHistoryService
                 return poiByName;
         }
 
-    if (vm.PoiId > 0)
-    {
-        var poiById = await _context.Pois
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == vm.PoiId && x.IsActive);
+        if (vm.PoiId > 0)
+        {
+            var poiById = await _context.Pois
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == vm.PoiId && x.IsActive);
 
-        if (poiById is not null)
-            return poiById;
+            if (poiById is not null)
+                return poiById;
+        }
+
+        return null;
     }
 
-    return null;
+    private static bool MatchesSearch(string? source, string query)
+    {
+        var normalizedSource = NormalizeSearchText(source);
+        var normalizedQuery = NormalizeSearchText(query);
+
+        if (string.IsNullOrWhiteSpace(normalizedQuery))
+            return true;
+
+        return normalizedSource.Contains(normalizedQuery, StringComparison.Ordinal);
+    }
+
+    private static string NormalizeSearchText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var builder = new StringBuilder(value.Length);
+        var previousWasSpace = false;
+
+        foreach (var character in value
+                     .Trim()
+                     .ToLowerInvariant()
+                     .Normalize(NormalizationForm.FormD))
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            var normalizedCharacter = character switch
+            {
+                '\u0111' => 'd',
+                _ => character
+            };
+
+            if (char.IsWhiteSpace(normalizedCharacter))
+            {
+                if (previousWasSpace)
+                    continue;
+
+                builder.Append(' ');
+                previousWasSpace = true;
+                continue;
+            }
+
+            builder.Append(normalizedCharacter);
+            previousWasSpace = false;
+        }
+
+        return builder.ToString().Trim();
     }
 
     private static string NormalizeTriggerSource(string? source)
     {
-        var normalized = (source ?? "manual").Trim().ToLowerInvariant();
+        var normalized = (source ?? string.Empty).Trim().ToLowerInvariant();
 
         return normalized switch
         {
             "auto" => "gps",
             "gps" => "gps",
             "qr" => "qr",
-            _ => "manual"
+            "manual" => "manual",
+            _ => string.Empty
         };
     }
 
     private static string NormalizeUserKey(string? userKey)
         => (userKey ?? string.Empty).Trim().ToLowerInvariant();
+
+    private static string? NormalizeSimpleFilter(string? value)
+    {
+        var normalized = (value ?? string.Empty).Trim().ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
 }

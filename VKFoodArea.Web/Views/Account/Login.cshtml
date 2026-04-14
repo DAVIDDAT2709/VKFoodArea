@@ -7,53 +7,51 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dang nhap Admin - VK Food Area CMS</title>
+    <title>Đăng nhập quản trị - VK Food Area</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="auth-page auth-page--admin">
-    <main class="admin-login-shell" aria-label="Dang nhap khu vuc quan tri">
-        <section class="admin-login-hero" aria-label="Tong quan he thong">
+    <main class="admin-login-shell" aria-label="Đăng nhập khu vực quản trị">
+        <section class="admin-login-hero" aria-label="Giới thiệu khu vực quản trị">
             <div class="admin-login-brand">
                 <span class="admin-login-logo">VK</span>
                 <div>
                     <p>VK Food Area</p>
-                    <strong>CMS Control Room</strong>
+                    <strong>Khu vực quản trị</strong>
                 </div>
             </div>
 
             <div class="admin-login-copy">
-                <span class="soft-pill soft-pill--glass">Admin workspace</span>
-                <h1>Van hanh POI, QR va audio tren mot man hinh.</h1>
-                <p>
-                    Kiem soat noi dung thuyet minh, ban do va lich su nghe dong bo voi App.
-                </p>
+                <span class="soft-pill soft-pill--glass">Admin</span>
+                <h1>Quản lý POI, tour, mã QR và dữ liệu nghe trên một giao diện.</h1>
+                <p>Đăng nhập để tiếp tục vào trang điều hành.</p>
             </div>
 
-            <div class="admin-login-signal" aria-label="Cac module chinh">
+            <div class="admin-login-signal" aria-label="Chức năng chính">
                 <div>
                     <span>01</span>
-                    <strong>POI content</strong>
-                    <p>Toa do, ban kinh, uu tien va ban dich.</p>
+                    <strong>POI</strong>
+                    <p>Quản lý ảnh, vị trí và nội dung TTS.</p>
                 </div>
                 <div>
                     <span>02</span>
-                    <strong>Audio preview</strong>
-                    <p>Nghe thu TTS hoac file audio truoc khi xuat ban.</p>
+                    <strong>QR</strong>
+                    <p>Tạo mã mới và gắn trực tiếp với POI hoặc tour.</p>
                 </div>
                 <div>
                     <span>03</span>
-                    <strong>Usage logs</strong>
-                    <p>Theo doi luot nghe, QR va hanh vi su dung.</p>
+                    <strong>Báo cáo</strong>
+                    <p>Theo dõi lịch sử nghe và dữ liệu bản đồ.</p>
                 </div>
             </div>
         </section>
 
-        <section class="admin-login-panel" aria-label="Form dang nhap admin">
+        <section class="admin-login-panel" aria-label="Form đăng nhập admin">
             <div class="admin-login-panel__head">
-                <span class="soft-pill">Secure access</span>
-                <h2>Dang nhap Admin</h2>
-                <p>Nhap tai khoan quan tri de tiep tuc vao bang dieu khien.</p>
+                <span class="soft-pill">Đăng nhập</span>
+                <h2>Quản trị viên</h2>
+                <p>Nhập tài khoản để tiếp tục.</p>
             </div>
 
             <form asp-action="Login" method="post" class="admin-login-form" novalidate>
@@ -79,7 +77,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="auth-submit">Dang nhap vao CMS</button>
+                <button type="submit" class="auth-submit">Đăng nhập</button>
             </form>
         </section>
     </main>

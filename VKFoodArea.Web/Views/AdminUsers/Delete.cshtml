@@ -1,14 +1,14 @@
 @model VKFoodArea.Web.Models.AdminUser
 @{
-    ViewData["Title"] = "Xoa admin";
+    ViewData["Title"] = "Xóa admin";
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Xoa tai khoan CMS</h2>
+        <h2>Xóa tài khoản admin</h2>
     </div>
     <div class="page-actions">
-        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
     </div>
 </section>
 
@@ -19,26 +19,26 @@
         </div>
         <div class="summary-list">
             <div class="summary-row">
-                <span>Ten hien thi</span>
+                <span>Tên hiển thị</span>
                 <strong>@Model.FullName</strong>
             </div>
             <div class="summary-row">
-                <span>Quyen</span>
+                <span>Quyền</span>
                 <strong>@Model.Role</strong>
             </div>
             <div class="summary-row">
-                <span>Trang thai</span>
-                <strong>@(Model.IsActive ? "Active" : "Locked")</strong>
+                <span>Trạng thái</span>
+                <strong>@(Model.IsActive ? "Đang hoạt động" : "Đang khóa")</strong>
             </div>
         </div>
     </article>
 
     <aside class="warning-panel">
-        <h3>Xac nhan xoa</h3>
-        <p>Thao tac nay xoa tai khoan quan tri khoi CMS.</p>
+        <h3>Xác nhận xóa</h3>
+        <p>Thao tác này sẽ xóa tài khoản quản trị khỏi hệ thống.</p>
         <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="page-actions">
-            <button type="submit" class="btn btn-danger">Xoa admin</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Huy</a>
+            <button type="submit" class="btn btn-danger">Xóa admin</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
         </form>
     </aside>
 </section>

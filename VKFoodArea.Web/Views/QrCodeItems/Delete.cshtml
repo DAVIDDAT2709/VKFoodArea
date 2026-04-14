@@ -1,11 +1,11 @@
 @model VKFoodArea.Web.ViewModels.QrCodeItemDeleteViewModel
 @{
-    ViewData["Title"] = "Xóa QR code";
+    ViewData["Title"] = "Xóa mã QR";
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Xóa QR code</h2>
+        <h2>Xóa mã QR</h2>
     </div>
 </section>
 
@@ -22,7 +22,7 @@
                 </div>
                 <div class="list-row">
                     <div class="list-row__content">
-                        <strong>Target</strong>
+                        <strong>Đích đến</strong>
                         <p>@Model.TargetName (@Model.TargetType.ToUpperInvariant() #@Model.TargetId)</p>
                     </div>
                 </div>
@@ -41,7 +41,7 @@
                 <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
                 <form asp-action="Delete" method="post">
                     <input type="hidden" asp-for="Id" />
-                    <button type="submit" class="btn btn-danger">Xóa QR</button>
+                    <button type="submit" class="btn btn-danger">Xóa mã QR</button>
                 </form>
             </div>
         </div>

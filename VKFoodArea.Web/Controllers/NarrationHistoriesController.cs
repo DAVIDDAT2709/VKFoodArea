@@ -14,11 +14,22 @@ public class NarrationHistoriesController : Controller
         _narrationHistoryService = narrationHistoryService;
     }
 
-    public async Task<IActionResult> Index(string? source)
+    public async Task<IActionResult> Index(
+        string? query,
+        DateTime? fromDate,
+        DateTime? toDate,
+        string? language,
+        string? mode,
+        string? source)
     {
-        var data = await _narrationHistoryService.GetAllAsync(source);
+        var vm = await _narrationHistoryService.GetIndexAsync(
+            query,
+            fromDate,
+            toDate,
+            language,
+            mode,
+            source);
 
-        ViewBag.CurrentSource = source;
-        return View(data);
+        return View(vm);
     }
 }
