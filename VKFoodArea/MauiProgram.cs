@@ -4,7 +4,6 @@ using Plugin.Maui.Audio;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using ZXing.Net.Maui.Controls;
 using VKFoodArea.Data;
-using VKFoodArea.Features.Auth;
 using VKFoodArea.Features.Home;
 using VKFoodArea.Features.Settings;
 using VKFoodArea.Features.Startup;
@@ -81,14 +80,13 @@ public static class MauiProgram
         builder.Services.AddTransient<HomeDesignPage>();
         builder.Services.AddTransient<HistoryPage>();
         builder.Services.AddTransient<FullMapPage>();
-        builder.Services.AddTransient<LoginPage>();
-        builder.Services.AddTransient<RegisterPage>();
         builder.Services.AddTransient<PoiDetailPage>();
         builder.Services.AddTransient<QrScannerPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<AccountProfilePage>();
         builder.Services.AddTransient<TourSessionPage>();
         builder.Services.AddTransient<UserPage>();
+        builder.Services.AddTransient<HomeEntryPage>();
         builder.Services.AddTransient<StartupPage>();
 
 #if DEBUG

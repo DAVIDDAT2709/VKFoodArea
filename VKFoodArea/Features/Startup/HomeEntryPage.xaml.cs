@@ -1,86 +1,64 @@
-﻿using VKFoodArea.Features.Home;
+using System.Linq;
+using VKFoodArea.Features.Home;
 using VKFoodArea.Services;
 
-namespace VKFoodArea.Features.Auth;
+namespace VKFoodArea.Features.Startup;
 
-public partial class LoginPage : ContentPage
+public partial class HomeEntryPage : ContentPage
 {
-    private readonly AuthService _authService;
-    private readonly IServiceProvider _serviceProvider;
     private readonly LanguageSelectionFlowService _languageSelectionFlowService;
     private readonly AppRootNavigationService _rootNavigationService;
     private readonly AppLinkService _appLinkService;
     private readonly AppTextService _text;
-    private string _selectedUserType = "domestic";
-    private string _selectedLanguage = "en";
+    private readonly AppLanguageService _languageService;
 
-    public LoginPage(
-        AuthService authService,
-        IServiceProvider serviceProvider,
+    private string _selectedUserType = "domestic";
+    private string _selectedLanguage = "vi";
+
+    public HomeEntryPage(
         LanguageSelectionFlowService languageSelectionFlowService,
         AppRootNavigationService rootNavigationService,
         AppLinkService appLinkService,
-        AppTextService text)
+        AppTextService text,
+        AppLanguageService languageService)
     {
         InitializeComponent();
-        _authService = authService;
-        _serviceProvider = serviceProvider;
         _languageSelectionFlowService = languageSelectionFlowService;
         _rootNavigationService = rootNavigationService;
         _appLinkService = appLinkService;
         _text = text;
+        _languageService = languageService;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        SyncSelectionFromPreferences();
         ApplyLocalizedText();
         BuildLanguageButtons();
         ApplySelectionVisuals();
     }
 
-    private async void OnLoginClicked(object sender, EventArgs e)
+    private void SyncSelectionFromPreferences()
     {
-        await HandleLoginAsync();
+        var currentLanguage = AppLanguageService.NormalizeLanguage(_languageService.CurrentLanguage);
+        var isTourist = string.Equals(_languageService.UserType, "tourist", StringComparison.OrdinalIgnoreCase);
+
+        _selectedUserType = isTourist ? "tourist" : "domestic";
+        _selectedLanguage = isTourist
+            ? currentLanguage == "vi" ? "en" : currentLanguage
+            : "vi";
     }
 
-    private void OnUsernameCompleted(object sender, EventArgs e)
+    private async void OnEnterClicked(object sender, EventArgs e)
     {
-        PasswordEntry.Focus();
-    }
+        if (_selectedUserType == "domestic")
+            _languageSelectionFlowService.ApplyDomestic();
+        else
+            _languageSelectionFlowService.ApplyTourist(_selectedLanguage);
 
-    private async void OnPasswordCompleted(object sender, EventArgs e)
-    {
-        await HandleLoginAsync();
-    }
-
-    private async Task HandleLoginAsync()
-    {
-        var username = UsernameEntry.Text?.Trim() ?? string.Empty;
-        var password = PasswordEntry.Text ?? string.Empty;
-        MessageLabel.Text = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-        {
-            MessageLabel.Text = _text["Login.RequiredError"];
-            return;
-        }
-
-        var result = await _authService.LoginAsync(username, password);
-
-        if (!result.IsSuccess)
-        {
-            MessageLabel.Text = _text[result.ErrorKey ?? "Login.InvalidError"];
-            return;
-        }
-
-        SelectionOverlay.IsVisible = true;
-    }
-
-    private async void OnRegisterClicked(object sender, EventArgs e)
-    {
-        var page = _serviceProvider.GetRequiredService<RegisterPage>();
-        await Navigation.PushAsync(page);
+        await _rootNavigationService.SetRootAsync<HomeDesignPage>();
+        await _appLinkService.TryHandlePendingAsync();
     }
 
     private void OnDomesticSelected(object sender, TappedEventArgs e)
@@ -100,26 +78,6 @@ public partial class LoginPage : ContentPage
         ApplySelectionVisuals();
     }
 
-    private void OnSelectionBackClicked(object sender, EventArgs e)
-    {
-        SelectionOverlay.IsVisible = false;
-    }
-
-    private async void OnSelectionConfirmClicked(object sender, EventArgs e)
-    {
-        if (_selectedUserType == "domestic")
-            _languageSelectionFlowService.ApplyDomestic();
-        else
-            _languageSelectionFlowService.ApplyTourist(_selectedLanguage);
-
-        await _authService.UpdateCurrentUserSoundSettingsAsync(
-            _selectedUserType == "domestic" ? "vi" : _selectedLanguage);
-
-        SelectionOverlay.IsVisible = false;
-        await _rootNavigationService.SetRootAsync<HomeDesignPage>();
-        await _appLinkService.TryHandlePendingAsync();
-    }
-
     private void OnLanguageButtonClicked(object? sender, EventArgs e)
     {
         if (sender is not Button button || button.CommandParameter is not string language)
@@ -131,26 +89,17 @@ public partial class LoginPage : ContentPage
 
     private void ApplyLocalizedText()
     {
-        Title = _text["Login.PageTitle"];
-        LoginTitleLabel.Text = _text["Login.Title"];
-        LoginSubtitleLabel.Text = _text["Login.Subtitle"];
-        UsernameLabel.Text = _text["Login.UsernameLabel"];
-        UsernameEntry.Placeholder = _text["Login.UsernamePlaceholder"];
-        PasswordLabel.Text = _text["Login.PasswordLabel"];
-        PasswordEntry.Placeholder = _text["Login.PasswordPlaceholder"];
-        LoginButton.Text = _text["Login.Submit"];
-        RegisterPromptLabel.Text = _text["Login.RegisterPrompt"];
-        RegisterDescriptionLabel.Text = _text["Login.RegisterDescription"];
-        RegisterButton.Text = _text["Login.RegisterButton"];
+        Title = _text["Nav.Home"];
+        HeroSubtitleLabel.Text = _text["Login.SelectionSubtitle"];
         SelectionTitleLabel.Text = _text["Login.SelectionTitle"];
-        SelectionSubtitleLabel.Text = _text["Login.SelectionSubtitle"];
+        SelectionSubtitleLabel.Text = _text["Home.MapStatusDefault"];
         DomesticTitleLabel.Text = _text["Login.DomesticTitle"];
         DomesticDescriptionLabel.Text = _text["Login.DomesticDescription"];
         TouristTitleLabel.Text = _text["Login.TouristTitle"];
         TouristDescriptionLabel.Text = _text["Login.TouristDescription"];
         LanguageTitleLabel.Text = _text["Login.LanguageTitle"];
-        SelectionBackButton.Text = _text["Login.BackButton"];
-        SelectionConfirmButton.Text = _text["Login.EnterButton"];
+        EnterButton.Text = _text["Login.EnterButton"];
+        FooterNoteLabel.Text = _text["User.FooterNote"];
     }
 
     private void BuildLanguageButtons()
