@@ -1,70 +1,182 @@
 @model VKFoodArea.Web.ViewModels.AdminMapViewModel
 @{
-    ViewData["Title"] = "Map POI";
+    ViewData["Title"] = "Analytics";
+    ViewData["Subtitle"] = "Theo dõi tuyến di chuyển ẩn danh, điểm nóng vị trí và hiệu quả nghe POI từ dữ liệu đồng bộ của app.";
+
     var poisJson = System.Text.Json.JsonSerializer.Serialize(Model.ActivePois);
+    var routesJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.Routes);
+    var heatmapJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.HeatmapPoints);
+    var topPoi = Model.Analytics.TopPois.FirstOrDefault();
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <section class="page-header page-section">
-    <div>
-        <h2>Map POI dang hoat dong</h2>
+    <div class="headline-stack">
+        <span class="page-kicker">Analytics</span>
+        <h2>Ban do hanh vi nguoi dung</h2>
+        <p class="page-subtitle">@Model.Analytics.AnalyticsWindowLabel</p>
     </div>
     <div class="page-actions">
-        <a asp-controller="Pois" asp-action="Index" class="btn btn-outline-secondary">Danh sach POI</a>
+        <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Lich su nghe</a>
+        <a asp-controller="Pois" asp-action="Index" class="btn btn-primary">Danh sach POI</a>
     </div>
 </section>
 
+<section class="metrics-grid page-section">
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Tuyen an danh</span>
+        <strong class="metric-card__value">@Model.Analytics.AnonymousRouteCount</strong>
+        <span class="metric-card__meta">So phien di chuyen co du diem de ve thanh route.</span>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Thiet bi ghi nhan</span>
+        <strong class="metric-card__value">@Model.Analytics.AnonymousVisitorCount</strong>
+        <span class="metric-card__meta">Tong so anonymous key dang co trong tap log dang phan tich.</span>
+    </article>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">Heat points</span>
+        <strong class="metric-card__value">@Model.Analytics.HeatmapPoints.Count</strong>
+        <span class="metric-card__meta">Cum diem nong da duoc rut gon de doc mat do di chuyen nhanh hon.</span>
+    </article>
+    <article class="metric-card metric-card--red">
+        <span class="metric-card__label">TB nghe / POI</span>
+        <strong class="metric-card__value">@Math.Round(Model.Analytics.AverageListenSeconds)s</strong>
+        <span class="metric-card__meta">Thoi gian nghe trung binh cua moi luot thuyet minh da dong bo.</span>
+    </article>
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Top POI</span>
+        <strong class="metric-card__value">@(topPoi?.Count ?? 0)</strong>
+        <span class="metric-card__meta">@(topPoi is null ? "Chua co luot nghe de xep hang." : $"{topPoi.PoiName}")</span>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Movement logs</span>
+        <strong class="metric-card__value">@Model.Analytics.AnalyzedMovementLogCount / @Model.Analytics.TotalMovementLogs</strong>
+        <span class="metric-card__meta">Mau phan tich hien tai so voi tong log di chuyen da luu.</span>
+    </article>
+</section>
+
 <section class="dashboard-grid page-section">
-    <article class="card-surface">
+    <article class="card-surface card-surface--accent">
         <div class="section-heading">
-            <h2>Ban do</h2>
-            <span class="soft-pill">@Model.ActivePois.Count POI active</span>
+            <div class="headline-stack">
+                <span class="section-kicker">Movement</span>
+                <h2>Route va heatmap</h2>
+                <p class="section-caption">POI active, duong di chuyen an danh va cac diem nong vi tri duoc phu len cung mot ban do.</p>
+            </div>
+            <span class="soft-pill soft-pill--neutral">
+                @(Model.Analytics.LatestMovementAt.HasValue
+                    ? $"Cap nhat {Model.Analytics.LatestMovementAt.Value:dd/MM HH:mm}"
+                    : "Chua co movement log")
+            </span>
         </div>
-        @if (!Model.ActivePois.Any())
+
+        @if (Model.Analytics.UnassignedMovementLogCount > 0)
+        {
+            <div class="map-insight-note">
+                Co @Model.Analytics.UnassignedMovementLogCount movement log cu chua co anonymous key. Cac diem nay van vao heatmap, nhung se khong duoc noi thanh route rieng.
+            </div>
+        }
+
+        @if (!Model.HasMapData)
         {
             <div class="empty-state">
-                <p>Chua co POI active de hien thi.</p>
+                <p>Chua co du lieu de ve ban do analytics.</p>
             </div>
         }
         else
         {
-            <div id="admin-poi-map" class="admin-poi-map" aria-label="Map POI active"></div>
+            <div id="admin-poi-map" class="admin-poi-map" aria-label="Ban do analytics"></div>
             <div id="admin-map-fallback" class="empty-state mt-3 d-none">
-                <p>Khong tai duoc map tile. Danh sach POI van hien o cot ben phai.</p>
+                <p>Khong tai duoc map tile. Cac chi so va danh sach tong hop van hien o cot ben phai.</p>
+            </div>
+            <div id="admin-heatmap-warning" class="map-insight-note d-none">
+                Heatmap plugin khong tai duoc. Route va marker POI van dang hien thi.
             </div>
         }
     </article>
 
-    <article class="card-surface">
-        <div class="section-heading">
-            <h2>POI active</h2>
-        </div>
-        <div class="list-stack">
-            @foreach (var poi in Model.ActivePois.OrderByDescending(x => x.Priority).ThenBy(x => x.Name))
+    <div class="stacked-panels">
+        <article class="card-surface">
+            <div class="section-heading">
+                <div class="headline-stack">
+                    <span class="section-kicker">Ranking</span>
+                    <h2>Top dia diem duoc nghe nhieu nhat</h2>
+                    <p class="section-caption">Uu tien nhanh nhung diem dang co tan suat nghe cao de kiem tra noi dung va audio.</p>
+                </div>
+            </div>
+
+            @if (!Model.Analytics.TopPois.Any())
             {
-                <div class="list-row">
-                    <div class="list-row__content">
-                        <strong>@poi.Name</strong>
-                        <p>@poi.Address</p>
-                        <p class="mono">@poi.Latitude.ToString("0.######"), @poi.Longitude.ToString("0.######")</p>
-                    </div>
-                    <span class="status-pill status-pill--info">@poi.RadiusMeters.ToString("0.#")m</span>
+                <div class="empty-state">
+                    <p>Chua co du lieu luot nghe.</p>
                 </div>
             }
-        </div>
-    </article>
+            else
+            {
+                <div class="list-stack">
+                    @foreach (var poi in Model.Analytics.TopPois)
+                    {
+                        <div class="list-row">
+                            <div class="list-row__content">
+                                <strong>@poi.PoiName</strong>
+                                <p>POI #@poi.PoiId · cap nhat @poi.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
+                            </div>
+                            <span class="status-pill status-pill--info">@poi.Count luot</span>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+
+        <article class="card-surface">
+            <div class="section-heading">
+                <div class="headline-stack">
+                    <span class="section-kicker">Routes</span>
+                    <h2>Tuyen di chuyen gan day</h2>
+                    <p class="section-caption">Moi tuyen duoc tach theo phien de tranh noi nham giua nhieu lan di chuyen khac nhau.</p>
+                </div>
+            </div>
+
+            @if (!Model.Analytics.Routes.Any())
+            {
+                <div class="empty-state">
+                    <p>Chua co route du diem de hien thi.</p>
+                </div>
+            }
+            else
+            {
+                <div class="list-stack">
+                    @foreach (var route in Model.Analytics.Routes.OrderByDescending(x => x.EndedAt))
+                    {
+                        <div class="list-row">
+                            <div class="list-row__content">
+                                <strong>@route.RouteLabel</strong>
+                                <p>@route.PointCount diem · @Math.Round(route.ApproxDistanceMeters)m · @Math.Round(route.DurationMinutes) phut</p>
+                                <p>@route.StartedAt.ToString("dd/MM HH:mm") - @route.EndedAt.ToString("dd/MM HH:mm")</p>
+                            </div>
+                            <span class="status-pill status-pill--muted">@route.SourceSummary</span>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+    </div>
 </section>
 
 @section Scripts {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
     <script>
         (() => {
             const pois = @Html.Raw(poisJson);
+            const routes = @Html.Raw(routesJson);
+            const heatPoints = @Html.Raw(heatmapJson);
             const mapElement = document.getElementById("admin-poi-map");
             const fallback = document.getElementById("admin-map-fallback");
+            const heatWarning = document.getElementById("admin-heatmap-warning");
 
-            if (!mapElement || !Array.isArray(pois) || pois.length === 0) {
+            if (!mapElement) {
                 return;
             }
 
@@ -73,39 +185,136 @@
                 return;
             }
 
-            const center = [
-                pois.reduce((sum, item) => sum + item.Latitude, 0) / pois.length,
-                pois.reduce((sum, item) => sum + item.Longitude, 0) / pois.length
-            ];
-            const map = L.map(mapElement).setView(center, 15);
+            const defaultCenter = [10.7618, 106.7022];
+            const map = L.map(mapElement).setView(defaultCenter, 14);
+            const bounds = [];
+            const routePalette = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#0f766e", "#be185d"];
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
                 attribution: "&copy; OpenStreetMap"
             }).addTo(map);
 
-            const bounds = [];
+            const poiLayer = L.layerGroup();
+            const routeLayer = L.layerGroup();
+            let heatLayer = null;
+
             pois.forEach((poi) => {
                 const latLng = [poi.Latitude, poi.Longitude];
                 bounds.push(latLng);
-                const marker = L.marker(latLng).addTo(map);
+
+                const marker = L.marker(latLng);
                 marker.bindPopup(`
                     <strong>${escapeHtml(poi.Name)}</strong><br>
                     ${escapeHtml(poi.Address)}<br>
-                    Radius: ${poi.RadiusMeters}m<br>
-                    Priority: ${poi.Priority}
+                    Radius: ${formatNumber(poi.RadiusMeters)}m<br>
+                    Priority: ${formatNumber(poi.Priority)}
                 `);
-                L.circle(latLng, {
+                poiLayer.addLayer(marker);
+
+                poiLayer.addLayer(L.circle(latLng, {
                     radius: poi.RadiusMeters,
                     color: "#2563eb",
                     fillColor: "#2563eb",
-                    fillOpacity: 0.12,
+                    fillOpacity: 0.1,
                     weight: 1
-                }).addTo(map);
+                }));
             });
+
+            routes.forEach((route, index) => {
+                if (!Array.isArray(route.Points) || route.Points.length < 2) {
+                    return;
+                }
+
+                const color = routePalette[index % routePalette.length];
+                const latLngs = route.Points.map((point) => [point.Latitude, point.Longitude]);
+                latLngs.forEach((point) => bounds.push(point));
+
+                const polyline = L.polyline(latLngs, {
+                    color,
+                    weight: 4,
+                    opacity: 0.84
+                });
+
+                polyline.bindPopup(`
+                    <strong>${escapeHtml(route.RouteLabel)}</strong><br>
+                    ${escapeHtml(route.SourceSummary)}<br>
+                    ${formatNumber(route.PointCount)} diem · ${formatNumber(route.ApproxDistanceMeters)}m<br>
+                    ${formatNumber(route.DurationMinutes)} phut
+                `);
+
+                routeLayer.addLayer(polyline);
+                routeLayer.addLayer(L.circleMarker(latLngs[0], {
+                    radius: 6,
+                    color,
+                    fillColor: "#ffffff",
+                    fillOpacity: 1,
+                    weight: 2
+                }));
+                routeLayer.addLayer(L.circleMarker(latLngs[latLngs.length - 1], {
+                    radius: 5,
+                    color,
+                    fillColor: color,
+                    fillOpacity: 0.95,
+                    weight: 1
+                }));
+            });
+
+            if (typeof L.heatLayer === "function" && Array.isArray(heatPoints) && heatPoints.length > 0) {
+                heatLayer = L.heatLayer(
+                    heatPoints.map((point) => [point.Latitude, point.Longitude, point.Weight]),
+                    {
+                        radius: 26,
+                        blur: 22,
+                        maxZoom: 17,
+                        minOpacity: 0.35,
+                        gradient: {
+                            0.25: "#60a5fa",
+                            0.45: "#14b8a6",
+                            0.7: "#f59e0b",
+                            1.0: "#ef4444"
+                        }
+                    });
+
+                heatPoints.forEach((point) => bounds.push([point.Latitude, point.Longitude]));
+            } else if (Array.isArray(heatPoints) && heatPoints.length > 0) {
+                heatWarning?.classList.remove("d-none");
+            }
+
+            if (poiLayer.getLayers().length > 0) {
+                poiLayer.addTo(map);
+            }
+
+            if (routeLayer.getLayers().length > 0) {
+                routeLayer.addTo(map);
+            }
+
+            if (heatLayer) {
+                heatLayer.addTo(map);
+            }
+
+            const overlayLayers = {};
+            if (poiLayer.getLayers().length > 0) {
+                overlayLayers["POI active"] = poiLayer;
+            }
+            if (routeLayer.getLayers().length > 0) {
+                overlayLayers["Tuyen an danh"] = routeLayer;
+            }
+            if (heatLayer) {
+                overlayLayers["Heatmap"] = heatLayer;
+            }
+
+            if (Object.keys(overlayLayers).length > 0) {
+                L.control.layers(null, overlayLayers, {
+                    collapsed: false,
+                    position: "topright"
+                }).addTo(map);
+            }
 
             if (bounds.length > 1) {
                 map.fitBounds(bounds, { padding: [28, 28] });
+            } else if (bounds.length === 1) {
+                map.setView(bounds[0], 16);
             }
 
             function escapeHtml(value) {
@@ -115,6 +324,13 @@
                     .replaceAll(">", "&gt;")
                     .replaceAll('"', "&quot;")
                     .replaceAll("'", "&#039;");
+            }
+
+            function formatNumber(value) {
+                const numericValue = Number(value ?? 0);
+                return new Intl.NumberFormat("vi-VN", {
+                    maximumFractionDigits: numericValue >= 100 ? 0 : 1
+                }).format(numericValue);
             }
         })();
     </script>

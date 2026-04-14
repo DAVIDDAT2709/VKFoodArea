@@ -9,15 +9,18 @@ namespace VKFoodArea.Web.Controllers;
 public class MapController : Controller
 {
     private readonly IPoiService _poiService;
+    private readonly IAnalyticsService _analyticsService;
 
-    public MapController(IPoiService poiService)
+    public MapController(IPoiService poiService, IAnalyticsService analyticsService)
     {
         _poiService = poiService;
+        _analyticsService = analyticsService;
     }
 
     public async Task<IActionResult> Index()
     {
         var pois = await _poiService.GetAllAsync();
+        var analytics = await _analyticsService.GetAdminMapAnalyticsAsync();
         var vm = new AdminMapViewModel
         {
             ActivePois = pois
@@ -32,7 +35,8 @@ public class MapController : Controller
                     RadiusMeters = x.RadiusMeters,
                     Priority = x.Priority
                 })
-                .ToList()
+                .ToList(),
+            Analytics = analytics
         };
 
         return View(vm);

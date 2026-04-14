@@ -1,36 +1,66 @@
 @model IEnumerable<VKFoodArea.Web.Models.AdminUser>
 @{
-    ViewData["Title"] = "Quan ly admin";
+    ViewData["Title"] = "Quản lý admin";
+    ViewData["Subtitle"] = "Kiểm soát tài khoản quản trị, quyền truy cập và trạng thái đăng nhập của CMS.";
     var users = Model.ToList();
+    var activeCount = users.Count(x => x.IsActive);
 }
 
 <section class="page-header page-section">
-    <div>
-        <h2>Quan ly tai khoan CMS</h2>
+    <div class="headline-stack">
+        <span class="page-kicker">Access Control</span>
+        <h2>Quản lý tài khoản CMS</h2>
+        <p class="page-subtitle">Rà soát nhanh toàn bộ tài khoản quản trị đang có quyền truy cập vào hệ thống.</p>
     </div>
     <div class="page-actions">
-        <a asp-action="Create" class="btn btn-primary">Them admin</a>
+        <a asp-action="Create" class="btn btn-primary">Thêm admin</a>
     </div>
+</section>
+
+<section class="metrics-grid page-section">
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Tổng admin</span>
+        <strong class="metric-card__value">@users.Count</strong>
+        <span class="metric-card__meta">Số lượng tài khoản quản trị đang được cấu hình.</span>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Đang hoạt động</span>
+        <strong class="metric-card__value">@activeCount</strong>
+        <span class="metric-card__meta">Các tài khoản hiện còn quyền đăng nhập CMS.</span>
+    </article>
+    <article class="metric-card metric-card--red">
+        <span class="metric-card__label">Đang khóa</span>
+        <strong class="metric-card__value">@(users.Count - activeCount)</strong>
+        <span class="metric-card__meta">Tài khoản đã bị vô hiệu hóa để bảo toàn quyền truy cập.</span>
+    </article>
 </section>
 
 <section class="card-surface page-section">
     @if (!users.Any())
     {
         <div class="empty-state">
-            <p>Chua co tai khoan admin.</p>
+            <p>Chưa có tài khoản admin.</p>
         </div>
     }
     else
     {
+        <div class="section-heading">
+            <div class="headline-stack">
+                <span class="section-kicker">Directory</span>
+                <h2>Danh sách tài khoản</h2>
+                <p class="section-caption">Theo dõi vai trò, trạng thái và thời điểm đăng nhập gần nhất của từng admin.</p>
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table data-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Tai khoan</th>
-                        <th>Ten hien thi</th>
-                        <th>Quyen</th>
-                        <th>Trang thai</th>
-                        <th>Dang nhap gan nhat</th>
+                        <th>Tài khoản</th>
+                        <th>Tên hiển thị</th>
+                        <th>Quyền</th>
+                        <th>Trạng thái</th>
+                        <th>Đăng nhập gần nhất</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -42,7 +72,7 @@
                             <div class="table-title">@item.Username</div>
                         </td>
                         <td>@item.FullName</td>
-                        <td><span class="soft-pill">@item.Role</span></td>
+                        <td><span class="soft-pill soft-pill--neutral">@item.Role</span></td>
                         <td>
                             @if (item.IsActive)
                             {
@@ -56,8 +86,8 @@
                         <td>@(item.LastLoginAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                         <td>
                             <div class="table-actions">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Sua</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xoa</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
                             </div>
                         </td>
                     </tr>

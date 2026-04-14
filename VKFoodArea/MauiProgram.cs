@@ -54,6 +54,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ApiBaseUrlService>();
         builder.Services.AddSingleton<NarrationUiStateService>();
         builder.Services.AddSingleton<SessionStoreService>();
+        builder.Services.AddSingleton<AnonymousIdentityService>();
 
         builder.Services.AddHttpClient("DemoHttp", ConfigureDemoHttpClient);
         builder.Services.AddHttpClient<QrLookupService>(ConfigureDemoHttpClient);

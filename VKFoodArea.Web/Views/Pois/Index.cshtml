@@ -1,6 +1,7 @@
 @model IEnumerable<VKFoodArea.Web.Models.Poi>
 @{
     ViewData["Title"] = "Quản lý POI";
+    ViewData["Subtitle"] = "Điều phối dữ liệu điểm đến, bán kính GPS, nội dung TTS và audio phát cho ứng dụng.";
     var pois = Model.ToList();
     var activeCount = pois.Count(x => x.IsActive);
     var defaultQrCount = pois.Count(x => !string.IsNullOrWhiteSpace(x.QrCode));
@@ -8,8 +9,10 @@
 }
 
 <section class="page-header page-section">
-    <div>
+    <div class="headline-stack">
+        <span class="page-kicker">POI Library</span>
         <h2>Danh sách POI</h2>
+        <p class="page-subtitle">Quản lý toàn bộ điểm phát nội dung, kiểm tra GPS và rà soát nhanh phạm vi đa ngôn ngữ.</p>
     </div>
     <div class="page-actions">
         <a asp-action="Create" class="btn btn-primary">Thêm địa điểm</a>
@@ -20,24 +23,33 @@
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng POI</span>
         <strong class="metric-card__value">@pois.Count</strong>
+        <span class="metric-card__meta">Toàn bộ điểm đang được quản lý trong CMS.</span>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">POI hoạt động</span>
         <strong class="metric-card__value">@activeCount</strong>
+        <span class="metric-card__meta">Số điểm đang được app hiển thị và cho phép phát.</span>
     </article>
     <article class="metric-card metric-card--orange">
         <span class="metric-card__label">POI có QR</span>
         <strong class="metric-card__value">@defaultQrCount</strong>
+        <span class="metric-card__meta">Điểm đã gắn QR mặc định để phát nhanh tại chỗ.</span>
     </article>
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">POI đa ngôn ngữ</span>
         <strong class="metric-card__value">@multilingualCount</strong>
+        <span class="metric-card__meta">Điểm có từ hai ngôn ngữ TTS trở lên.</span>
     </article>
 </section>
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <h2>POI hiện có</h2>
+        <div class="headline-stack">
+            <span class="section-kicker">Inventory</span>
+            <h2>POI hiện có</h2>
+            <p class="section-caption">Bảng điều hành nhanh để rà nội dung, tọa độ, QR và trạng thái phát của từng điểm.</p>
+        </div>
+        <span class="soft-pill soft-pill--neutral">@activeCount / @pois.Count đang hoạt động</span>
     </div>
 
     @if (!pois.Any())
@@ -55,7 +67,7 @@
                         <th>POI</th>
                         <th>GPS</th>
                         <th>TTS tiếng Việt</th>
-                        <th>Nghe thu</th>
+                        <th>Nghe thử</th>
                         <th>QR</th>
                         <th>Trạng thái</th>
                         <th class="text-end">Thao tác</th>
@@ -96,7 +108,7 @@
                                     data-audio="@VietnameseAudio(poi)"
                                     data-text="@poi.TtsScriptVi"
                                     data-title="@poi.Name"
-                                    aria-label="Nghe thu @poi.Name">
+                                    aria-label="Nghe thử @poi.Name">
                                 <span class="audio-preview-button__icon" aria-hidden="true"></span>
                                 <span>Nghe</span>
                             </button>

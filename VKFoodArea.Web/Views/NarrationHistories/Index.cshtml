@@ -1,6 +1,7 @@
 @model IEnumerable<VKFoodArea.Web.Models.NarrationHistory>
 @{
     ViewData["Title"] = "Lịch sử nghe";
+    ViewData["Subtitle"] = "Theo dõi lượt phát, nguồn kích hoạt và hoạt động nghe gần nhất để kiểm tra trải nghiệm thực tế trên app.";
     var currentSource = (ViewBag.CurrentSource as string ?? string.Empty).Trim().ToLowerInvariant();
     var items = Model.ToList();
     var todayCount = items.Count(x => x.PlayedAt >= DateTime.Today);
@@ -24,8 +25,10 @@
 }
 
 <section class="page-header page-section">
-    <div>
+    <div class="headline-stack">
+        <span class="page-kicker">Playback Logs</span>
         <h2>Lịch sử nghe</h2>
+        <p class="page-subtitle">Theo dõi dữ liệu phát theo thời gian thực để đối chiếu nhanh giữa app, QR và nội dung đang xuất bản.</p>
     </div>
 </section>
 
@@ -33,25 +36,33 @@
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng lượt nghe</span>
         <strong class="metric-card__value">@items.Count</strong>
+        <span class="metric-card__meta">Tổng số lượt phát hiện có trong tập dữ liệu đang xem.</span>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Hôm nay</span>
         <strong class="metric-card__value">@todayCount</strong>
+        <span class="metric-card__meta">Mức sử dụng mới nhất để kiểm tra nhịp vận hành trong ngày.</span>
     </article>
     <article class="metric-card metric-card--orange">
         <span class="metric-card__label">GPS</span>
         <strong class="metric-card__value">@gpsCount</strong>
+        <span class="metric-card__meta">Số lượt phát tự động từ vị trí hoặc geofence.</span>
     </article>
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">QR</span>
         <strong class="metric-card__value">@qrCount</strong>
+        <span class="metric-card__meta">Số lượt phát đến từ kênh quét QR tại điểm dừng.</span>
     </article>
 </section>
 
 <section class="page-grid page-section">
-    <article class="card-surface">
+    <article class="card-surface card-surface--accent">
         <div class="section-heading">
-            <h2>Bộ lọc</h2>
+            <div class="headline-stack">
+                <span class="section-kicker">Filter</span>
+                <h2>Bộ lọc dữ liệu</h2>
+                <p class="section-caption">Khoanh vùng nhanh theo nguồn phát để so sánh hành vi sử dụng.</p>
+            </div>
         </div>
 
         <form method="get" class="stack-gap">
@@ -73,7 +84,11 @@
 
     <article class="card-surface">
         <div class="section-heading">
-            <h2>Top POI</h2>
+            <div class="headline-stack">
+                <span class="section-kicker">Ranking</span>
+                <h2>Top POI</h2>
+                <p class="section-caption">Các điểm đang được phát nhiều nhất trong phạm vi dữ liệu hiện tại.</p>
+            </div>
         </div>
 
         @if (!topPois.Any())
@@ -102,7 +117,11 @@
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <h2>Chi tiết lượt nghe</h2>
+        <div class="headline-stack">
+            <span class="section-kicker">Realtime</span>
+            <h2>Chi tiết lượt nghe</h2>
+            <p class="section-caption">Bảng phát sinh mới nhất để kiểm tra trạng thái live giữa app và web.</p>
+        </div>
     </div>
 
     @if (!items.Any())
@@ -161,7 +180,7 @@
 
                 statusEl = document.createElement("span");
                 statusEl.id = "history-live-status";
-                statusEl.className = "soft-pill";
+                statusEl.className = "soft-pill soft-pill--neutral";
                 actions.appendChild(statusEl);
                 header.appendChild(actions);
             }
@@ -197,18 +216,18 @@
                         : 0;
 
                     if (newestId !== lastItemId) {
-                        setStatus("Co luot nghe moi, dang cap nhat...");
+                        setStatus("Có lượt nghe mới, đang cập nhật...");
                         window.location.reload();
                         return;
                     }
 
-                    setStatus("Dang theo doi realtime App/Web");
+                    setStatus("Đang theo dõi realtime App/Web");
                 } catch {
-                    setStatus("Mat ket noi realtime, dang giu du lieu hien tai");
+                    setStatus("Mất kết nối realtime, đang giữ dữ liệu hiện tại");
                 }
             };
 
-            setStatus("Dang theo doi realtime App/Web");
+            setStatus("Đang theo dõi realtime App/Web");
             window.setInterval(poll, 5000);
         })();
     </script>

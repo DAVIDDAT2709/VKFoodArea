@@ -23,6 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=vkfoodarea_web.db"));
 
 builder.Services.AddScoped<IHomeService, HomeService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IPoiService, PoiService>();
 builder.Services.AddScoped<ITourService, TourService>();
 builder.Services.AddScoped<IQrResolveService, QrResolveService>();

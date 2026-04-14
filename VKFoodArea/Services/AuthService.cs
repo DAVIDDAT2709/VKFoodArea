@@ -14,6 +14,7 @@ public class AuthService
     private readonly AppSettingsService _settingsService;
     private readonly AppLanguageService _languageService;
     private readonly AppUserSyncService _appUserSyncService;
+    private readonly AnonymousIdentityService _anonymousIdentityService;
 
     public AppUser? CurrentUser { get; private set; }
 
@@ -22,13 +23,15 @@ public class AuthService
         SessionStoreService sessionStore,
         AppSettingsService settingsService,
         AppLanguageService languageService,
-        AppUserSyncService appUserSyncService)
+        AppUserSyncService appUserSyncService,
+        AnonymousIdentityService anonymousIdentityService)
     {
         _db = db;
         _sessionStore = sessionStore;
         _settingsService = settingsService;
         _languageService = languageService;
         _appUserSyncService = appUserSyncService;
+        _anonymousIdentityService = anonymousIdentityService;
     }
 
     public async Task<AuthActionResult> LoginAsync(string identifier, string password)
@@ -145,7 +148,12 @@ public class AuthService
         => CurrentUser?.Id ?? _sessionStore.GetCurrentUserId();
 
     public string? GetCurrentUserSyncKey()
-        => BuildUserSyncKey(CurrentUser);
+    {
+        var currentUserKey = BuildUserSyncKey(CurrentUser);
+        return string.IsNullOrWhiteSpace(currentUserKey)
+            ? _anonymousIdentityService.GetOrCreateAnonymousUserKey()
+            : currentUserKey;
+    }
 
     public static string? BuildUserSyncKey(AppUser? user)
     {
