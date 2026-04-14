@@ -14,6 +14,7 @@ public static class WebDataInitializer
         await db.Database.MigrateAsync();
         await EnsureAdminUsersTableAsync(db);
         await EnsureNarrationHistoryUserKeyColumnAsync(db);
+        await EnsureAnonymousMovementLogKeysAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
         await EnsureTourNarrationColumnsAsync(db);
         await EnsureQrCodeImageColumnAsync(db);
@@ -75,6 +76,28 @@ public static class WebDataInitializer
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE NarrationHistories ADD COLUMN UserKey TEXT NOT NULL DEFAULT '';");
         }
+    }
+
+    private static async Task EnsureAnonymousMovementLogKeysAsync(AppDbContext db)
+    {
+        var movementLogs = await db.UserMovementLogs
+            .Where(x => !string.IsNullOrWhiteSpace(x.UserKey))
+            .ToListAsync();
+
+        var hasChanges = false;
+
+        foreach (var movementLog in movementLogs)
+        {
+            var anonymizedKey = MovementLogUserKeyPrivacy.NormalizeForStorage(movementLog.UserKey);
+            if (string.Equals(movementLog.UserKey, anonymizedKey, StringComparison.Ordinal))
+                continue;
+
+            movementLog.UserKey = anonymizedKey;
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+            await db.SaveChangesAsync();
     }
 
     private static async Task EnsureAdminUsersTableAsync(AppDbContext db)

@@ -1,0 +1,10 @@
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.csproj.AssemblyReference.cache
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.GeneratedMSBuildEditorConfig.editorconfig
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.AssemblyInfoInputs.cache
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.AssemblyInfo.cs
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.csproj.CoreCompileInputs.cache
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.MvcApplicationPartsAssemblyInfo.cache
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.RazorAssemblyInfo.cache
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.RazorAssemblyInfo.cs
+C:\xampp\htdocs\VKFoodArea\tempbuild\web-obj\Debug\net10.0\VKFoodArea.Web.sourcelink.json

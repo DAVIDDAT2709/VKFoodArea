@@ -27,6 +27,7 @@ public class AdminMapAnalyticsViewModel
     public int UnassignedMovementLogCount { get; set; }
     public DateTime? LatestMovementAt { get; set; }
     public double AverageListenSeconds { get; set; }
+    public int AverageListenSampleCount { get; set; }
     public string AnalyticsWindowLabel { get; set; } = string.Empty;
     public List<TopPoiPerformanceViewModel> TopPois { get; set; } = new();
     public List<AdminMapRouteViewModel> Routes { get; set; } = new();

@@ -18,7 +18,7 @@ public class UserMovementLogService : IUserMovementLogService
     {
         var entity = new UserMovementLog
         {
-            UserKey = NormalizeUserKey(vm.UserKey),
+            UserKey = MovementLogUserKeyPrivacy.NormalizeForStorage(vm.UserKey),
             Latitude = vm.Latitude,
             Longitude = vm.Longitude,
             AccuracyMeters = vm.AccuracyMeters,
@@ -43,7 +43,7 @@ public class UserMovementLogService : IUserMovementLogService
             .Select(x => new MovementLogApiViewModel
             {
                 Id = x.Id,
-                UserKey = x.UserKey,
+                UserKey = MovementLogUserKeyPrivacy.NormalizeForStorage(x.UserKey),
                 Latitude = x.Latitude,
                 Longitude = x.Longitude,
                 AccuracyMeters = x.AccuracyMeters,
@@ -56,16 +56,13 @@ public class UserMovementLogService : IUserMovementLogService
     private static MovementLogApiViewModel MapToApi(UserMovementLog entity) => new()
     {
         Id = entity.Id,
-        UserKey = entity.UserKey,
+        UserKey = MovementLogUserKeyPrivacy.NormalizeForStorage(entity.UserKey),
         Latitude = entity.Latitude,
         Longitude = entity.Longitude,
         AccuracyMeters = entity.AccuracyMeters,
         Source = entity.Source,
         RecordedAt = entity.RecordedAt
     };
-
-    private static string NormalizeUserKey(string? userKey)
-        => (userKey ?? string.Empty).Trim().ToLowerInvariant();
 
     private static string NormalizeSource(string? source)
     {

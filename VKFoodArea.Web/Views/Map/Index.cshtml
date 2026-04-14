@@ -1,76 +1,250 @@
 @model VKFoodArea.Web.ViewModels.AdminMapViewModel
 @{
-    ViewData["Title"] = "Bản đồ POI";
+    ViewData["Title"] = "Bản đồ Analytics";
 
-    var poisJson = System.Text.Json.JsonSerializer.Serialize(Model.ActivePois);
-    var routesJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.Routes);
+    var activePois = Model.ActivePois
+        .OrderByDescending(x => x.Priority)
+        .ThenBy(x => x.Name)
+        .ToList();
+
+    var routes = Model.Analytics.Routes
+        .OrderByDescending(x => x.EndedAt)
+        .ToList();
+
+    var deploymentAreas = new[]
+    {
+        "Khánh Hội",
+        "Vĩnh Hội",
+        "Xóm Chiếu"
+    };
+
+    var averageListenLabel = Model.Analytics.AverageListenSeconds > 0
+        ? $"{Math.Round(Model.Analytics.AverageListenSeconds)}s"
+        : "--";
+
+    var latestMovementLabel = Model.Analytics.LatestMovementAt.HasValue
+        ? $"Cập nhật {Model.Analytics.LatestMovementAt.Value:dd/MM HH:mm}"
+        : "Chưa có log di chuyển";
+
+    var topPoi = Model.Analytics.TopPois.FirstOrDefault();
+
+    var poisJson = System.Text.Json.JsonSerializer.Serialize(
+        activePois.Select((poi, index) => new
+        {
+            poi.Id,
+            poi.Name,
+            poi.Address,
+            poi.Latitude,
+            poi.Longitude,
+            poi.RadiusMeters,
+            poi.Priority,
+            Number = index + 1
+        }));
+
+    var routesJson = System.Text.Json.JsonSerializer.Serialize(routes);
     var heatmapJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.HeatmapPoints);
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="~/css/map-analytics.css" asp-append-version="true" />
 
 <section class="page-header page-section">
-    <div>
-        <h2>Bản đồ POI</h2>
+    <div class="headline-stack">
+        <h2>Bản đồ triển khai và Analytics</h2>
+        <p class="map-page-intro">
+            Dùng map view thật để hiển thị POI, tuyến di chuyển ẩn danh và heatmap vị trí người dùng
+            trên nền bản đồ tọa độ thực.
+        </p>
     </div>
     <div class="page-actions">
         <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Lịch sử nghe</a>
+        <a asp-controller="QrCodeItems" asp-action="Index" class="btn btn-outline-secondary">Mã QR</a>
         <a asp-controller="Pois" asp-action="Index" class="btn btn-primary">Danh sách POI</a>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
-        <span class="metric-card__label">POI hoạt động</span>
-        <strong class="metric-card__value">@Model.ActivePois.Count</strong>
+        <span class="metric-card__label">Điểm kích hoạt</span>
+        <strong class="metric-card__value">@activePois.Count</strong>
+        <span class="metric-card__footer">POI đang hoạt động trên web.</span>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Tuyến ẩn danh</span>
         <strong class="metric-card__value">@Model.Analytics.AnonymousRouteCount</strong>
+        <span class="metric-card__footer">Tách tuyến theo phiên di chuyển gần nhau.</span>
     </article>
     <article class="metric-card metric-card--orange">
-        <span class="metric-card__label">Thiết bị ghi nhận</span>
+        <span class="metric-card__label">Người dùng ẩn danh</span>
         <strong class="metric-card__value">@Model.Analytics.AnonymousVisitorCount</strong>
+        <span class="metric-card__footer">Khóa thiết bị được băm trước khi nhóm route.</span>
     </article>
     <article class="metric-card metric-card--red">
-        <span class="metric-card__label">Điểm nóng</span>
+        <span class="metric-card__label">Điểm heatmap</span>
         <strong class="metric-card__value">@Model.Analytics.HeatmapPoints.Count</strong>
+        <span class="metric-card__footer">Cụm mật độ tính từ log vị trí đã gom nhóm.</span>
+    </article>
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Log phân tích</span>
+        <strong class="metric-card__value">@Model.Analytics.AnalyzedMovementLogCount</strong>
+        <span class="metric-card__footer">@Model.Analytics.AnalyticsWindowLabel</span>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">TB nghe / POI</span>
+        <strong class="metric-card__value">@averageListenLabel</strong>
+        <span class="metric-card__footer">
+            @(Model.Analytics.AverageListenSampleCount > 0
+                ? $"{Model.Analytics.AverageListenSampleCount:N0} lượt nghe có thời lượng."
+                : "Chưa có lượt nghe nào ghi nhận thời lượng.")
+        </span>
     </article>
 </section>
 
 <section class="dashboard-grid page-section">
     <article class="card-surface card-surface--accent">
         <div class="section-heading">
-            <h2>Bản đồ theo dõi</h2>
-            <span class="soft-pill soft-pill--neutral">
-                @(Model.Analytics.LatestMovementAt.HasValue
-                    ? $"Cập nhật {Model.Analytics.LatestMovementAt.Value:dd/MM HH:mm}"
-                    : Model.Analytics.AnalyticsWindowLabel)
-            </span>
+            <div class="headline-stack">
+                <h2>Bản đồ POI, tuyến ẩn danh và heatmap</h2>
+                <p class="map-section-intro">
+                    Heatmap được render theo tọa độ thật trên nền bản đồ, không còn nội suy theo khung SVG giả.
+                </p>
+            </div>
+            <div class="pill-cloud">
+                <span class="soft-pill">POI @activePois.Count</span>
+                <span class="soft-pill soft-pill--neutral">Route @routes.Count</span>
+                <span class="soft-pill soft-pill--neutral">Heatmap @Model.Analytics.HeatmapPoints.Count</span>
+            </div>
         </div>
 
         @if (!Model.HasMapData)
         {
             <div class="empty-state">
-                <p>Chưa có dữ liệu để hiển thị trên bản đồ.</p>
+                <p>Chưa có dữ liệu POI hoặc log di chuyển để hiển thị trên bản đồ analytics.</p>
             </div>
         }
         else
         {
-            <div id="admin-poi-map" class="admin-poi-map" aria-label="Bản đồ POI"></div>
-            <div id="admin-map-fallback" class="empty-state mt-3 d-none">
-                <p>Không tải được nền bản đồ. Dữ liệu tổng hợp vẫn hiển thị ở cột bên phải.</p>
+            <div class="map-info-strip">
+                <span class="soft-pill">@Model.Analytics.AnalyticsWindowLabel</span>
+                <span class="soft-pill soft-pill--neutral">@latestMovementLabel</span>
             </div>
-            <div id="admin-heatmap-warning" class="map-insight-note d-none">
-                Không tải được lớp heatmap. Tuyến đi và marker POI vẫn hiển thị bình thường.
+
+            <div id="analytics-map" class="analytics-map" aria-label="Bản đồ analytics hành vi người dùng"></div>
+            <div id="analytics-map-fallback" class="empty-state mt-3 d-none">
+                <p>Không tải được nền bản đồ. Dữ liệu analytics vẫn hiển thị ở cột bên phải.</p>
             </div>
+            <div id="analytics-map-heat-warning" class="map-runtime-note d-none">
+                Lớp heatmap không tải được. POI và tuyến ẩn danh vẫn hiển thị bình thường.
+            </div>
+
+            <div class="map-summary-grid">
+                <article class="map-summary-card">
+                    <span class="map-summary-card__label">Khu vực triển khai</span>
+                    <div class="pill-cloud">
+                        @foreach (var area in deploymentAreas)
+                        {
+                            <span class="soft-pill soft-pill--neutral">@area</span>
+                        }
+                    </div>
+                </article>
+                <article class="map-summary-card">
+                    <span class="map-summary-card__label">POI nghe nhiều nhất</span>
+                    @if (topPoi is null)
+                    {
+                        <strong class="map-summary-card__value">Chưa có dữ liệu</strong>
+                        <p>Top POI sẽ hiển thị khi có lịch sử nghe được đồng bộ.</p>
+                    }
+                    else
+                    {
+                        <strong class="map-summary-card__value">@topPoi.PoiName</strong>
+                        <p>@topPoi.Count lượt nghe, cập nhật @topPoi.LatestPlayedAt.ToString("dd/MM HH:mm").</p>
+                    }
+                </article>
+                <article class="map-summary-card">
+                    <span class="map-summary-card__label">Ẩn danh hóa tuyến đi</span>
+                    <strong class="map-summary-card__value">Lưu bằng khóa băm</strong>
+                    <p>UserKey của movement log được băm trước khi lưu và chỉ dùng để nhóm route.</p>
+                </article>
+            </div>
+
+            @if (activePois.Any())
+            {
+                <div class="qr-point-list">
+                    @foreach (var poi in activePois.Select((item, index) => new { Item = item, Number = index + 1 }))
+                    {
+                        <div class="qr-point-list__item">
+                            <span class="qr-point-list__badge">@poi.Number</span>
+                            <div class="qr-point-list__content">
+                                <strong>@poi.Item.Name</strong>
+                                <p>@poi.Item.Address</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         }
     </article>
 
     <div class="stacked-panels">
         <article class="card-surface">
             <div class="section-heading">
-                <h2>Điểm được nghe nhiều</h2>
+                <h2>Dữ liệu phân tích</h2>
+            </div>
+
+            <div class="summary-list">
+                <div class="summary-row">
+                    <span>Tổng log di chuyển</span>
+                    <strong>@Model.Analytics.TotalMovementLogs</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Log đang dùng để vẽ map</span>
+                    <strong>@Model.Analytics.AnalyzedMovementLogCount</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Log chưa gắn khóa</span>
+                    <strong>@Model.Analytics.UnassignedMovementLogCount</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Cập nhật gần nhất</span>
+                    <strong>@(Model.Analytics.LatestMovementAt?.ToString("dd/MM HH:mm") ?? "--")</strong>
+                </div>
+            </div>
+
+            <p class="panel-support-copy">@Model.Analytics.AnalyticsWindowLabel</p>
+        </article>
+
+        <article class="card-surface">
+            <div class="section-heading">
+                <h2>Tuyến ẩn danh gần đây</h2>
+            </div>
+
+            @if (!routes.Any())
+            {
+                <div class="empty-state">
+                    <p>Chưa có dữ liệu tuyến đi.</p>
+                </div>
+            }
+            else
+            {
+                <div class="list-stack">
+                    @foreach (var route in routes.Take(6))
+                    {
+                        <div class="list-row">
+                            <div class="list-row__content">
+                                <strong>@route.RouteLabel</strong>
+                                <p>@route.PointCount điểm · @Math.Round(route.ApproxDistanceMeters)m · @Math.Round(route.DurationMinutes) phút</p>
+                                <p>@route.StartedAt.ToString("dd/MM HH:mm") - @route.EndedAt.ToString("dd/MM HH:mm")</p>
+                            </div>
+                            <span class="status-pill status-pill--muted">@route.SourceSummary</span>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+
+        <article class="card-surface">
+            <div class="section-heading">
+                <h2>Top địa điểm được nghe nhiều nhất</h2>
             </div>
 
             @if (!Model.Analytics.TopPois.Any())
@@ -98,49 +272,17 @@
 
         <article class="card-surface">
             <div class="section-heading">
-                <h2>Tuyến gần đây</h2>
-            </div>
-
-            @if (!Model.Analytics.Routes.Any())
-            {
-                <div class="empty-state">
-                    <p>Chưa có dữ liệu tuyến đi.</p>
-                </div>
-            }
-            else
-            {
-                <div class="list-stack">
-                    @foreach (var route in Model.Analytics.Routes.OrderByDescending(x => x.EndedAt))
-                    {
-                        <div class="list-row">
-                            <div class="list-row__content">
-                                <strong>@route.RouteLabel</strong>
-                                <p>@route.PointCount điểm · @Math.Round(route.ApproxDistanceMeters)m · @Math.Round(route.DurationMinutes) phút</p>
-                                <p>@route.StartedAt.ToString("dd/MM HH:mm") - @route.EndedAt.ToString("dd/MM HH:mm")</p>
-                            </div>
-                            <span class="status-pill status-pill--muted">@route.SourceSummary</span>
-                        </div>
-                    }
-                </div>
-            }
-        </article>
-
-        <article class="card-surface">
-            <div class="section-heading">
-                <h2>TB nghe / POI</h2>
+                <h2>Thời gian trung bình nghe 1 POI</h2>
             </div>
 
             <div class="stat-box">
-                @if (Model.Analytics.AverageListenSeconds > 0)
-                {
-                    <strong class="stat-box__value">@Math.Round(Model.Analytics.AverageListenSeconds)s</strong>
-                    <span class="stat-box__hint">Tính từ các lượt nghe đã đồng bộ và có thời lượng.</span>
-                }
-                else
-                {
-                    <strong class="stat-box__value">--</strong>
-                    <span class="stat-box__hint">Chưa có dữ liệu thời lượng nghe.</span>
-                }
+                <span class="stat-box__label">Thời lượng trung bình</span>
+                <strong class="stat-box__value">@averageListenLabel</strong>
+                <span class="stat-box__hint">
+                    @(Model.Analytics.AverageListenSampleCount > 0
+                        ? $"Tính từ {Model.Analytics.AverageListenSampleCount:N0} lượt nghe đã đồng bộ và có thời lượng."
+                        : "Chưa có dữ liệu thời lượng nghe để tính trung bình.")
+                </span>
             </div>
         </article>
     </div>
@@ -154,13 +296,11 @@
             const pois = @Html.Raw(poisJson);
             const routes = @Html.Raw(routesJson);
             const heatPoints = @Html.Raw(heatmapJson);
-            const mapElement = document.getElementById("admin-poi-map");
-            const fallback = document.getElementById("admin-map-fallback");
-            const heatWarning = document.getElementById("admin-heatmap-warning");
+            const mapElement = document.getElementById("analytics-map");
+            const fallback = document.getElementById("analytics-map-fallback");
+            const heatWarning = document.getElementById("analytics-map-heat-warning");
 
-            if (!mapElement) {
-                return;
-            }
+            if (!mapElement) return;
 
             if (!window.L) {
                 fallback?.classList.remove("d-none");
@@ -168,45 +308,57 @@
             }
 
             const defaultCenter = [10.7618, 106.7022];
-            const map = L.map(mapElement).setView(defaultCenter, 14);
+            const routePalette = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#0ea5e9", "#be185d", "#65a30d"];
+            const map = L.map(mapElement, {
+                zoomControl: true,
+                preferCanvas: true
+            }).setView(defaultCenter, 14);
+
             const bounds = [];
-            const routePalette = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#0f766e", "#be185d"];
+            const poiLayer = L.layerGroup();
+            const routeLayer = L.layerGroup();
+            let heatLayer = null;
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
                 attribution: "&copy; OpenStreetMap"
             }).addTo(map);
 
-            const poiLayer = L.layerGroup();
-            const routeLayer = L.layerGroup();
-            let heatLayer = null;
-
             pois.forEach((poi) => {
                 const latLng = [poi.Latitude, poi.Longitude];
                 bounds.push(latLng);
 
-                const marker = L.marker(latLng);
+                const marker = L.marker(latLng, {
+                    icon: L.divIcon({
+                        className: "analytics-map__poi-marker",
+                        html: `<span>${escapeHtml(poi.Number)}</span>`,
+                        iconSize: [34, 34],
+                        iconAnchor: [17, 17]
+                    })
+                });
+
                 marker.bindPopup(`
                     <strong>${escapeHtml(poi.Name)}</strong><br>
                     ${escapeHtml(poi.Address)}<br>
                     Bán kính: ${formatNumber(poi.RadiusMeters)}m<br>
                     Ưu tiên: ${formatNumber(poi.Priority)}
                 `);
+
                 poiLayer.addLayer(marker);
 
-                poiLayer.addLayer(L.circle(latLng, {
-                    radius: poi.RadiusMeters,
-                    color: "#2563eb",
-                    fillColor: "#2563eb",
-                    fillOpacity: 0.1,
-                    weight: 1
-                }));
+                if (Number(poi.RadiusMeters) > 0) {
+                    poiLayer.addLayer(L.circle(latLng, {
+                        radius: Number(poi.RadiusMeters),
+                        color: "#0f766e",
+                        fillColor: "#0f766e",
+                        fillOpacity: 0.08,
+                        weight: 1
+                    }));
+                }
             });
 
             routes.forEach((route, index) => {
-                if (!Array.isArray(route.Points) || route.Points.length < 2) {
-                    return;
-                }
+                if (!Array.isArray(route.Points) || route.Points.length < 2) return;
 
                 const color = routePalette[index % routePalette.length];
                 const latLngs = route.Points.map((point) => [point.Latitude, point.Longitude]);
@@ -215,7 +367,7 @@
                 const polyline = L.polyline(latLngs, {
                     color,
                     weight: 4,
-                    opacity: 0.84
+                    opacity: 0.82
                 });
 
                 polyline.bindPopup(`
@@ -243,48 +395,40 @@
             });
 
             if (typeof L.heatLayer === "function" && Array.isArray(heatPoints) && heatPoints.length > 0) {
-                heatLayer = L.heatLayer(
-                    heatPoints.map((point) => [point.Latitude, point.Longitude, point.Weight]),
-                    {
-                        radius: 26,
-                        blur: 22,
-                        maxZoom: 17,
-                        minOpacity: 0.35,
-                        gradient: {
-                            0.25: "#60a5fa",
-                            0.45: "#14b8a6",
-                            0.7: "#f59e0b",
-                            1.0: "#ef4444"
-                        }
-                    });
+                const maxHeatCount = heatPoints.reduce((max, point) => Math.max(max, Number(point.Count) || 0), 1);
+                const heatSamples = heatPoints.map((point) => ([
+                    point.Latitude,
+                    point.Longitude,
+                    normalizeHeatWeight(point, maxHeatCount)
+                ]));
+
+                heatLayer = L.heatLayer(heatSamples, {
+                    radius: 32,
+                    blur: 26,
+                    maxZoom: 18,
+                    minOpacity: 0.14,
+                    gradient: {
+                        0.10: "#8ecae6",
+                        0.30: "#219ebc",
+                        0.55: "#ffb703",
+                        0.80: "#fb8500",
+                        1.00: "#d00000"
+                    }
+                });
 
                 heatPoints.forEach((point) => bounds.push([point.Latitude, point.Longitude]));
             } else if (Array.isArray(heatPoints) && heatPoints.length > 0) {
                 heatWarning?.classList.remove("d-none");
             }
 
-            if (poiLayer.getLayers().length > 0) {
-                poiLayer.addTo(map);
-            }
-
-            if (routeLayer.getLayers().length > 0) {
-                routeLayer.addTo(map);
-            }
-
-            if (heatLayer) {
-                heatLayer.addTo(map);
-            }
+            if (heatLayer) heatLayer.addTo(map);
+            if (routeLayer.getLayers().length > 0) routeLayer.addTo(map);
+            if (poiLayer.getLayers().length > 0) poiLayer.addTo(map);
 
             const overlayLayers = {};
-            if (poiLayer.getLayers().length > 0) {
-                overlayLayers["POI hoạt động"] = poiLayer;
-            }
-            if (routeLayer.getLayers().length > 0) {
-                overlayLayers["Tuyến ẩn danh"] = routeLayer;
-            }
-            if (heatLayer) {
-                overlayLayers["Điểm nóng"] = heatLayer;
-            }
+            if (poiLayer.getLayers().length > 0) overlayLayers["POI hoạt động"] = poiLayer;
+            if (routeLayer.getLayers().length > 0) overlayLayers["Tuyến ẩn danh"] = routeLayer;
+            if (heatLayer) overlayLayers["Heatmap người dùng"] = heatLayer;
 
             if (Object.keys(overlayLayers).length > 0) {
                 L.control.layers(null, overlayLayers, {
@@ -297,6 +441,14 @@
                 map.fitBounds(bounds, { padding: [28, 28] });
             } else if (bounds.length === 1) {
                 map.setView(bounds[0], 16);
+            }
+
+            setTimeout(() => map.invalidateSize(), 0);
+
+            function normalizeHeatWeight(point, maxHeatCount) {
+                const count = Number(point?.Count) || 0;
+                if (maxHeatCount <= 1) return 0.18;
+                return Math.min(1, Math.max(0.06, count / maxHeatCount));
             }
 
             function escapeHtml(value) {

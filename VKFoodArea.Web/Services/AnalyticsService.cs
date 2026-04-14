@@ -33,9 +33,12 @@ public class AnalyticsService : IAnalyticsService
             .Take(movementLogSampleSize)
             .ToListAsync();
 
-        var averageListenSeconds = await _context.NarrationHistories
+        var durationQuery = _context.NarrationHistories
             .AsNoTracking()
-            .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0)
+            .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0);
+
+        var averageListenSampleCount = await durationQuery.CountAsync();
+        var averageListenSeconds = await durationQuery
             .Select(x => (double?)x.DurationSeconds!.Value)
             .AverageAsync() ?? 0;
 
@@ -77,6 +80,7 @@ public class AnalyticsService : IAnalyticsService
             UnassignedMovementLogCount = recentMovementLogs.Count(x => string.IsNullOrWhiteSpace(NormalizeUserKey(x.UserKey))),
             LatestMovementAt = latestMovementAt,
             AverageListenSeconds = averageListenSeconds,
+            AverageListenSampleCount = averageListenSampleCount,
             TopPois = topPois,
             Routes = routes.Take(maxDisplayedRoutes).ToList(),
             HeatmapPoints = heatmapPoints,
@@ -206,9 +210,9 @@ public class AnalyticsService : IAnalyticsService
                 Latitude = x.Latitude,
                 Longitude = x.Longitude,
                 Count = x.Count,
-                Weight = maxCount <= 1
-                    ? 0.35
-                    : 0.25 + (0.75 * x.Count / maxCount)
+                Weight = maxCount <= 0
+                    ? 0
+                    : (double)x.Count / maxCount
             })
             .ToList();
     }
@@ -235,7 +239,7 @@ public class AnalyticsService : IAnalyticsService
     }
 
     private static string NormalizeUserKey(string? userKey)
-        => (userKey ?? string.Empty).Trim().ToLowerInvariant();
+        => MovementLogUserKeyPrivacy.NormalizeForStorage(userKey);
 
     private static string NormalizeSource(string? source)
     {
