@@ -19,7 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<UserMovementLog> UserMovementLogs => Set<UserMovementLog>();
     public DbSet<Tour> Tours => Set<Tour>();
     public DbSet<TourStop> TourStops => Set<TourStop>();
-
+    public DbSet<AppDeviceSession> AppDeviceSessions => Set<AppDeviceSession>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -93,5 +93,15 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TourStop>()
             .HasIndex(x => new { x.TourId, x.DisplayOrder })
             .IsUnique();
+
+        modelBuilder.Entity<AppDeviceSession>()
+            .HasIndex(x => x.DeviceKey)
+            .IsUnique();
+
+        modelBuilder.Entity<AppDeviceSession>()
+            .HasIndex(x => x.LastHeartbeatAt);
+
+        modelBuilder.Entity<AppDeviceSession>()
+            .HasIndex(x => x.UserKey);
     }
 }

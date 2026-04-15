@@ -10,9 +10,12 @@ public class HomeService : IHomeService
 {
     private readonly AppDbContext _context;
 
-    public HomeService(AppDbContext context)
+    private readonly IAppDevicePresenceService _appDevicePresenceService;
+
+    public HomeService(AppDbContext context, IAppDevicePresenceService appDevicePresenceService)
     {
         _context = context;
+        _appDevicePresenceService = appDevicePresenceService;
     }
 
     public async Task<HomeDashboardViewModel> GetDashboardAsync()
@@ -36,12 +39,17 @@ public class HomeService : IHomeService
             .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0)
             .Select(x => (double?)x.DurationSeconds!.Value)
             .AverageAsync() ?? 0;
+        var presence = await _appDevicePresenceService.GetSummaryAsync();
 
         return new HomeDashboardViewModel
         {
             PoiCount = await _context.Pois.CountAsync(),
             ActivePoiCount = activePois.Count,
             ActiveQrCount = await _context.QrCodeItems.CountAsync(x => x.IsActive),
+            ActiveDeviceCount = presence.ActiveDeviceCount,
+            ActiveUserCount = presence.ActiveUserCount,
+            DeviceTimeoutSeconds = presence.TimeoutSeconds,
+            ActiveDevices = presence.Devices,
             NarrationHistoryCount = narrationHistoryCount,
             TodayNarrationCount = await _context.NarrationHistories.CountAsync(x => x.PlayedAt >= today),
             ConfiguredLanguageCount = CountConfiguredLanguages(activePois),

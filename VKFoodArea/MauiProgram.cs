@@ -92,6 +92,8 @@ public static class MauiProgram
         builder.Services.AddTransient<UserPage>();
         builder.Services.AddTransient<HomeEntryPage>();
         builder.Services.AddTransient<StartupPage>();
+        builder.Services.AddSingleton<DeviceIdentityService>();
+        builder.Services.AddHttpClient<AppDevicePresenceService>(ConfigureDemoHttpClient);
 
 #if DEBUG
         builder.Logging.AddDebug();

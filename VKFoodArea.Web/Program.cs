@@ -44,6 +44,7 @@ builder.Services.AddScoped<INarrationHistoryService, NarrationHistoryService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IAppUserAccountService, AppUserAccountService>();
 builder.Services.AddScoped<IUserMovementLogService, UserMovementLogService>();
+builder.Services.AddScoped<IAppDevicePresenceService, AppDevicePresenceService>();
 builder.Services.AddHttpClient<ITtsTranslationService, TtsTranslationService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(12);

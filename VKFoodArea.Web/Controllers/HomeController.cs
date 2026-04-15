@@ -10,10 +10,21 @@ namespace VKFoodArea.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IHomeService _homeService;
+    private readonly IAppDevicePresenceService _appDevicePresenceService;
 
-    public HomeController(IHomeService homeService)
+    public HomeController(
+        IHomeService homeService,
+        IAppDevicePresenceService appDevicePresenceService)
     {
         _homeService = homeService;
+        _appDevicePresenceService = appDevicePresenceService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ActiveDevices()
+    {
+        var vm = await _appDevicePresenceService.GetSummaryAsync();
+        return Json(vm);
     }
 
     public async Task<IActionResult> Index()

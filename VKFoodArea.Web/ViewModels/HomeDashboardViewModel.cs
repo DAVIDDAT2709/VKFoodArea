@@ -14,6 +14,10 @@ public class HomeDashboardViewModel
     public int ActiveTourCount { get; set; }
     public double AverageListenSeconds { get; set; }
     public int AverageListenSampleCount { get; set; }
+    public int ActiveDeviceCount { get; set; }
+    public int ActiveUserCount { get; set; }
+    public int DeviceTimeoutSeconds { get; set; }
+    public List<ActiveDeviceItemViewModel> ActiveDevices { get; set; } = new();
     public List<RecentNarrationItemViewModel> RecentNarrations { get; set; } = new();
     public List<DashboardBreakdownItemViewModel> LanguageBreakdown { get; set; } = new();
     public List<DashboardBreakdownItemViewModel> TriggerSourceBreakdown { get; set; } = new();
