@@ -6,11 +6,43 @@ public class LocationTrackerService
 {
     public event EventHandler<Location>? LocationChanged;
 
+    private readonly object _demoSync = new();
+
     private bool _isListening;
     private LocationTrackingProfile? _activeProfile;
 
+    private bool _isDemoModeEnabled;
+    private Location? _demoLocation;
+
+    public bool IsDemoModeEnabled
+    {
+        get
+        {
+            lock (_demoSync)
+                return _isDemoModeEnabled;
+        }
+    }
+
+    public Location? DemoLocation
+    {
+        get
+        {
+            lock (_demoSync)
+            {
+                if (!_isDemoModeEnabled || _demoLocation is null)
+                    return null;
+
+                return new Location(_demoLocation.Latitude, _demoLocation.Longitude);
+            }
+        }
+    }
+
     public async Task<Location?> GetLastKnownAsync(CancellationToken ct = default)
     {
+        var demo = DemoLocation;
+        if (demo is not null)
+            return demo;
+
         try
         {
             return await Geolocation.Default.GetLastKnownLocationAsync();
@@ -25,6 +57,10 @@ public class LocationTrackerService
         LocationTrackingProfile profile,
         CancellationToken ct = default)
     {
+        var demo = DemoLocation;
+        if (demo is not null)
+            return demo;
+
         try
         {
             var request = new GeolocationRequest(profile.CurrentAccuracy, profile.CurrentTimeout);
@@ -85,13 +121,39 @@ public class LocationTrackerService
         }
     }
 
-    private void OnGeolocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+    public void EnableDemoMode(double latitude, double longitude)
     {
-        LocationChanged?.Invoke(this, e.Location);
+        Location demoLocation;
+
+        lock (_demoSync)
+        {
+            _isDemoModeEnabled = true;
+            _demoLocation = new Location(latitude, longitude);
+            demoLocation = _demoLocation;
+        }
+
+        LocationChanged?.Invoke(this, demoLocation);
+    }
+
+    public void DisableDemoMode()
+    {
+        lock (_demoSync)
+        {
+            _isDemoModeEnabled = false;
+            _demoLocation = null;
+        }
     }
 
     public void SimulateLocation(double latitude, double longitude)
     {
-        LocationChanged?.Invoke(this, new Location(latitude, longitude));
+        EnableDemoMode(latitude, longitude);
+    }
+
+    private void OnGeolocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+    {
+        if (IsDemoModeEnabled)
+            return;
+
+        LocationChanged?.Invoke(this, e.Location);
     }
 }

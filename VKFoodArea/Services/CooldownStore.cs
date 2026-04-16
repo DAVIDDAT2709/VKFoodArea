@@ -39,7 +39,7 @@ public class CooldownStore
         if (!_globalPlayedAt.HasValue)
             return false;
 
-        // Nếu đang chuyển sang POI khác thì không chặn bởi global cooldown
+        // Nếu đang chuyển sang POI khác thì không chặn
         if (_lastPlayedPoiId.HasValue && _lastPlayedPoiId.Value != poiId)
             return false;
 
