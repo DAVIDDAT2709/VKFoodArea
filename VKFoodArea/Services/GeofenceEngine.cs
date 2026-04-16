@@ -71,7 +71,7 @@ public class GeofenceEngine
             };
         }
 
-        if (_cooldownStore.IsGlobalCooldownActive(GlobalCooldown))
+        if (_cooldownStore.IsGlobalCooldownActive(GlobalCooldown, best.Poi.Id))
         {
             return new GeofenceDecision
             {

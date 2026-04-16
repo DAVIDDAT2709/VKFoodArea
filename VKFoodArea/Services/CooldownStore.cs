@@ -5,6 +5,7 @@ public class CooldownStore
     private readonly Dictionary<int, DateTimeOffset> _poiPlayedAt = new();
     private readonly Dictionary<int, DateTimeOffset> _insideSince = new();
     private DateTimeOffset? _globalPlayedAt;
+    private int? _lastPlayedPoiId;
 
     public void MarkInside(int poiId)
     {
@@ -33,9 +34,13 @@ public class CooldownStore
         return DateTimeOffset.UtcNow - at < cooldown;
     }
 
-    public bool IsGlobalCooldownActive(TimeSpan cooldown)
+    public bool IsGlobalCooldownActive(TimeSpan cooldown, int poiId)
     {
         if (!_globalPlayedAt.HasValue)
+            return false;
+
+        // Nếu đang chuyển sang POI khác thì không chặn bởi global cooldown
+        if (_lastPlayedPoiId.HasValue && _lastPlayedPoiId.Value != poiId)
             return false;
 
         return DateTimeOffset.UtcNow - _globalPlayedAt.Value < cooldown;
@@ -46,5 +51,6 @@ public class CooldownStore
         var now = DateTimeOffset.UtcNow;
         _poiPlayedAt[poiId] = now;
         _globalPlayedAt = now;
+        _lastPlayedPoiId = poiId;
     }
 }
