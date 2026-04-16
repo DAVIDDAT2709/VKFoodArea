@@ -300,7 +300,7 @@ public class PoiRuntimeService : IDisposable
                         stopPoi.Longitude,
                         DistanceUnits.Kilometers) * 1000;
 
-                    if (distanceToStopMeters <= stopPoi.RadiusMeters + 12)
+                    if (distanceToStopMeters <= stopPoi.RadiusMeters)
                     {
                         poiToPlay = stopPoi;
                         shouldAdvanceTour = true;

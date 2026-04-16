@@ -15,7 +15,7 @@ public class GeofenceEngine
     /// Nếu khoảng cách giữa 2 quán chỉ lệch rất ít thì mới dùng Priority để phân xử.
     /// </summary>
     private const double PriorityTieThresholdMeters = 5;
-    private const double TriggerBufferMeters = 12;
+    private const double TriggerBufferMeters = 0;
 
     public GeofenceEngine(
         HaversineDistanceCalculator distanceCalculator,
@@ -109,10 +109,11 @@ public class GeofenceEngine
         var nearest = inRange[0];
 
         var tiedCandidates = inRange
-            .Where(x => Math.Abs(x.Distance - nearest.Distance) <= PriorityTieThresholdMeters)
-            .OrderByDescending(x => x.Poi.Priority)
-            .ThenBy(x => x.Distance)
-            .ToList();
+        .Where(x => Math.Abs(x.Distance - nearest.Distance) <= PriorityTieThresholdMeters)
+        .OrderByDescending(x => x.Poi.Priority)
+        .ThenBy(x => x.Distance)
+        .ThenBy(x => x.Poi.Id)
+        .ToList();
 
         return tiedCandidates[0];
     }
