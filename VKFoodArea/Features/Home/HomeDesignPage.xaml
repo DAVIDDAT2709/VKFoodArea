@@ -410,30 +410,44 @@
                 Stroke="#CFE0DA"
                 StrokeThickness="1"
                 Padding="14"
-                StrokeShape="RoundRectangle 22">
+                StrokeShape="RoundRectangle 8">
             <Border.Shadow>
                 <Shadow Brush="#12312B"
                         Offset="0,8"
                         Radius="16"
                         Opacity="0.08" />
             </Border.Shadow>
-            <Grid ColumnDefinitions="Auto,*,Auto"
+            <Grid ColumnDefinitions="36,Auto,*,Auto"
                   RowDefinitions="Auto,Auto,Auto"
                   ColumnSpacing="12"
                   RowSpacing="4">
-                <Border Grid.RowSpan="3"
+                <Button x:Name="MiniPlayerCloseButton"
+                        Grid.RowSpan="3"
+                        Text="X"
+                        Command="{Binding CloseMiniPlayerCommand}"
+                        WidthRequest="34"
+                        HeightRequest="34"
+                        CornerRadius="8"
+                        BackgroundColor="#F1F5F3"
+                        TextColor="#48635F"
+                        FontSize="12"
+                        FontAttributes="Bold"
+                        VerticalOptions="Center" />
+
+                <Border Grid.Column="1"
+                        Grid.RowSpan="3"
                         WidthRequest="58"
                         HeightRequest="58"
                         BackgroundColor="#EAF4F1"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 18">
+                        StrokeShape="RoundRectangle 8">
                     <Grid>
                         <Image Source="{Binding CurrentNarrationImageUrl}"
                                Aspect="AspectFill" />
                         <Border BackgroundColor="#DDEFE9"
                                 Opacity="0.35"
                                 StrokeThickness="0"
-                                StrokeShape="RoundRectangle 18" />
+                                StrokeShape="RoundRectangle 8" />
                         <Label Text="TTS"
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
@@ -443,13 +457,13 @@
                     </Grid>
                 </Border>
 
-                <HorizontalStackLayout Grid.Column="1"
+                <HorizontalStackLayout Grid.Column="2"
                                        Grid.ColumnSpan="2"
                                        Spacing="8">
                     <Border BackgroundColor="#EAF4F1"
                             Padding="8,4"
                             StrokeThickness="0"
-                            StrokeShape="RoundRectangle 10">
+                            StrokeShape="RoundRectangle 8">
                         <Label Text="{Binding MiniPlayerStateTag}"
                                FontSize="10"
                                FontAttributes="Bold"
@@ -464,7 +478,7 @@
                 </HorizontalStackLayout>
 
                 <VerticalStackLayout Grid.Row="1"
-                                     Grid.Column="1"
+                                     Grid.Column="2"
                                      Spacing="2">
                     <Label Text="{Binding CurrentNarrationTitle}"
                            FontSize="13"
@@ -481,11 +495,11 @@
 
                 <Button x:Name="MiniPlayerStopButton"
                         Grid.Row="1"
-                        Grid.Column="2"
+                        Grid.Column="3"
                         Command="{Binding StopNarrationCommand}"
                         WidthRequest="64"
                         HeightRequest="34"
-                        CornerRadius="12"
+                        CornerRadius="8"
                         BackgroundColor="#173330"
                         TextColor="White"
                         FontSize="11"
@@ -493,7 +507,7 @@
                         IsEnabled="{Binding IsNarrationPlaying}" />
 
                 <VerticalStackLayout Grid.Row="2"
-                                     Grid.Column="1"
+                                     Grid.Column="2"
                                      Grid.ColumnSpan="2"
                                      Spacing="6">
                     <ProgressBar Progress="{Binding MiniPlayerProgress}"

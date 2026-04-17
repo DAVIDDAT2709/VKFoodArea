@@ -351,7 +351,7 @@ public class TourCatalogPage : ContentPage
 
         _tourSessionService.Start(tour);
         RefreshActiveSessionCard();
-        await Navigation.PushAsync(_serviceProvider.GetRequiredService<TourSessionPage>());
+        await Navigation.PushAsync(_serviceProvider.GetRequiredService<FullMapPage>());
     }
 
     private void RefreshActiveSessionCard()
@@ -384,7 +384,7 @@ public class TourCatalogPage : ContentPage
         if (_tourSessionService.GetCurrentSession() is null)
             return;
 
-        await Navigation.PushAsync(_serviceProvider.GetRequiredService<TourSessionPage>());
+        await Navigation.PushAsync(_serviceProvider.GetRequiredService<FullMapPage>());
     }
 
     private async void OnCancelCurrentTourClicked(object? sender, EventArgs e)

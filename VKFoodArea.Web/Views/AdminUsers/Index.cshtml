@@ -73,7 +73,7 @@
                                 <span class="status-pill status-pill--muted">Đang khóa</span>
                             }
                         </td>
-                        <td>@(item.LastLoginAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        <td>@(item.LastLoginAt.HasValue ? WebDisplayTime.Format(item.LastLoginAt.Value, "dd/MM/yyyy HH:mm") : "-")</td>
                         <td>
                             <div class="table-actions">
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>

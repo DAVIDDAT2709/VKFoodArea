@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 using VKFoodArea.Web.ViewModels;
 
 namespace VKFoodArea.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = AdminRoleNames.AdminOrRestaurantOwner)]
 public class PoisController : Controller
 {
     private readonly IPoiService _poiService;
@@ -22,9 +23,9 @@ public class PoisController : Controller
         return View(pois);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        return View(new PoiFormViewModel());
+        return View(await _poiService.BuildCreateFormAsync());
     }
 
     [HttpPost]
@@ -38,7 +39,10 @@ public class PoisController : Controller
         AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
+        {
+            vm = await _poiService.RebuildFormAsync(vm);
             return View(vm);
+        }
 
         var createdId = await _poiService.CreateAsync(vm);
 
@@ -69,7 +73,10 @@ public class PoisController : Controller
         AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
+        {
+            vm = await _poiService.RebuildFormAsync(vm);
             return View(vm);
+        }
 
         var updated = await _poiService.UpdateAsync(id, vm);
         if (!updated)

@@ -2,23 +2,31 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using VKFoodArea.Web.Data;
+using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
         options.Cookie.Name = "VKFoodArea.Cms";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AdminRoleNames.AdminOnly, policy => policy.RequireRole(AdminRoleNames.Admin));
+    options.AddPolicy(
+        AdminRoleNames.AdminOrRestaurantOwner,
+        policy => policy.RequireRole(AdminRoleNames.Admin, AdminRoleNames.RestaurantOwner));
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options
@@ -42,6 +50,7 @@ builder.Services.AddScoped<IQrCodeImageStorageService, QrCodeImageStorageService
 builder.Services.AddScoped<IQrCodeItemService, QrCodeItemService>();
 builder.Services.AddScoped<INarrationHistoryService, NarrationHistoryService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+builder.Services.AddScoped<ICurrentAdminService, CurrentAdminService>();
 builder.Services.AddScoped<IAppUserAccountService, AppUserAccountService>();
 builder.Services.AddScoped<IUserMovementLogService, UserMovementLogService>();
 builder.Services.AddScoped<IAppDevicePresenceService, AppDevicePresenceService>();

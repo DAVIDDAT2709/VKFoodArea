@@ -7,6 +7,8 @@ namespace VKFoodArea.Web.Services;
 
 public interface IPoiService
 {
+    Task<PoiFormViewModel> BuildCreateFormAsync();
+    Task<PoiFormViewModel> RebuildFormAsync(PoiFormViewModel vm);
     Task<List<Poi>> GetAllAsync();
     Task<PoiFormViewModel?> GetEditFormAsync(int id);
     Task<Poi?> GetDeleteModelAsync(int id);

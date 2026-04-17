@@ -11,10 +11,12 @@ namespace VKFoodArea.Web.Services;
 public class NarrationHistoryService : INarrationHistoryService
 {
     private readonly AppDbContext _context;
+    private readonly ICurrentAdminService _currentAdminService;
 
-    public NarrationHistoryService(AppDbContext context)
+    public NarrationHistoryService(AppDbContext context, ICurrentAdminService currentAdminService)
     {
         _context = context;
+        _currentAdminService = currentAdminService;
     }
 
     public async Task<NarrationHistoryIndexViewModel> GetIndexAsync(
@@ -40,13 +42,13 @@ public class NarrationHistoryService : INarrationHistoryService
 
         if (fromDate.HasValue)
         {
-            var from = DateTime.SpecifyKind(fromDate.Value.Date, DateTimeKind.Unspecified);
+            var from = WebDisplayTime.ToUtcStartOfDay(fromDate.Value);
             dataQuery = dataQuery.Where(x => x.PlayedAt >= from);
         }
 
         if (toDate.HasValue)
         {
-            var toExclusive = DateTime.SpecifyKind(toDate.Value.Date.AddDays(1), DateTimeKind.Unspecified);
+            var toExclusive = WebDisplayTime.ToUtcStartOfNextDay(toDate.Value);
             dataQuery = dataQuery.Where(x => x.PlayedAt < toExclusive);
         }
 
@@ -68,7 +70,8 @@ public class NarrationHistoryService : INarrationHistoryService
             Mode = normalizedMode,
             Source = normalizedSource,
             Items = items,
-            TodayCount = items.Count(x => x.PlayedAt >= DateTime.Today),
+            TodayCount = items.Count(x => x.PlayedAt >= WebDisplayTime.TodayStartUtc &&
+                                          x.PlayedAt < WebDisplayTime.TomorrowStartUtc),
             GpsCount = items.Count(x => x.TriggerSource == "gps" || x.TriggerSource == "auto"),
             QrCount = items.Count(x => x.TriggerSource == "qr"),
             ManualCount = items.Count(x => x.TriggerSource == "manual"),
@@ -134,7 +137,7 @@ public class NarrationHistoryService : INarrationHistoryService
             Language = language,
             TriggerSource = triggerSource,
             Mode = mode,
-            PlayedAt = vm.PlayedAt ?? DateTime.UtcNow,
+            PlayedAt = NormalizePlayedAt(vm.PlayedAt),
             DurationSeconds = vm.DurationSeconds,
             Latitude = vm.Latitude,
             Longitude = vm.Longitude
@@ -202,9 +205,18 @@ public class NarrationHistoryService : INarrationHistoryService
         var normalizedUserKey = NormalizeUserKey(userKey);
 
         var query = _context.NarrationHistories
+            .Include(x => x.Poi)
             .AsNoTracking()
             .OrderByDescending(x => x.PlayedAt)
+            .ThenByDescending(x => x.Id)
             .AsQueryable();
+
+        if (_currentAdminService.IsRestaurantOwner)
+        {
+            query = _currentAdminService.UserId.HasValue
+                ? query.Where(x => x.Poi != null && x.Poi.OwnerAdminUserId == _currentAdminService.UserId.Value)
+                : query.Where(x => false);
+        }
 
         if (!string.IsNullOrWhiteSpace(normalizedUserKey))
             query = query.Where(x => x.UserKey == normalizedUserKey);
@@ -321,10 +333,27 @@ public class NarrationHistoryService : INarrationHistoryService
         {
             "auto" => "gps",
             "gps" => "gps",
+            "tour" => "tour",
             "qr" => "qr",
             "manual" => "manual",
             _ => string.Empty
         };
+    }
+
+    private static DateTime NormalizePlayedAt(DateTime? playedAt)
+    {
+        var now = DateTime.UtcNow;
+        if (!playedAt.HasValue)
+            return now;
+
+        var utc = playedAt.Value.Kind == DateTimeKind.Utc
+            ? playedAt.Value
+            : DateTime.SpecifyKind(playedAt.Value, DateTimeKind.Utc);
+
+        if (utc > now.AddMinutes(5))
+            return now;
+
+        return utc;
     }
 
     private static string NormalizeUserKey(string? userKey)

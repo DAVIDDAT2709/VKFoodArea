@@ -26,7 +26,8 @@ public class HomeService : IHomeService
             .ToListAsync();
 
         var narrationHistoryCount = await _context.NarrationHistories.CountAsync();
-        var today = DateTime.Today;
+        var today = WebDisplayTime.TodayStartUtc;
+        var tomorrow = WebDisplayTime.TomorrowStartUtc;
         var gpsNarrationCount = await _context.NarrationHistories.CountAsync(x =>
             x.TriggerSource == "gps" ||
             x.TriggerSource == "auto");
@@ -51,7 +52,7 @@ public class HomeService : IHomeService
             DeviceTimeoutSeconds = presence.TimeoutSeconds,
             ActiveDevices = presence.Devices,
             NarrationHistoryCount = narrationHistoryCount,
-            TodayNarrationCount = await _context.NarrationHistories.CountAsync(x => x.PlayedAt >= today),
+            TodayNarrationCount = await _context.NarrationHistories.CountAsync(x => x.PlayedAt >= today && x.PlayedAt < tomorrow),
             ConfiguredLanguageCount = CountConfiguredLanguages(activePois),
             GpsNarrationCount = gpsNarrationCount,
             QrNarrationCount = await _context.NarrationHistories.CountAsync(x => x.TriggerSource == "qr"),

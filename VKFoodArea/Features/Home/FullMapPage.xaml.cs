@@ -9,9 +9,11 @@ using Mapsui.UI.Maui;
 using Mapsui.UI.Maui.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Networking;
 using System.ComponentModel;
 using VKFoodArea.Features.User;
 using VKFoodArea.Models;
+using VKFoodArea.Repositories;
 using VKFoodArea.Services;
 
 namespace VKFoodArea.Features.Home;
@@ -24,10 +26,17 @@ public partial class FullMapPage : ContentPage
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
     private readonly LocationTrackerService _locationTrackerService;
+    private readonly TourSessionService _tourSessionService;
+    private readonly TourNarrationService _tourNarrationService;
+    private readonly FoodRepository _foodRepository;
 
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
     private List<Poi> _allPois = new();
+    private TourSession? _activeTourSession;
+    private FoodItem? _suggestedFood;
+    private Poi? _suggestedFoodPoi;
+    private bool _isOnlineMapMode;
 
     private Location? _currentGpsLocation;
     private bool _followMyLocation = true;
@@ -43,6 +52,7 @@ public partial class FullMapPage : ContentPage
 
     private const double DefaultMapLatitude = DemoMidLatitude;
     private const double DefaultMapLongitude = DemoMidLongitude;
+    private const double MapFollowDistanceMeters = 3500;
     private Button? DemoMenuButtonView => this.FindByName("DemoMenuButton") as Button;
     private Button? RealGpsButtonView => this.FindByName("RealGpsButton") as Button;
     private Label? DemoModeLabelView => this.FindByName("DemoModeLabel") as Label;
@@ -61,13 +71,37 @@ public partial class FullMapPage : ContentPage
         "<circle cx='36' cy='28' r='4' fill='#1F9D74'/>" +
         "</svg>";
 
+    private const string TourPoiPinSvg =
+        "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 64 64'>" +
+        "<path d='M32 5C20.95 5 12 13.95 12 25c0 14 20 34 20 34s20-20 20-34C52 13.95 43.05 5 32 5z' fill='#F59E0B'/>" +
+        "<circle cx='32' cy='25' r='10' fill='white'/>" +
+        "<path d='M27 25l4 4 7-9' fill='none' stroke='#F59E0B' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/>" +
+        "</svg>";
+    private static readonly string[] PoiPinPalette =
+    [
+        "#2F80ED",
+        "#9B51E0",
+        "#EB5757",
+        "#27AE60",
+        "#F2994A",
+        "#00A3A3"
+    ];
+
+    private static readonly IReadOnlyList<double> OfflineMapResolutions = Enumerable
+        .Range(0, 22)
+        .Select(level => 156543.03392804097 / Math.Pow(2, level))
+        .ToArray();
+
     public FullMapPage(
         HomeViewModel viewModel,
         NarrationService narrationService,
         IServiceProvider serviceProvider,
         AppTextService text,
         NarrationUiStateService narrationUiState,
-        LocationTrackerService locationTrackerService)
+        LocationTrackerService locationTrackerService,
+        TourSessionService tourSessionService,
+        TourNarrationService tourNarrationService,
+        FoodRepository foodRepository)
     {
         InitializeComponent();
 
@@ -77,6 +111,9 @@ public partial class FullMapPage : ContentPage
         _text = text;
         _narrationUiState = narrationUiState;
         _locationTrackerService = locationTrackerService;
+        _tourSessionService = tourSessionService;
+        _tourNarrationService = tourNarrationService;
+        _foodRepository = foodRepository;
 
         BindingContext = _viewModel;
     }
@@ -91,13 +128,22 @@ public partial class FullMapPage : ContentPage
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
+        _tourSessionService.StateChanged -= OnTourSessionStateChanged;
+        _tourSessionService.StateChanged += OnTourSessionStateChanged;
+
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
+
         ApplyStaticText();
         SetDemoUi(false);
 
         await _viewModel.InitializeAsync();
         _allPois = (await _viewModel.GetMapPoisAsync()).ToList();
 
+        RefreshActiveTourContext();
+        await RefreshFoodSuggestionAsync();
         RefreshMapLocationFromViewModel(true);
+        _ = TryPlayTourIntroAsync();
     }
 
     protected override void OnDisappearing()
@@ -105,13 +151,19 @@ public partial class FullMapPage : ContentPage
         base.OnDisappearing();
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        _tourSessionService.StateChanged -= OnTourSessionStateChanged;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
     }
 
     private void ApplyStaticText()
     {
         Title = "Bản đồ khám phá";
         PageTitleLabel.Text = "Bản đồ khám phá";
+        MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
         MapBadgeLabel.Text = "Bản đồ";
+        ApplyMapModeText();
+        TourContextPanel.IsVisible = false;
+        FoodSuggestionPanel.IsVisible = false;
 
         if (DemoMenuButtonView is not null)
             DemoMenuButtonView.Text = "Demo";
@@ -123,6 +175,7 @@ public partial class FullMapPage : ContentPage
         NavMapButton.Text = "Bản đồ";
         NavHistoryButton.Text = "Lịch sử";
         NavAccountButton.Text = "Tài khoản";
+        MiniPlayerStopButton.Text = "Dừng";
     }
 
     private void SetDemoUi(bool isDemoMode, string? label = null)
@@ -146,8 +199,10 @@ public partial class FullMapPage : ContentPage
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 _allPois = (await _viewModel.GetMapPoisAsync()).ToList();
+                RefreshActiveTourContext();
                 RefreshMapSurface(_followMyLocation);
                 UpdateNearestPoiInfo();
+                await RefreshFoodSuggestionAsync();
             });
             return;
         }
@@ -162,8 +217,10 @@ public partial class FullMapPage : ContentPage
     private void RefreshMapLocationFromViewModel(bool shouldCenterMap)
     {
         _currentGpsLocation = _viewModel.CurrentLocation;
+        RefreshActiveTourContext();
         UpdateNearestPoiInfo();
         RefreshMapSurface(shouldCenterMap);
+        _ = RefreshFoodSuggestionAsync();
     }
 
     private void InitializeMap()
@@ -202,16 +259,35 @@ public partial class FullMapPage : ContentPage
 
     private Mapsui.Map BuildMap()
     {
-        var map = new Mapsui.Map();
+        _isOnlineMapMode = ShouldUseOnlineMap();
+        ApplyMapModeText();
+
+        var map = new Mapsui.Map
+        {
+            BackColor = Mapsui.Styles.Color.FromString("#E7F0EC")
+        };
         map.Widgets.Clear();
-        map.Layers.Add(OpenStreetMap.CreateTileLayer());
 
         var nearestPoiId = GetNearestPoiIdForCurrentLocation();
+        var visiblePois = GetVisibleMapPois();
+        var isTourMap = HasActiveTour();
+
+        if (_isOnlineMapMode)
+        {
+            map.Layers.Add(OpenStreetMap.CreateTileLayer());
+        }
+        else
+        {
+            map.Navigator.OverrideResolutions = OfflineMapResolutions;
+
+            foreach (var layer in OfflineMapLayerFactory.CreateVinhKhanhLayers())
+                map.Layers.Add(layer);
+        }
 
         _poiLayer = new MemoryLayer("POIs")
         {
-            Features = _allPois
-                .Select(poi => CreatePoiFeature(poi, nearestPoiId == poi.Id))
+            Features = visiblePois
+                .Select(poi => CreatePoiFeature(poi, nearestPoiId == poi.Id, isTourMap))
                 .Cast<IFeature>()
                 .ToList()
         };
@@ -239,24 +315,50 @@ public partial class FullMapPage : ContentPage
             .FromLonLat(location.Longitude, location.Latitude)
             .ToMPoint();
 
-        var resolutions = map.Navigator.Resolutions;
-        var zoomResolution = resolutions.Count > 19 ? resolutions[19] : resolutions[^1];
+        var zoomResolution = GetOfflineMapResolution(map, 19);
 
         map.Navigator.CenterOnAndZoomTo(center, zoomResolution);
     }
 
+    private static double GetOfflineMapResolution(Mapsui.Map map, int preferredLevel)
+    {
+        var resolutions = map.Navigator.Resolutions;
+        if (resolutions.Count > 0)
+            return resolutions[Math.Min(preferredLevel, resolutions.Count - 1)];
+
+        return OfflineMapResolutions[Math.Min(preferredLevel, OfflineMapResolutions.Count - 1)];
+    }
+
     private Location GetMapCenterLocation()
-        => _currentGpsLocation ?? new Location(DefaultMapLatitude, DefaultMapLongitude);
+    {
+        var currentStopPoi = _activeTourSession?.CurrentStop?.Poi;
+        if (currentStopPoi is not null)
+            return new Location(currentStopPoi.Latitude, currentStopPoi.Longitude);
+
+        var visiblePois = GetVisibleMapPois();
+        if (OfflineMapLayerFactory.IsNearAnyPoi(_currentGpsLocation, visiblePois, MapFollowDistanceMeters))
+            return _currentGpsLocation!;
+
+        if (visiblePois.Count > 0)
+            return OfflineMapLayerFactory.GetContentCenter(visiblePois);
+
+        return new Location(DefaultMapLatitude, DefaultMapLongitude);
+    }
 
     private int? GetNearestPoiIdForCurrentLocation()
     {
-        if (_currentGpsLocation is null || _allPois.Count == 0)
+        if (_activeTourSession?.CurrentStop is { PoiId: > 0 } currentStop)
+            return currentStop.PoiId;
+
+        var visiblePois = GetVisibleMapPois();
+
+        if (_currentGpsLocation is null || visiblePois.Count == 0)
             return null;
 
         Poi? nearestPoi = null;
         double nearestDistanceMeters = double.MaxValue;
 
-        foreach (var poi in _allPois)
+        foreach (var poi in visiblePois)
         {
             var distanceMeters = Location.CalculateDistance(
                 _currentGpsLocation.Latitude,
@@ -277,22 +379,32 @@ public partial class FullMapPage : ContentPage
 
     private void UpdateNearestPoiInfo()
     {
-        if (_currentGpsLocation is null)
+        if (HasActiveTour())
         {
-            InfoLabel.Text = "Chưa có vị trí hiện tại.";
+            UpdateTourInfoText();
             return;
         }
 
-        if (_allPois.Count == 0)
+        if (_currentGpsLocation is null)
+        {
+            InfoLabel.Text = "Chưa có vị trí hiện tại.";
+            MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
+            return;
+        }
+
+        var visiblePois = GetVisibleMapPois();
+
+        if (visiblePois.Count == 0)
         {
             InfoLabel.Text = $"GPS: {_currentGpsLocation.Latitude:F6}, {_currentGpsLocation.Longitude:F6}";
+            MapSubtitleLabel.Text = "Chưa có POI để hiển thị";
             return;
         }
 
         Poi? nearestPoi = null;
         double nearestDistanceMeters = double.MaxValue;
 
-        foreach (var poi in _allPois)
+        foreach (var poi in visiblePois)
         {
             var distanceMeters = Location.CalculateDistance(
                 _currentGpsLocation.Latitude,
@@ -308,12 +420,25 @@ public partial class FullMapPage : ContentPage
             }
         }
 
-        InfoLabel.Text = nearestPoi is null
-            ? $"GPS: {_currentGpsLocation.Latitude:F6}, {_currentGpsLocation.Longitude:F6}"
-            : $"Gần nhất: {nearestPoi.Name} • {nearestDistanceMeters:F0} m";
+        if (nearestPoi is null)
+        {
+            InfoLabel.Text = $"GPS: {_currentGpsLocation.Latitude:F6}, {_currentGpsLocation.Longitude:F6}";
+            MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
+            return;
+        }
+
+        if (nearestDistanceMeters > MapFollowDistanceMeters)
+        {
+            InfoLabel.Text = "Đang xem các POI tại Vĩnh Khánh • GPS hiện tại ngoài khu vực trải nghiệm";
+            MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
+            return;
+        }
+
+        InfoLabel.Text = $"Gần nhất: {nearestPoi.Name} • {nearestDistanceMeters:F0} m";
+        MapSubtitleLabel.Text = $"GPS đang hoạt động • {nearestPoi.Name}";
     }
 
-    private static PointFeature CreatePoiFeature(Poi poi, bool isNearest)
+    private static PointFeature CreatePoiFeature(Poi poi, bool isNearest, bool isTourMap)
     {
         var point = SphericalMercator
             .FromLonLat(poi.Longitude, poi.Latitude)
@@ -326,7 +451,7 @@ public partial class FullMapPage : ContentPage
 
         feature.Styles.Add(new ImageStyle
         {
-            Image = isNearest ? NearestPoiPinSvg : PoiPinSvg,
+            Image = GetPoiPinSvg(poi, isNearest, isTourMap),
             SymbolScale = isNearest ? 0.68 : 0.55,
             Offset = new Offset(0, 18),
             RotateWithMap = false
@@ -335,10 +460,35 @@ public partial class FullMapPage : ContentPage
         return feature;
     }
 
+    private static string GetPoiPinSvg(Poi poi, bool isNearest, bool isTourMap)
+    {
+        if (isNearest)
+            return NearestPoiPinSvg;
+
+        if (isTourMap)
+            return TourPoiPinSvg;
+
+        var fillColor = PoiPinPalette[Math.Abs(poi.Id.GetHashCode()) % PoiPinPalette.Length];
+
+        return
+            "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 64 64'>" +
+            "<circle cx='32' cy='26' r='19' fill='" + fillColor + "' opacity='0.18'/>" +
+            "<path d='M32 5C20.95 5 12 13.95 12 25c0 14 20 34 20 34s20-20 20-34C52 13.95 43.05 5 32 5z' fill='" + fillColor + "'/>" +
+            "<circle cx='32' cy='25' r='10' fill='white'/>" +
+            "<circle cx='32' cy='25' r='4' fill='" + fillColor + "'/>" +
+            "</svg>";
+    }
+
     private PointFeature? CreateCurrentLocationFeature()
     {
         if (_currentGpsLocation is null)
             return null;
+
+        if (!_isOnlineMapMode &&
+            !OfflineMapLayerFactory.IsNearAnyPoi(_currentGpsLocation, GetVisibleMapPois(), MapFollowDistanceMeters))
+        {
+            return null;
+        }
 
         var point = SphericalMercator
             .FromLonLat(_currentGpsLocation.Longitude, _currentGpsLocation.Latitude)
@@ -351,7 +501,7 @@ public partial class FullMapPage : ContentPage
         {
             SymbolType = SymbolType.Ellipse,
             SymbolScale = 0.20,
-            Fill = new Mapsui.Styles.Brush(Mapsui.Styles.Color.Blue),
+            Fill = new Mapsui.Styles.Brush(Mapsui.Styles.Color.FromString("#1D4ED8")),
             Outline = new Pen(Mapsui.Styles.Color.White, 2)
         });
 
@@ -414,7 +564,8 @@ public partial class FullMapPage : ContentPage
         if (!int.TryParse(mapInfo.Feature["PoiId"]?.ToString(), out var poiId))
             return;
 
-        var poi = _allPois.FirstOrDefault(x => x.Id == poiId);
+        var poi = GetVisibleMapPois().FirstOrDefault(x => x.Id == poiId)
+                  ?? _allPois.FirstOrDefault(x => x.Id == poiId);
         if (poi is null)
             return;
 
@@ -429,6 +580,156 @@ public partial class FullMapPage : ContentPage
             _narrationService,
             _text,
             _narrationUiState));
+    }
+
+    private List<Poi> GetVisibleMapPois()
+    {
+        var session = _activeTourSession;
+        if (session?.OrderedStops.Count > 0 && !session.IsFinished)
+        {
+            var tourPois = new List<Poi>();
+
+            foreach (var stop in session.OrderedStops)
+            {
+                var poi = _allPois.FirstOrDefault(x => x.Id == stop.PoiId) ?? stop.Poi;
+                if (poi is null)
+                    continue;
+
+                if (tourPois.All(x => x.Id != poi.Id))
+                    tourPois.Add(poi);
+            }
+
+            if (tourPois.Count > 0)
+                return tourPois;
+        }
+
+        return _allPois;
+    }
+
+    private bool HasActiveTour()
+        => _activeTourSession is { IsFinished: false };
+
+    private void RefreshActiveTourContext()
+    {
+        _activeTourSession = _tourSessionService.GetCurrentSession();
+        var hasTour = HasActiveTour();
+
+        TourContextPanel.IsVisible = hasTour;
+        MapBadgeLabel.Text = hasTour ? "Tour" : "Bản đồ";
+        PageTitleLabel.Text = hasTour ? "Bản đồ Tour" : "Bản đồ khám phá";
+        MapSubtitleLabel.Text = hasTour ? "Đang theo tour" : "Khu Vĩnh Khánh, Quận 4";
+
+        if (!hasTour || _activeTourSession is null)
+        {
+            TourContextTitleLabel.Text = string.Empty;
+            TourContextSubtitleLabel.Text = string.Empty;
+            return;
+        }
+
+        var session = _activeTourSession;
+        var currentStop = session.CurrentStop;
+        var completedCount = session.CompletedStopIds.Count;
+        var totalCount = session.OrderedStops.Count;
+
+        TourContextTitleLabel.Text = session.TourName;
+        TourContextSubtitleLabel.Text = currentStop?.Poi is { } poi
+            ? $"Điểm tiếp theo: {poi.Name} • {completedCount}/{totalCount} điểm đã nghe"
+            : $"{completedCount}/{totalCount} điểm đã nghe";
+    }
+
+    private void UpdateTourInfoText()
+    {
+        var session = _activeTourSession;
+        var currentStopPoi = session?.CurrentStop?.Poi;
+
+        if (session is null || currentStopPoi is null)
+        {
+            InfoLabel.Text = "Tour đang sẵn sàng.";
+            return;
+        }
+
+        if (_currentGpsLocation is null)
+        {
+            InfoLabel.Text = $"Tour: {currentStopPoi.Name}. Bật GPS để app tự phát khi đến gần.";
+            MapSubtitleLabel.Text = "Đang theo tour";
+            return;
+        }
+
+        var distanceMeters = Location.CalculateDistance(
+            _currentGpsLocation.Latitude,
+            _currentGpsLocation.Longitude,
+            currentStopPoi.Latitude,
+            currentStopPoi.Longitude,
+            DistanceUnits.Kilometers) * 1000;
+
+        if (distanceMeters > MapFollowDistanceMeters)
+        {
+            InfoLabel.Text = $"Tour: {currentStopPoi.Name} • GPS hiện tại ngoài khu tour";
+            MapSubtitleLabel.Text = "Đang theo tour tại Vĩnh Khánh";
+            return;
+        }
+
+        InfoLabel.Text = $"Tour: {currentStopPoi.Name} • còn khoảng {distanceMeters:F0} m";
+        MapSubtitleLabel.Text = "Đang theo tour";
+    }
+
+    private async Task RefreshFoodSuggestionAsync()
+    {
+        var session = _activeTourSession;
+        var poi = session?.CurrentStop?.Poi;
+
+        if (poi is null)
+        {
+            _suggestedFood = null;
+            _suggestedFoodPoi = null;
+            FoodSuggestionPanel.IsVisible = false;
+            return;
+        }
+
+        var foods = await _foodRepository.GetByRestaurantAsync(poi.Name);
+        var food = foods.FirstOrDefault();
+
+        if (food is null)
+        {
+            _suggestedFood = null;
+            _suggestedFoodPoi = null;
+            FoodSuggestionPanel.IsVisible = false;
+            return;
+        }
+
+        _suggestedFood = food;
+        _suggestedFoodPoi = poi;
+        FoodSuggestionTitleLabel.Text = food.Name;
+        FoodSuggestionSubtitleLabel.Text = $"{food.RestaurantName} • từ {food.Price:N0}đ";
+        FoodSuggestionImage.Source = food.ImageUrl;
+        FoodSuggestionPanel.IsVisible = true;
+    }
+
+    private async Task TryPlayTourIntroAsync()
+    {
+        var session = _tourSessionService.GetCurrentSession();
+        var currentLanguage = _tourNarrationService.CurrentLanguage;
+
+        if (session is null ||
+            session.IsFinished ||
+            (session.IntroPlayedAt.HasValue &&
+             string.Equals(
+                 session.IntroPlayedLanguage,
+                 currentLanguage,
+                 StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        _tourSessionService.MarkIntroPlayed(currentLanguage);
+
+        try
+        {
+            await _tourNarrationService.PlayIntroAsync(session);
+        }
+        catch
+        {
+        }
     }
 
     private async void OnDemoMenuClicked(object sender, EventArgs e)
@@ -487,6 +788,24 @@ public partial class FullMapPage : ContentPage
             InfoLabel.Text = "Đã quay về GPS thật.";
     }
 
+    private async void OnEndTourClicked(object sender, EventArgs e)
+    {
+        _tourSessionService.Cancel();
+        RefreshActiveTourContext();
+        await RefreshFoodSuggestionAsync();
+        RefreshMapSurface(true);
+        UpdateNearestPoiInfo();
+    }
+
+    private async void OnFoodSuggestionClicked(object sender, EventArgs e)
+    {
+        if (_suggestedFoodPoi is null || _suggestedFood is null)
+            return;
+
+        InfoLabel.Text = $"Gợi ý: {_suggestedFood.Name}";
+        await OpenPoiDetailAsync(_suggestedFoodPoi);
+    }
+
     private async void OnGoHomeClicked(object sender, EventArgs e)
     {
         await Navigation.PopAsync();
@@ -512,5 +831,45 @@ public partial class FullMapPage : ContentPage
     private void OnNarrationUiStateChanged(object? sender, EventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(_viewModel.RefreshNarrationState);
+    }
+
+    private static bool ShouldUseOnlineMap()
+        => Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
+
+    private void ApplyMapModeText()
+    {
+        if (MapModeLabel is null || MapModeDot is null)
+            return;
+
+        MapModeLabel.Text = _isOnlineMapMode
+            ? "Online"
+            : "Offline Vĩnh Khánh";
+
+        MapModeDot.Fill = _isOnlineMapMode
+            ? Microsoft.Maui.Graphics.Color.FromArgb("#1F9D74")
+            : Microsoft.Maui.Graphics.Color.FromArgb("#D59C29");
+    }
+
+    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var shouldUseOnlineMap = ShouldUseOnlineMap();
+            if (shouldUseOnlineMap == _isOnlineMapMode)
+                return;
+
+            RefreshMapSurface(true);
+        });
+    }
+
+    private void OnTourSessionStateChanged(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            RefreshActiveTourContext();
+            await RefreshFoodSuggestionAsync();
+            RefreshMapSurface(true);
+            UpdateNearestPoiInfo();
+        });
     }
 }

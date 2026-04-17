@@ -54,6 +54,17 @@ public sealed class NarrationUiStateService
         NotifyChanged();
     }
 
+    public void Clear()
+    {
+        HasContext = false;
+        IsPlaying = false;
+        PoiId = null;
+        PoiName = string.Empty;
+        ImageUrl = string.Empty;
+
+        NotifyChanged();
+    }
+
     private void NotifyChanged()
     {
         StateChanged?.Invoke(this, EventArgs.Empty);

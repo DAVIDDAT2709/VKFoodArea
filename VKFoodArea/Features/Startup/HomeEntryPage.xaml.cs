@@ -121,15 +121,32 @@ public partial class HomeEntryPage : ContentPage
                 CommandParameter = option.Item2,
                 BackgroundColor = Color.FromArgb("#F2F6F5"),
                 TextColor = Color.FromArgb("#35534D"),
-                CornerRadius = 16,
+                CornerRadius = 8,
                 FontAttributes = FontAttributes.Bold,
                 FontSize = 13,
-                Padding = new Thickness(14, 10),
+                HeightRequest = 42,
+                MinimumWidthRequest = 108,
+                Padding = new Thickness(14, 8),
                 Margin = new Thickness(0, 0, 10, 10)
             };
 
             button.Clicked += OnLanguageButtonClicked;
             LanguageOptionsLayout.Children.Add(button);
+        }
+
+        NormalizeLanguageButtonText();
+    }
+
+    private void NormalizeLanguageButtonText()
+    {
+        foreach (var button in LanguageOptionsLayout.Children.OfType<Button>())
+        {
+            button.Text = button.CommandParameter?.ToString() switch
+            {
+                "zh" => "\u4e2d\u6587",
+                "ja" => "\u65e5\u672c\u8a9e",
+                _ => button.Text
+            };
         }
     }
 

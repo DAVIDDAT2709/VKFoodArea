@@ -134,5 +134,5 @@ public class AdminUserService : IAdminUserService
         => (username ?? string.Empty).Trim().ToLowerInvariant();
 
     private static string NormalizeRole(string? role)
-        => string.IsNullOrWhiteSpace(role) ? "Admin" : role.Trim();
+        => AdminRoleNames.Normalize(role);
 }

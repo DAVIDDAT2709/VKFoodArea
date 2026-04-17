@@ -102,7 +102,7 @@
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
-                            <p>@item.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
+                            <p>@WebDisplayTime.Format(item.LatestPlayedAt, "dd/MM HH:mm")</p>
                         </div>
                         <span class="soft-pill">@item.Count lượt</span>
                     </div>
@@ -172,7 +172,7 @@
                         <td><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
                         <td>@(item.DurationSeconds.HasValue ? $"{item.DurationSeconds.Value}s" : "-")</td>
                         <td><span class="soft-pill">@(string.IsNullOrWhiteSpace(item.UserKey) ? "Ẩn danh" : item.UserKey)</span></td>
-                        <td>@item.PlayedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td>@WebDisplayTime.Format(item.PlayedAt)</td>
                     </tr>
                 }
                 </tbody>

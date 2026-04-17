@@ -29,7 +29,7 @@
                 <div class="list-row">
                     <div class="list-row__content">
                         <strong>Ngày tạo</strong>
-                        <p>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p>@WebDisplayTime.Format(Model.CreatedAt, "dd/MM/yyyy HH:mm")</p>
                     </div>
                 </div>
             </div>

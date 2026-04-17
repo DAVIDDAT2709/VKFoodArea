@@ -100,7 +100,7 @@
                             </div>
                             <div class="inventory-stat">
                                 <strong>Ngày tạo</strong>
-                                <span>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                <span>@WebDisplayTime.Format(item.CreatedAt, "dd/MM/yyyy HH:mm")</span>
                             </div>
                         </div>
 

@@ -1,0 +1,417 @@
+@model VKFoodArea.Web.ViewModels.AdminMapViewModel
+@{
+    ViewData["Title"] = "Bản đồ Analytics";
+
+    var activePois = Model.ActivePois
+        .OrderByDescending(x => x.IsTopListened)
+        .ThenByDescending(x => x.ListenCount)
+        .ThenBy(x => x.Name)
+        .ToList();
+
+    var routes = Model.Analytics.Routes
+        .OrderByDescending(x => x.EndedAt)
+        .ToList();
+
+    var averageListenLabel = Model.Analytics.AverageListenSeconds > 0
+        ? $"{Math.Round(Model.Analytics.AverageListenSeconds)}s"
+        : "--";
+
+    var latestMovementLabel = Model.Analytics.LatestMovementAt.HasValue
+        ? WebDisplayTime.Format(Model.Analytics.LatestMovementAt.Value, "dd/MM HH:mm")
+        : "--";
+
+    var topPoi = Model.Analytics.TopPois.FirstOrDefault();
+
+    var poisJson = System.Text.Json.JsonSerializer.Serialize(
+        activePois.Select((poi, index) => new
+        {
+            poi.Id,
+            poi.Name,
+            poi.Address,
+            poi.Latitude,
+            poi.Longitude,
+            poi.RadiusMeters,
+            poi.Priority,
+            poi.ListenCount,
+            poi.IsTopListened,
+            Number = index + 1
+        }));
+
+    var routesJson = System.Text.Json.JsonSerializer.Serialize(routes);
+    var heatmapJson = System.Text.Json.JsonSerializer.Serialize(Model.Analytics.HeatmapPoints);
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="~/css/map-analytics.css" asp-append-version="true" />
+
+<section class="map-ops-header page-section">
+    <div>
+        <p class="section-kicker">Map Analytics</p>
+        <h2>Bản đồ vận hành POI</h2>
+        <p>Quản lý vị trí POI, tuyến thiết bị và điểm nóng lượt nghe trên cùng một bản đồ.</p>
+    </div>
+    <div class="page-actions">
+        <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Lịch sử nghe</a>
+        <a asp-controller="QrCodeItems" asp-action="Index" class="btn btn-outline-secondary">Mã QR</a>
+        <a asp-controller="Pois" asp-action="Index" class="btn btn-primary">Danh sách POI</a>
+    </div>
+</section>
+
+<section class="map-kpi-strip page-section" aria-label="Chỉ số bản đồ">
+    <article>
+        <span>POI hoạt động</span>
+        <strong>@activePois.Count</strong>
+    </article>
+    <article>
+        <span>Thiết bị có tuyến</span>
+        <strong>@Model.Analytics.AnonymousRouteCount</strong>
+    </article>
+    <article>
+        <span>Điểm heatmap</span>
+        <strong>@Model.Analytics.HeatmapPoints.Count</strong>
+    </article>
+    <article>
+        <span>TB nghe / POI</span>
+        <strong>@averageListenLabel</strong>
+    </article>
+</section>
+
+<section class="map-workspace page-section">
+    <article class="map-panel">
+        <div class="map-panel__header">
+            <div>
+                <h2>Bản đồ TP.HCM</h2>
+                <p>Tâm bản đồ đặt tại khu Vĩnh Khánh, Quận 4. Marker đỏ là POI được nghe nhiều nhất.</p>
+            </div>
+            <div class="map-panel__badges">
+                <span class="map-badge map-badge--poi">POI @activePois.Count</span>
+                <span class="map-badge map-badge--route">Tuyến @routes.Count</span>
+                <span class="map-badge map-badge--heat">Heatmap @Model.Analytics.HeatmapPoints.Count</span>
+            </div>
+        </div>
+
+        @if (!Model.HasMapData)
+        {
+            <div class="empty-state">
+                <p>Chưa có POI hoặc log di chuyển để hiển thị.</p>
+            </div>
+        }
+        else
+        {
+            <div id="analytics-map" class="analytics-map" aria-label="Bản đồ Analytics"></div>
+            <div id="analytics-map-fallback" class="empty-state mt-3 d-none">
+                <p>Không tải được nền bản đồ. Dữ liệu vẫn hiển thị ở bảng bên cạnh.</p>
+            </div>
+            <div id="analytics-map-heat-warning" class="map-runtime-note d-none">
+                Không tải được lớp heatmap. POI và tuyến thiết bị vẫn hoạt động.
+            </div>
+        }
+    </article>
+
+    <aside class="map-inspector">
+        <article class="inspector-panel inspector-panel--primary">
+            <span class="panel-label">Theo dõi nhanh</span>
+            <div class="inspector-row">
+                <span>Cập nhật gần nhất</span>
+                <strong>@latestMovementLabel</strong>
+            </div>
+            <div class="inspector-row">
+                <span>Log đang dùng</span>
+                <strong>@Model.Analytics.AnalyzedMovementLogCount</strong>
+            </div>
+            <div class="inspector-row">
+                <span>Thiết bị ghi nhận</span>
+                <strong>@Model.Analytics.AnonymousVisitorCount</strong>
+            </div>
+        </article>
+
+        <article class="inspector-panel">
+            <span class="panel-label">POI nghe nhiều nhất</span>
+            @if (topPoi is null)
+            {
+                <p class="panel-empty">Chưa có lượt nghe.</p>
+            }
+            else
+            {
+                <strong class="featured-poi">@topPoi.PoiName</strong>
+                <p>@topPoi.Count lượt nghe · @WebDisplayTime.Format(topPoi.LatestPlayedAt, "dd/MM HH:mm")</p>
+            }
+        </article>
+
+        <article class="inspector-panel">
+            <span class="panel-label">Top POI</span>
+            @if (!Model.Analytics.TopPois.Any())
+            {
+                <p class="panel-empty">Chưa có dữ liệu.</p>
+            }
+            else
+            {
+                <div class="compact-list">
+                    @foreach (var poi in Model.Analytics.TopPois.Take(5))
+                    {
+                        <div class="compact-row">
+                            <span>@poi.PoiName</span>
+                            <strong>@poi.Count</strong>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+
+        <article class="inspector-panel">
+            <span class="panel-label">Tuyến thiết bị gần đây</span>
+            @if (!routes.Any())
+            {
+                <p class="panel-empty">Chưa có tuyến di chuyển.</p>
+            }
+            else
+            {
+                <div class="compact-list">
+                    @foreach (var route in routes.Take(6).Select((item, index) => new { Item = item, Number = index + 1 }))
+                    {
+                        <div class="route-row">
+                            <i style="--route-color: var(--route-@((route.Number - 1) % 8));"></i>
+                            <div>
+                                <strong>Thiết bị @route.Number</strong>
+                                <span>@route.Item.PointCount điểm · @Math.Round(route.Item.DurationMinutes) phút</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+    </aside>
+</section>
+
+@if (activePois.Any())
+{
+    <section class="poi-table-panel page-section">
+        <div class="map-panel__header">
+            <div>
+                <h2>Danh sách POI trên bản đồ</h2>
+                <p>Thứ tự marker trên map trùng với số trong bảng.</p>
+            </div>
+        </div>
+        <div class="poi-table">
+            @foreach (var poi in activePois.Select((item, index) => new { Item = item, Number = index + 1 }))
+            {
+                <div class="poi-table__row">
+                    <span class="poi-number @(poi.Item.IsTopListened ? "is-hot" : "")">@poi.Number</span>
+                    <div>
+                        <strong>@poi.Item.Name</strong>
+                        <span>@poi.Item.Address</span>
+                    </div>
+                    <strong>@poi.Item.ListenCount lượt</strong>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script>
+    (() => {
+        const pois = @Html.Raw(poisJson);
+        const routes = @Html.Raw(routesJson);
+        const heatPoints = @Html.Raw(heatmapJson);
+        const mapElement = document.getElementById("analytics-map");
+        const fallback = document.getElementById("analytics-map-fallback");
+        const heatWarning = document.getElementById("analytics-map-heat-warning");
+
+        if (!mapElement) return;
+
+        if (!window.L) {
+            fallback?.classList.remove("d-none");
+            return;
+        }
+
+        const defaultCenter = [10.7618, 106.7040];
+        const routePalette = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#be185d", "#65a30d"];
+        const map = L.map(mapElement, {
+            zoomControl: true,
+            preferCanvas: true
+        }).setView(defaultCenter, 16);
+
+        const bounds = [];
+        const poiLayer = L.layerGroup();
+        const routeLayer = L.layerGroup();
+        let heatLayer = null;
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap"
+        }).addTo(map);
+
+        pois.forEach((poi) => {
+            const latLng = [poi.Latitude, poi.Longitude];
+            bounds.push(latLng);
+
+            const marker = L.marker(latLng, {
+                icon: L.divIcon({
+                    className: `analytics-map__poi-marker ${poi.IsTopListened ? "is-hot" : ""}`,
+                    html: `<span>${escapeHtml(poi.Number)}</span>`,
+                    iconSize: poi.IsTopListened ? [44, 44] : [34, 34],
+                    iconAnchor: poi.IsTopListened ? [22, 22] : [17, 17]
+                })
+            });
+
+            marker.bindPopup(`
+                <strong>${escapeHtml(poi.Name)}</strong><br>
+                ${escapeHtml(poi.Address)}<br>
+                Bán kính: ${formatNumber(poi.RadiusMeters)}m<br>
+                Lượt nghe: ${formatNumber(poi.ListenCount)}
+            `);
+
+            poiLayer.addLayer(marker);
+
+            if (Number(poi.RadiusMeters) > 0) {
+                poiLayer.addLayer(L.circle(latLng, {
+                    radius: Number(poi.RadiusMeters),
+                    color: poi.IsTopListened ? "#dc2626" : "#0f766e",
+                    fillColor: poi.IsTopListened ? "#dc2626" : "#0f766e",
+                    fillOpacity: poi.IsTopListened ? 0.14 : 0.08,
+                    weight: 1
+                }));
+            }
+        });
+
+        routes.forEach((route, index) => {
+            if (!Array.isArray(route.Points) || route.Points.length < 2) return;
+
+            const color = routePalette[index % routePalette.length];
+            const latLngs = route.Points.map((point) => [point.Latitude, point.Longitude]);
+            latLngs.forEach((point) => bounds.push(point));
+
+            const polyline = L.polyline(latLngs, {
+                color,
+                weight: 4,
+                opacity: 0.84
+            });
+
+            polyline.bindPopup(`
+                <strong>Thiết bị ${index + 1}</strong><br>
+                ${formatNumber(route.PointCount)} điểm · ${formatNumber(route.ApproxDistanceMeters)}m<br>
+                ${formatNumber(route.DurationMinutes)} phút
+            `);
+
+            routeLayer.addLayer(polyline);
+            routeLayer.addLayer(L.circleMarker(latLngs[0], {
+                radius: 6,
+                color,
+                fillColor: "#ffffff",
+                fillOpacity: 1,
+                weight: 2
+            }));
+            routeLayer.addLayer(L.circleMarker(latLngs[latLngs.length - 1], {
+                radius: 5,
+                color,
+                fillColor: color,
+                fillOpacity: 0.95,
+                weight: 1
+            }));
+        });
+
+        if (typeof L.heatLayer === "function" && Array.isArray(heatPoints) && heatPoints.length > 0) {
+            const maxHeatCount = heatPoints.reduce((max, point) => Math.max(max, Number(point.Count) || 0), 1);
+            const heatSamples = heatPoints.map((point) => ([
+                point.Latitude,
+                point.Longitude,
+                normalizeHeatWeight(point, maxHeatCount)
+            ]));
+
+            heatLayer = L.heatLayer(heatSamples, {
+                radius: 32,
+                blur: 24,
+                maxZoom: 18,
+                minOpacity: 0.14,
+                gradient: {
+                    0.15: "#60a5fa",
+                    0.38: "#22c55e",
+                    0.62: "#facc15",
+                    0.82: "#fb923c",
+                    1.00: "#dc2626"
+                }
+            });
+
+            heatPoints.forEach((point) => bounds.push([point.Latitude, point.Longitude]));
+        } else if (Array.isArray(heatPoints) && heatPoints.length > 0) {
+            heatWarning?.classList.remove("d-none");
+        }
+
+        if (heatLayer) heatLayer.addTo(map);
+        if (routeLayer.getLayers().length > 0) routeLayer.addTo(map);
+        if (poiLayer.getLayers().length > 0) poiLayer.addTo(map);
+
+        const overlayLayers = {};
+        if (poiLayer.getLayers().length > 0) overlayLayers["POI"] = poiLayer;
+        if (routeLayer.getLayers().length > 0) overlayLayers["Tuyến thiết bị"] = routeLayer;
+        if (heatLayer) overlayLayers["Heatmap"] = heatLayer;
+
+        if (Object.keys(overlayLayers).length > 0) {
+            L.control.layers(null, overlayLayers, {
+                collapsed: false,
+                position: "topright"
+            }).addTo(map);
+        }
+
+        addLegend(routePalette, routes);
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, {
+                padding: [34, 34],
+                maxZoom: 17
+            });
+        }
+
+        setTimeout(() => map.invalidateSize(), 0);
+
+        function addLegend(palette, routeItems) {
+            const legend = L.control({ position: "bottomleft" });
+            legend.onAdd = function () {
+                const container = L.DomUtil.create("div", "analytics-map__legend");
+                const routeRows = Array.isArray(routeItems)
+                    ? routeItems.slice(0, 8).map((route, index) => `
+                        <div class="analytics-map__legend-row">
+                            <span style="background:${palette[index % palette.length]}"></span>
+                            <strong>Thiết bị ${index + 1}</strong>
+                        </div>
+                    `).join("")
+                    : "";
+
+                container.innerHTML = `
+                    <div class="analytics-map__legend-title">Chú giải</div>
+                    <div class="analytics-map__legend-row"><span style="background:#0f766e"></span><strong>POI</strong></div>
+                    <div class="analytics-map__legend-row"><span style="background:#dc2626"></span><strong>POI nghe nhiều</strong></div>
+                    <div class="analytics-map__legend-row"><span style="background:linear-gradient(90deg,#60a5fa,#facc15,#dc2626)"></span><strong>Heatmap</strong></div>
+                    ${routeRows}
+                `;
+                return container;
+            };
+
+            legend.addTo(map);
+        }
+
+        function normalizeHeatWeight(point, maxHeatCount) {
+            const count = Number(point?.Count) || 0;
+            if (maxHeatCount <= 1) return 0.18;
+            return Math.min(1, Math.max(0.06, count / maxHeatCount));
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function formatNumber(value) {
+            const numericValue = Number(value ?? 0);
+            return new Intl.NumberFormat("vi-VN", {
+                maximumFractionDigits: numericValue >= 100 ? 0 : 1
+            }).format(numericValue);
+        }
+    })();
+</script>

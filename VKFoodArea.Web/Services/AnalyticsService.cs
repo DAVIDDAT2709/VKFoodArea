@@ -84,8 +84,18 @@ public class AnalyticsService : IAnalyticsService
             TopPois = topPois,
             Routes = routes.Take(maxDisplayedRoutes).ToList(),
             HeatmapPoints = heatmapPoints,
-            AnalyticsWindowLabel = BuildAnalyticsWindowLabel(recentMovementLogs.Count, movementLogSampleSize)
+            AnalyticsWindowLabel = BuildCleanAnalyticsWindowLabel(recentMovementLogs.Count, movementLogSampleSize)
         };
+    }
+
+    private static string BuildCleanAnalyticsWindowLabel(int analyzedCount, int sampleSize)
+    {
+        if (analyzedCount == 0)
+            return "Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u di chuy\u1ec3n.";
+
+        return analyzedCount >= sampleSize
+            ? $"Ph\u00e2n t\u00edch {sampleSize:N0} log g\u1ea7n nh\u1ea5t."
+            : $"Ph\u00e2n t\u00edch {analyzedCount:N0} log \u0111\u00e3 \u0111\u1ed3ng b\u1ed9.";
     }
 
     private static List<AdminMapRouteViewModel> BuildRoutes(IEnumerable<UserMovementLog> logs)

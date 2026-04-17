@@ -94,7 +94,8 @@ public class AppDevicePresenceService : IAppDevicePresenceService
                 Platform = x.Platform,
                 DeviceName = x.DeviceName,
                 AppVersion = x.AppVersion,
-                LastHeartbeatAt = x.LastHeartbeatAt
+                LastHeartbeatAt = x.LastHeartbeatAt,
+                LastHeartbeatDisplay = WebDisplayTime.Format(x.LastHeartbeatAt, "dd/MM HH:mm:ss")
             }).ToList()
         };
     }

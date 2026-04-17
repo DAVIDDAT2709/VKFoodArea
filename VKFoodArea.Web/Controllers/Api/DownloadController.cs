@@ -17,7 +17,7 @@ public class DownloadController : Controller
     [HttpGet("/download-app")]
     public IActionResult Index()
     {
-        var apkUrl = Url.Action(nameof(Apk), "Download") ?? "/download-apk";
+        var apkUrl = Url.Action(nameof(Apk), "Download", new { v = GetApkVersionToken() }) ?? "/download-apk";
 
         var html = $$"""
 <!DOCTYPE html>
@@ -119,9 +119,23 @@ public class DownloadController : Controller
         if (!System.IO.File.Exists(apkPath))
             return NotFound("Không tìm thấy file APK.");
 
+        Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+        Response.Headers.Pragma = "no-cache";
+        Response.Headers.Expires = "0";
+
         return PhysicalFile(
             apkPath,
             "application/vnd.android.package-archive",
             ApkFileName);
+    }
+
+    private string GetApkVersionToken()
+    {
+        var apkPath = Path.Combine(_env.WebRootPath, "apk", ApkFileName);
+        if (!System.IO.File.Exists(apkPath))
+            return DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
+        var file = new FileInfo(apkPath);
+        return $"{file.LastWriteTimeUtc:yyyyMMddHHmmss}-{file.Length}";
     }
 }

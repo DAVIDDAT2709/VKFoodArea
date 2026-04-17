@@ -41,6 +41,15 @@ public class AppDbContext : DbContext
             .HasForeignKey(x => x.PoiId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Poi>()
+            .HasOne(x => x.OwnerAdminUser)
+            .WithMany()
+            .HasForeignKey(x => x.OwnerAdminUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Poi>()
+            .HasIndex(x => x.OwnerAdminUserId);
+
         modelBuilder.Entity<AdminUser>()
             .HasIndex(x => x.Username)
             .IsUnique();

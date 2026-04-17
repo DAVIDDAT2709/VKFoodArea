@@ -83,6 +83,15 @@
                     <label asp-for="IsActive" class="form-check-label"></label>
                 </div>
             </div>
+            @if (Model.CanAssignOwner)
+            {
+                <div class="col-md-8">
+                    <label asp-for="OwnerAdminUserId" class="form-label"></label>
+                    <select asp-for="OwnerAdminUserId" asp-items="Model.OwnerOptions" class="form-select"></select>
+                    <span asp-validation-for="OwnerAdminUserId" class="text-danger"></span>
+                    <div class="form-text">Chủ nhà hàng chỉ xem và chỉnh sửa POI được gán cho tài khoản của họ.</div>
+                </div>
+            }
         </div>
     </section>
 

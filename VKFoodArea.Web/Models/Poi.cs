@@ -29,6 +29,8 @@ public class Poi
 
     public string QrCode { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+    public int? OwnerAdminUserId { get; set; }
+    public AdminUser? OwnerAdminUser { get; set; }
 
     public List<NarrationHistory> NarrationHistories { get; set; } = new();
     public List<PoiTranslation> Translations { get; set; } = new();

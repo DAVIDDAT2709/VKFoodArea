@@ -1,5 +1,9 @@
 @model VKFoodArea.Web.ViewModels.AdminMapViewModel
 @{
+    await Html.RenderPartialAsync("_MapAnalyticsClean", Model);
+}
+@*
+@{
     ViewData["Title"] = "Bản đồ Analytics";
 
     var activePois = Model.ActivePois
@@ -23,7 +27,7 @@
         : "--";
 
     var latestMovementLabel = Model.Analytics.LatestMovementAt.HasValue
-        ? $"Cập nhật {Model.Analytics.LatestMovementAt.Value:dd/MM HH:mm}"
+        ? "Cập nhật " + WebDisplayTime.Format(Model.Analytics.LatestMovementAt.Value, "dd/MM HH:mm")
         : "Chưa có log di chuyển";
 
     var topPoi = Model.Analytics.TopPois.FirstOrDefault();
@@ -38,6 +42,8 @@
             poi.Longitude,
             poi.RadiusMeters,
             poi.Priority,
+            poi.ListenCount,
+            poi.IsTopListened,
             Number = index + 1
         }));
 
@@ -157,7 +163,7 @@
                     else
                     {
                         <strong class="map-summary-card__value">@topPoi.PoiName</strong>
-                        <p>@topPoi.Count lượt nghe, cập nhật @topPoi.LatestPlayedAt.ToString("dd/MM HH:mm").</p>
+                        <p>@topPoi.Count lượt nghe, cập nhật @WebDisplayTime.Format(topPoi.LatestPlayedAt, "dd/MM HH:mm").</p>
                     }
                 </article>
                 <article class="map-summary-card">
@@ -206,7 +212,7 @@
                 </div>
                 <div class="summary-row">
                     <span>Cập nhật gần nhất</span>
-                    <strong>@(Model.Analytics.LatestMovementAt?.ToString("dd/MM HH:mm") ?? "--")</strong>
+                    <strong>@(Model.Analytics.LatestMovementAt.HasValue ? WebDisplayTime.Format(Model.Analytics.LatestMovementAt.Value, "dd/MM HH:mm") : "--")</strong>
                 </div>
             </div>
 
@@ -233,7 +239,7 @@
                             <div class="list-row__content">
                                 <strong>@route.RouteLabel</strong>
                                 <p>@route.PointCount điểm · @Math.Round(route.ApproxDistanceMeters)m · @Math.Round(route.DurationMinutes) phút</p>
-                                <p>@route.StartedAt.ToString("dd/MM HH:mm") - @route.EndedAt.ToString("dd/MM HH:mm")</p>
+                                <p>@WebDisplayTime.Format(route.StartedAt, "dd/MM HH:mm") - @WebDisplayTime.Format(route.EndedAt, "dd/MM HH:mm")</p>
                             </div>
                             <span class="status-pill status-pill--muted">@route.SourceSummary</span>
                         </div>
@@ -261,7 +267,7 @@
                         <div class="list-row">
                             <div class="list-row__content">
                                 <strong>@poi.PoiName</strong>
-                                <p>Cập nhật @poi.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
+                                <p>Cập nhật @WebDisplayTime.Format(poi.LatestPlayedAt, "dd/MM HH:mm")</p>
                             </div>
                             <span class="status-pill status-pill--info">@poi.Count lượt</span>
                         </div>
@@ -307,12 +313,12 @@
                 return;
             }
 
-            const defaultCenter = [10.7618, 106.7022];
-            const routePalette = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#0ea5e9", "#be185d", "#65a30d"];
+            const defaultCenter = [10.7769, 106.7009];
+            const routePalette = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#be185d", "#65a30d"];
             const map = L.map(mapElement, {
                 zoomControl: true,
                 preferCanvas: true
-            }).setView(defaultCenter, 14);
+            }).setView(defaultCenter, 13);
 
             const bounds = [];
             const poiLayer = L.layerGroup();
@@ -330,10 +336,10 @@
 
                 const marker = L.marker(latLng, {
                     icon: L.divIcon({
-                        className: "analytics-map__poi-marker",
+                        className: `analytics-map__poi-marker ${poi.IsTopListened ? "is-hot" : ""}`,
                         html: `<span>${escapeHtml(poi.Number)}</span>`,
-                        iconSize: [34, 34],
-                        iconAnchor: [17, 17]
+                        iconSize: poi.IsTopListened ? [42, 42] : [34, 34],
+                        iconAnchor: poi.IsTopListened ? [21, 21] : [17, 17]
                     })
                 });
 
@@ -341,7 +347,8 @@
                     <strong>${escapeHtml(poi.Name)}</strong><br>
                     ${escapeHtml(poi.Address)}<br>
                     Bán kính: ${formatNumber(poi.RadiusMeters)}m<br>
-                    Ưu tiên: ${formatNumber(poi.Priority)}
+                    Ưu tiên: ${formatNumber(poi.Priority)}<br>
+                    Lượt nghe: ${formatNumber(poi.ListenCount)}
                 `);
 
                 poiLayer.addLayer(marker);
@@ -349,9 +356,9 @@
                 if (Number(poi.RadiusMeters) > 0) {
                     poiLayer.addLayer(L.circle(latLng, {
                         radius: Number(poi.RadiusMeters),
-                        color: "#0f766e",
-                        fillColor: "#0f766e",
-                        fillOpacity: 0.08,
+                        color: poi.IsTopListened ? "#dc2626" : "#0f766e",
+                        fillColor: poi.IsTopListened ? "#dc2626" : "#0f766e",
+                        fillOpacity: poi.IsTopListened ? 0.13 : 0.08,
                         weight: 1
                     }));
                 }
@@ -437,13 +444,32 @@
                 }).addTo(map);
             }
 
-            if (bounds.length > 1) {
-                map.fitBounds(bounds, { padding: [28, 28] });
-            } else if (bounds.length === 1) {
-                map.setView(bounds[0], 16);
-            }
+            addRouteLegend(routePalette, routes);
 
             setTimeout(() => map.invalidateSize(), 0);
+
+            function addRouteLegend(palette, routeItems) {
+                if (!Array.isArray(routeItems) || routeItems.length === 0) return;
+
+                const legend = L.control({ position: "bottomleft" });
+                legend.onAdd = function () {
+                    const container = L.DomUtil.create("div", "analytics-map__legend");
+                    const rows = routeItems.slice(0, 8).map((route, index) => `
+                        <div class="analytics-map__legend-row">
+                            <span style="background:${palette[index % palette.length]}"></span>
+                            <strong>${escapeHtml(route.RouteLabel)}</strong>
+                        </div>
+                    `).join("");
+
+                    container.innerHTML = `
+                        <div class="analytics-map__legend-title">Màu thiết bị</div>
+                        ${rows}
+                    `;
+                    return container;
+                };
+
+                legend.addTo(map);
+            }
 
             function normalizeHeatWeight(point, maxHeatCount) {
                 const count = Number(point?.Count) || 0;
@@ -469,3 +495,4 @@
         })();
     </script>
 }
+*@

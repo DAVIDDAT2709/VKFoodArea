@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Web.Data;
 using VKFoodArea.Web.Dtos;
@@ -17,22 +18,46 @@ public class PoiService : IPoiService
     private readonly ITtsTranslationService _ttsTranslationService;
     private readonly IPoiImageStorageService _poiImageStorageService;
     private readonly IPoiAudioStorageService _poiAudioStorageService;
+    private readonly ICurrentAdminService _currentAdminService;
 
     public PoiService(
         AppDbContext context,
         ITtsTranslationService ttsTranslationService,
         IPoiImageStorageService poiImageStorageService,
-        IPoiAudioStorageService poiAudioStorageService)
+        IPoiAudioStorageService poiAudioStorageService,
+        ICurrentAdminService currentAdminService)
     {
         _context = context;
         _ttsTranslationService = ttsTranslationService;
         _poiImageStorageService = poiImageStorageService;
         _poiAudioStorageService = poiAudioStorageService;
+        _currentAdminService = currentAdminService;
+    }
+
+    public async Task<PoiFormViewModel> BuildCreateFormAsync()
+    {
+        var vm = new PoiFormViewModel
+        {
+            Latitude = 10.7618,
+            Longitude = 106.7022,
+            RadiusMeters = 30,
+            Priority = 1,
+            IsActive = true
+        };
+
+        await PopulateOwnerOptionsAsync(vm);
+        return vm;
+    }
+
+    public async Task<PoiFormViewModel> RebuildFormAsync(PoiFormViewModel vm)
+    {
+        await PopulateOwnerOptionsAsync(vm);
+        return vm;
     }
 
     public async Task<List<Poi>> GetAllAsync()
     {
-        return await _context.Pois
+        return await ApplyAccessFilter(_context.Pois)
             .AsNoTracking()
             .OrderByDescending(x => x.IsActive)
             .ThenByDescending(x => x.Priority)
@@ -42,17 +67,19 @@ public class PoiService : IPoiService
 
     public async Task<PoiFormViewModel?> GetEditFormAsync(int id)
     {
-        var poi = await BuildPoiContentQuery()
+        var poi = await ApplyAccessFilter(BuildPoiContentQuery())
             .FirstOrDefaultAsync(x => x.Id == id);
         if (poi is null)
             return null;
 
-        return MapToViewModel(poi);
+        var vm = MapToViewModel(poi);
+        await PopulateOwnerOptionsAsync(vm);
+        return vm;
     }
 
     public async Task<Poi?> GetDeleteModelAsync(int id)
     {
-        return await _context.Pois
+        return await ApplyAccessFilter(_context.Pois)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
     }
@@ -64,6 +91,7 @@ public class PoiService : IPoiService
         await PopulateStoredAudioAsync(vm);
 
         var poi = MapToEntity(vm, new Poi());
+        ApplyOwner(vm, poi, isNew: true);
         SyncContentCollections(poi, vm);
 
         _context.Pois.Add(poi);
@@ -74,7 +102,7 @@ public class PoiService : IPoiService
 
     public async Task<bool> UpdateAsync(int id, PoiFormViewModel vm)
     {
-        var poi = await _context.Pois
+        var poi = await ApplyAccessFilter(_context.Pois)
             .Include(x => x.Translations)
             .Include(x => x.AudioAssets)
             .FirstOrDefaultAsync(x => x.Id == id);
@@ -86,6 +114,7 @@ public class PoiService : IPoiService
         await PopulateStoredAudioAsync(vm);
 
         MapToEntity(vm, poi);
+        ApplyOwner(vm, poi, isNew: false);
         SyncContentCollections(poi, vm);
         await _context.SaveChangesAsync();
 
@@ -94,7 +123,8 @@ public class PoiService : IPoiService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var poi = await _context.Pois.FindAsync(id);
+        var poi = await ApplyAccessFilter(_context.Pois)
+            .FirstOrDefaultAsync(x => x.Id == id);
         if (poi is null)
             return false;
 
@@ -169,6 +199,16 @@ public class PoiService : IPoiService
             .Include(x => x.Translations)
             .Include(x => x.AudioAssets);
 
+    private IQueryable<Poi> ApplyAccessFilter(IQueryable<Poi> query)
+    {
+        if (_currentAdminService.IsAdmin)
+            return query;
+
+        return _currentAdminService.UserId.HasValue
+            ? query.Where(x => x.OwnerAdminUserId == _currentAdminService.UserId.Value)
+            : query.Where(x => false);
+    }
+
     private static PoiFormViewModel MapToViewModel(Poi poi) => new()
     {
         Id = poi.Id,
@@ -189,7 +229,8 @@ public class PoiService : IPoiService
         AudioFileEn = GetAudioFile(poi, "en", poi.AudioFileEn),
         AudioFileJa = GetAudioFile(poi, "ja", poi.AudioFileJa),
         QrCode = poi.QrCode,
-        IsActive = poi.IsActive
+        IsActive = poi.IsActive,
+        OwnerAdminUserId = poi.OwnerAdminUserId
     };
 
     private static Poi MapToEntity(PoiFormViewModel vm, Poi poi)
@@ -214,6 +255,46 @@ public class PoiService : IPoiService
         poi.QrCode = QrCodeHelper.Normalize(vm.QrCode);
         poi.IsActive = vm.IsActive;
         return poi;
+    }
+
+    private void ApplyOwner(PoiFormViewModel vm, Poi poi, bool isNew)
+    {
+        if (_currentAdminService.IsAdmin)
+        {
+            poi.OwnerAdminUserId = vm.OwnerAdminUserId;
+            return;
+        }
+
+        if (_currentAdminService.IsRestaurantOwner && _currentAdminService.UserId.HasValue)
+            poi.OwnerAdminUserId = _currentAdminService.UserId.Value;
+        else if (isNew)
+            poi.OwnerAdminUserId = null;
+    }
+
+    private async Task PopulateOwnerOptionsAsync(PoiFormViewModel vm)
+    {
+        vm.CanAssignOwner = _currentAdminService.IsAdmin;
+        vm.OwnerOptions.Clear();
+
+        if (!vm.CanAssignOwner)
+            return;
+
+        vm.OwnerOptions.Add(new SelectListItem("Chưa gán chủ quán", string.Empty, !vm.OwnerAdminUserId.HasValue));
+
+        var owners = await _context.AdminUsers
+            .AsNoTracking()
+            .Where(x => x.IsActive && x.Role == AdminRoleNames.RestaurantOwner)
+            .OrderBy(x => x.FullName)
+            .ThenBy(x => x.Username)
+            .ToListAsync();
+
+        foreach (var owner in owners)
+        {
+            vm.OwnerOptions.Add(new SelectListItem(
+                $"{owner.FullName} ({owner.Username})",
+                owner.Id.ToString(),
+                vm.OwnerAdminUserId == owner.Id));
+        }
     }
 
     private static void SyncContentCollections(Poi poi, PoiFormViewModel vm)

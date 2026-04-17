@@ -105,6 +105,7 @@ public class HomeViewModel : INotifyPropertyChanged
 
     public ICommand PlayPoiAudioCommand { get; }
     public ICommand StopNarrationCommand { get; }
+    public ICommand CloseMiniPlayerCommand { get; }
 
     public Location DefaultLocation { get; } = new(10.7618, 106.7022);
 
@@ -196,6 +197,7 @@ public class HomeViewModel : INotifyPropertyChanged
 
         PlayPoiAudioCommand = new Command<Poi>(async poi => await PlayPoiAudioAsync(poi));
         StopNarrationCommand = new Command(async () => await StopNarrationAsync());
+        CloseMiniPlayerCommand = new Command(async () => await CloseMiniPlayerAsync());
 
         RefreshLocalizedText();
     }
@@ -547,6 +549,18 @@ public class HomeViewModel : INotifyPropertyChanged
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
+            RefreshNarrationState();
+            StatusText = BuildStatusText(_text["Status.StoppedNarration"]);
+        });
+    }
+
+    public async Task CloseMiniPlayerAsync()
+    {
+        await _narrationService.StopAsync();
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            _narrationUiState.Clear();
             RefreshNarrationState();
             StatusText = BuildStatusText(_text["Status.StoppedNarration"]);
         });

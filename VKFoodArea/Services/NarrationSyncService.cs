@@ -107,6 +107,7 @@ public class NarrationSyncService
         {
             "auto" => "gps",
             "gps" => "gps",
+            "tour" => "tour",
             "qr" => "qr",
             _ => "manual"
         };

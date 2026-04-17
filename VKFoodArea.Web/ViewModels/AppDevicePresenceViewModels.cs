@@ -46,4 +46,5 @@ public class ActiveDeviceItemViewModel
     public string DeviceName { get; set; } = string.Empty;
     public string AppVersion { get; set; } = string.Empty;
     public DateTime LastHeartbeatAt { get; set; }
+    public string LastHeartbeatDisplay { get; set; } = string.Empty;
 }

@@ -102,7 +102,7 @@
                     <div class="list-row">
                         <div class="list-row__content">
                             <strong>@item.PoiName</strong>
-                            <p>Cập nhật @item.LatestPlayedAt.ToString("dd/MM HH:mm")</p>
+                            <p>Cập nhật @WebDisplayTime.Format(item.LatestPlayedAt, "dd/MM HH:mm")</p>
                         </div>
                         <span class="status-pill status-pill--info">@item.Count lượt</span>
                     </div>
@@ -154,7 +154,7 @@
                         <p>@item.Language.ToUpperInvariant() · @MapSource(item.TriggerSource) · @item.Mode.ToUpperInvariant()
                         </p>
                     </div>
-                    <span class="status-pill status-pill--muted">@item.PlayedAt.ToString("dd/MM HH:mm")</span>
+                    <span class="status-pill status-pill--muted">@WebDisplayTime.Format(item.PlayedAt, "dd/MM HH:mm")</span>
                 </div>
             }
         </div>
@@ -183,7 +183,7 @@
                         <p>@item.Platform · @item.DeviceName · v@item.AppVersion</p>
                     </div>
                     <span class="status-pill status-pill--info">
-                        @item.LastHeartbeatAt.ToLocalTime().ToString("dd/MM HH:mm:ss")
+                        @WebDisplayTime.Format(item.LastHeartbeatAt, "dd/MM HH:mm:ss")
                     </span>
                 </div>
             }
@@ -236,7 +236,7 @@
                             <p>${escapeHtml(item.platform || '')} · ${escapeHtml(item.deviceName || '')} · v${escapeHtml(item.appVersion || '')}</p>
                         </div>
                         <span class="status-pill status-pill--info">
-                            ${new Date(item.lastHeartbeatAt).toLocaleString('vi-VN')}
+                            ${escapeHtml(item.lastHeartbeatDisplay || '')}
                         </span>
                     </div>
                 `).join('');

@@ -40,6 +40,7 @@ public class NarrationService
     private static MemoryStream? _activeAudioBuffer;
 
     private static readonly object _requestLock = new();
+    private static readonly SemaphoreSlim _autoPlaybackQueueLock = new(1, 1);
     private static CancellationTokenSource? _requestCts;
     private static int? _currentPoiId;
     private static string? _currentTriggerSource;
@@ -102,6 +103,31 @@ public class NarrationService
         if (poi is null || !poi.IsActive)
             return;
 
+        if (ShouldQueuePlayback(triggerSource))
+        {
+            await _autoPlaybackQueueLock.WaitAsync(ct);
+            try
+            {
+                await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, ct);
+            }
+            finally
+            {
+                _autoPlaybackQueueLock.Release();
+            }
+
+            return;
+        }
+
+        await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, ct);
+    }
+
+    private async Task PlayPoiInternalAsync(
+        Poi poi,
+        string triggerSource,
+        string? overrideLanguage,
+        string? overrideMode,
+        CancellationToken ct)
+    {
         if (IsCurrentPoiPlaying(poi.Id))
             return;
 
@@ -319,6 +345,9 @@ public class NarrationService
                    string.Equals(_currentTriggerSource, "manual", StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    private static bool ShouldQueuePlayback(string? triggerSource)
+        => (triggerSource ?? string.Empty).Trim().ToLowerInvariant() is "auto" or "gps" or "tour" or "qr";
 
     private async Task LogNarrationAsync(
         Poi poi,

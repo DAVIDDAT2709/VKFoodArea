@@ -16,6 +16,7 @@ public static class WebDataInitializer
         await EnsureNarrationHistoryUserKeyColumnAsync(db);
         await EnsureAnonymousMovementLogKeysAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
+        await EnsurePoiOwnerColumnAsync(db);
         await EnsureTourNarrationColumnsAsync(db);
         await EnsureQrCodeImageColumnAsync(db);
         await SyncPoiContentTablesAsync(db);
@@ -135,6 +136,18 @@ public static class WebDataInitializer
 
         if (!await HasColumnAsync(connection, "Pois", "AudioFileJa"))
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN AudioFileJa TEXT NOT NULL DEFAULT '';");
+    }
+
+    private static async Task EnsurePoiOwnerColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "Pois", "OwnerAdminUserId"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN OwnerAdminUserId INTEGER NULL;");
+
+        await db.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_Pois_OwnerAdminUserId ON Pois (OwnerAdminUserId);");
     }
 
     private static async Task EnsureQrCodeImageColumnAsync(AppDbContext db)

@@ -11,6 +11,7 @@ using Mapsui.Widgets;
 using Mapsui.Widgets.InfoWidgets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Networking;
 using System.ComponentModel;
 using VKFoodArea.Features.Settings;
 using VKFoodArea.Features.User;
@@ -38,6 +39,8 @@ public partial class HomeDesignPage : ContentPage
     private MemoryLayer? _currentLocationLayer;
 
     private List<FeaturedFoodCardViewModel> _featuredFoodCards = new();
+    private bool _isOnlineMapMode;
+    private const double MapFollowDistanceMeters = 3500;
 
     private const string PoiPinSvg =
         "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 64 64'>" +
@@ -51,6 +54,10 @@ public partial class HomeDesignPage : ContentPage
         "<circle cx='36' cy='28' r='10' fill='white'/>" +
         "<circle cx='36' cy='28' r='4' fill='#1F9D74'/>" +
         "</svg>";
+    private static readonly IReadOnlyList<double> OfflineMapResolutions = Enumerable
+        .Range(0, 22)
+        .Select(level => 156543.03392804097 / Math.Pow(2, level))
+        .ToArray();
 
     public HomeDesignPage(
         HomeViewModel viewModel,
@@ -78,6 +85,8 @@ public partial class HomeDesignPage : ContentPage
         _narrationUiState.StateChanged += OnNarrationUiStateChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
         if (Window is not null)
         {
             Window.Resumed -= OnWindowResumed;
@@ -96,6 +105,7 @@ public partial class HomeDesignPage : ContentPage
         PoiSyncService.SyncCompleted -= OnSyncCompletedEscaped;
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
         if (Window is not null)
             Window.Resumed -= OnWindowResumed;
     }
@@ -175,45 +185,73 @@ public partial class HomeDesignPage : ContentPage
 
     private Mapsui.Map BuildMap(IEnumerable<Poi> pois)
     {
-        var map = new Mapsui.Map();
+        _isOnlineMapMode = ShouldUseOnlineMap();
+        var poiList = pois.ToList();
+        var map = new Mapsui.Map
+        {
+            BackColor = Mapsui.Styles.Color.FromString("#E7F0EC")
+        };
         map.Widgets.Clear();
 
-        map.Layers.Add(OpenStreetMap.CreateTileLayer());
+        if (_isOnlineMapMode)
+        {
+            map.Layers.Add(OpenStreetMap.CreateTileLayer());
+        }
+        else
+        {
+            map.Navigator.OverrideResolutions = OfflineMapResolutions;
+
+            foreach (var layer in OfflineMapLayerFactory.CreateVinhKhanhLayers())
+                map.Layers.Add(layer);
+        }
 
         _poiLayer = new MemoryLayer("POIs")
         {
-            Features = pois
+            Features = poiList
                 .Select(poi => CreatePoiFeature(poi, _viewModel.NearestPoi?.Id == poi.Id))
                 .Cast<IFeature>()
                 .ToList()
         };
 
+        var currentLocationFeature = CreateCurrentLocationFeature(poiList);
+
         _currentLocationLayer = new MemoryLayer("CurrentLocation")
         {
-            Features =
-            [
-                CreateCurrentLocationFeature()
-            ]
+            Features = currentLocationFeature is null
+                ? []
+                : [currentLocationFeature]
         };
 
         map.Layers.Add(_poiLayer);
         map.Layers.Add(_currentLocationLayer);
 
-        CenterOnCurrentLocation(map);
+        CenterOnMapContent(map, poiList);
 
         return map;
     }
 
-    private void CenterOnCurrentLocation(Mapsui.Map map)
+    private void CenterOnMapContent(Mapsui.Map map, IReadOnlyList<Poi> pois)
     {
+        var location = OfflineMapLayerFactory.IsNearAnyPoi(_viewModel.CurrentLocation, pois, MapFollowDistanceMeters)
+            ? _viewModel.CurrentLocation
+            : OfflineMapLayerFactory.GetContentCenter(pois);
+
         var center = SphericalMercator
-            .FromLonLat(_viewModel.CurrentLocation.Longitude, _viewModel.CurrentLocation.Latitude)
+            .FromLonLat(location.Longitude, location.Latitude)
             .ToMPoint();
 
-        var resolutions = map.Navigator.Resolutions;
-        var zoomResolution = resolutions.Count > 18 ? resolutions[18] : resolutions[^1];
+        var zoomResolution = GetOfflineMapResolution(map, 18);
 
         map.Navigator.CenterOnAndZoomTo(center, zoomResolution);
+    }
+
+    private static double GetOfflineMapResolution(Mapsui.Map map, int preferredLevel)
+    {
+        var resolutions = map.Navigator.Resolutions;
+        if (resolutions.Count > 0)
+            return resolutions[Math.Min(preferredLevel, resolutions.Count - 1)];
+
+        return OfflineMapResolutions[Math.Min(preferredLevel, OfflineMapResolutions.Count - 1)];
     }
 
     private static PointFeature CreatePoiFeature(Poi poi, bool isNearest)
@@ -238,8 +276,14 @@ public partial class HomeDesignPage : ContentPage
         return feature;
     }
 
-    private PointFeature CreateCurrentLocationFeature()
+    private PointFeature? CreateCurrentLocationFeature(IReadOnlyList<Poi> pois)
     {
+        if (!_isOnlineMapMode &&
+            !OfflineMapLayerFactory.IsNearAnyPoi(_viewModel.CurrentLocation, pois, MapFollowDistanceMeters))
+        {
+            return null;
+        }
+
         var point = SphericalMercator
             .FromLonLat(_viewModel.CurrentLocation.Longitude, _viewModel.CurrentLocation.Latitude)
             .ToMPoint();
@@ -320,7 +364,7 @@ public partial class HomeDesignPage : ContentPage
         if (_mapControl?.Map is null)
             return;
 
-        CenterOnCurrentLocation(_mapControl.Map);
+        CenterOnMapContent(_mapControl.Map, _viewModel.DisplayedPois.ToList());
         _mapControl.Refresh();
     }
 
@@ -438,6 +482,21 @@ public partial class HomeDesignPage : ContentPage
     private void OnNarrationUiStateChanged(object? sender, EventArgs e)
     {
         MainThread.BeginInvokeOnMainThread(_viewModel.RefreshNarrationState);
+    }
+
+    private static bool ShouldUseOnlineMap()
+        => Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
+
+    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var shouldUseOnlineMap = ShouldUseOnlineMap();
+            if (shouldUseOnlineMap == _isOnlineMapMode)
+                return;
+
+            InitializeMap();
+        });
     }
 
     private void ApplyLocalizedText()

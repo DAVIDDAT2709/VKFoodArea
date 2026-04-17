@@ -16,6 +16,8 @@ public class AdminMapPoiViewModel
     public double Longitude { get; set; }
     public double RadiusMeters { get; set; }
     public int Priority { get; set; }
+    public int ListenCount { get; set; }
+    public bool IsTopListened { get; set; }
 }
 
 public class AdminMapAnalyticsViewModel

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 using VKFoodArea.Web.ViewModels;
 
@@ -41,11 +42,12 @@ public class AccountController : Controller
             return View(vm);
         }
 
+        var role = AdminRoleNames.Normalize(admin.Role);
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, admin.Id.ToString()),
             new(ClaimTypes.Name, admin.Username),
-            new(ClaimTypes.Role, admin.Role),
+            new(ClaimTypes.Role, role),
             new("full_name", admin.FullName)
         };
 
@@ -60,6 +62,12 @@ public class AccountController : Controller
                 ExpiresUtc = vm.RememberMe ? DateTimeOffset.UtcNow.AddDays(14) : null
             });
 
+        if (string.IsNullOrWhiteSpace(vm.ReturnUrl) &&
+            role == AdminRoleNames.RestaurantOwner)
+        {
+            return RedirectToAction("Index", "Pois");
+        }
+
         return RedirectToLocal(vm.ReturnUrl);
     }
 
@@ -72,10 +80,19 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    [AllowAnonymous]
+    public IActionResult AccessDenied()
+    {
+        return RedirectToAction(nameof(Login));
+    }
+
     private IActionResult RedirectToLocal(string? returnUrl)
     {
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
+
+        if (User.IsInRole(AdminRoleNames.RestaurantOwner))
+            return RedirectToAction("Index", "Pois");
 
         return RedirectToAction("Index", "Home");
     }

@@ -2,6 +2,9 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     var pageTitle = (string?)ViewData["Title"] ?? "VK Food Area";
     var showDashboardTopbar = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase);
+    var isAdmin = User.IsInRole("Admin");
+    var isRestaurantOwner = User.IsInRole("RestaurantOwner");
+    var brandController = isRestaurantOwner && !isAdmin ? "Pois" : "Home";
 
     string NavClass(string controller) =>
         string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
@@ -23,17 +26,20 @@
 
     <div class="app-shell">
         <aside class="app-sidebar">
-            <a class="brand-mark" asp-controller="Home" asp-action="Index">
+            <a class="brand-mark" asp-controller="@brandController" asp-action="Index">
                 <strong class="brand-mark__title">VK Food Area</strong>
             </a>
 
             <nav class="app-nav" aria-label="Menu quản trị">
+                @if (isAdmin)
+                {
                 <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">
                     <span class="app-nav__icon">DB</span>
                     <span class="app-nav__content">
                         <span class="app-nav__title">Tổng quan</span>
                     </span>
                 </a>
+                }
 
                 <a class="@NavClass("Pois")" asp-controller="Pois" asp-action="Index">
                     <span class="app-nav__icon">POI</span>
@@ -42,6 +48,8 @@
                     </span>
                 </a>
 
+                @if (isAdmin)
+                {
                 <a class="@NavClass("Tours")" asp-controller="Tours" asp-action="Index">
                     <span class="app-nav__icon">TR</span>
                     <span class="app-nav__content">
@@ -69,6 +77,7 @@
                         <span class="app-nav__title">Quản trị viên</span>
                     </span>
                 </a>
+                }
 
                 <a class="@NavClass("NarrationHistories")" asp-controller="NarrationHistories" asp-action="Index">
                     <span class="app-nav__icon">LG</span>
@@ -77,6 +86,13 @@
                     </span>
                 </a>
             </nav>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form mt-3">
+                    <span class="soft-pill soft-pill--neutral">@User.Identity.Name</span>
+                    <button type="submit" class="btn btn-outline-secondary w-100 mt-2">Đăng xuất</button>
+                </form>
+            }
         </aside>
 
         <div class="app-main">

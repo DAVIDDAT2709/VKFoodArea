@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 using VKFoodArea.Web.ViewModels;
 
 namespace VKFoodArea.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = AdminRoleNames.AdminOnly)]
 public class QrCodeItemsController : Controller
 {
     private readonly IQrCodeItemService _qrCodeItemService;

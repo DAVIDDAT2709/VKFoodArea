@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace VKFoodArea.Web.ViewModels;
 
@@ -86,4 +87,10 @@ public class PoiFormViewModel
 
     [Display(Name = "Đang hoạt động")]
     public bool IsActive { get; set; } = true;
+
+    [Display(Name = "Chủ nhà hàng")]
+    public int? OwnerAdminUserId { get; set; }
+
+    public bool CanAssignOwner { get; set; }
+    public List<SelectListItem> OwnerOptions { get; set; } = new();
 }

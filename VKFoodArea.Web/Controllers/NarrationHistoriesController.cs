@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 
 namespace VKFoodArea.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = AdminRoleNames.AdminOrRestaurantOwner)]
 public class NarrationHistoriesController : Controller
 {
     private readonly INarrationHistoryService _narrationHistoryService;

@@ -68,7 +68,7 @@
                         </LinearGradientBrush>
                     </Border.Background>
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="28" />
+                        <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
 
                     <VerticalStackLayout Spacing="16">
@@ -107,7 +107,7 @@
                         Stroke="#D7E4DF"
                         StrokeThickness="1"
                         Padding="20"
-                        StrokeShape="RoundRectangle 28">
+                        StrokeShape="RoundRectangle 8">
                     <Border.Shadow>
                         <Shadow Brush="#799E98"
                                 Offset="0,12"
@@ -119,7 +119,7 @@
                         <Border BackgroundColor="#F4FBF8"
                                 Padding="14"
                                 StrokeThickness="0"
-                                StrokeShape="RoundRectangle 22">
+                                StrokeShape="RoundRectangle 8">
                             <VerticalStackLayout Spacing="4">
                                 <Label x:Name="SelectionTitleLabel"
                                        FontSize="22"
@@ -132,14 +132,13 @@
                             </VerticalStackLayout>
                         </Border>
 
-                        <Grid ColumnDefinitions="*,*"
-                              ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="12">
                             <Border x:Name="DomesticOptionBorder"
                                     BackgroundColor="#F3FAF7"
                                     Stroke="#CFE3DD"
                                     StrokeThickness="1"
                                     Padding="16"
-                                    StrokeShape="RoundRectangle 22">
+                                    StrokeShape="RoundRectangle 8">
                                 <VerticalStackLayout Spacing="10">
                                     <Grid ColumnDefinitions="Auto,*"
                                           ColumnSpacing="10">
@@ -174,12 +173,11 @@
                             </Border>
 
                             <Border x:Name="TouristOptionBorder"
-                                    Grid.Column="1"
                                     BackgroundColor="#F8F6EC"
                                     Stroke="#E4DAC2"
                                     StrokeThickness="1"
                                     Padding="16"
-                                    StrokeShape="RoundRectangle 22">
+                                    StrokeShape="RoundRectangle 8">
                                 <VerticalStackLayout Spacing="10">
                                     <Grid ColumnDefinitions="Auto,*"
                                           ColumnSpacing="10">
@@ -212,14 +210,14 @@
                                     <TapGestureRecognizer Tapped="OnTouristSelected" />
                                 </Border.GestureRecognizers>
                             </Border>
-                        </Grid>
+                        </VerticalStackLayout>
 
                         <Border x:Name="LanguageSelectionContainer"
                                 IsVisible="False"
                                 BackgroundColor="#F6FAF8"
                                 Padding="14"
                                 StrokeThickness="0"
-                                StrokeShape="RoundRectangle 20">
+                                StrokeShape="RoundRectangle 8">
                             <VerticalStackLayout Spacing="10">
                                 <Label x:Name="LanguageTitleLabel"
                                        FontSize="14"
@@ -238,7 +236,7 @@
                                 Clicked="OnEnterClicked"
                                 BackgroundColor="#129488"
                                 TextColor="White"
-                                CornerRadius="18"
+                                CornerRadius="8"
                                 HeightRequest="54"
                                 FontAttributes="Bold"
                                 FontSize="15" />
