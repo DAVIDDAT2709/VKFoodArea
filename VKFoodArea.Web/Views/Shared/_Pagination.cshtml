@@ -1,0 +1,55 @@
+@model VKFoodArea.Web.ViewModels.PaginationViewModel
+
+@if (Model.TotalItems > Model.PageSize)
+{
+    var startPage = Math.Max(1, Model.Page - 2);
+    var endPage = Math.Min(Model.TotalPages, Model.Page + 2);
+
+    if (endPage - startPage < 4)
+    {
+        startPage = Math.Max(1, endPage - 4);
+        endPage = Math.Min(Model.TotalPages, startPage + 4);
+    }
+
+    <nav class="pagination-bar" aria-label="Phân trang">
+        <div class="pagination-bar__summary">
+            @Model.FirstItemNumber-@Model.LastItemNumber / @Model.TotalItems
+        </div>
+        <div class="pagination-pages">
+            <a class="pagination-page @(Model.HasPreviousPage ? "" : "is-disabled")"
+               href="@(Model.HasPreviousPage ? BuildPageUrl(Model.Page - 1) : "#")"
+               aria-disabled="@(!Model.HasPreviousPage)">Trước</a>
+
+            @for (var pageNumber = startPage; pageNumber <= endPage; pageNumber++)
+            {
+                <a class="pagination-page @(pageNumber == Model.Page ? "is-active" : "")"
+                   href="@BuildPageUrl(pageNumber)"
+                   aria-current="@(pageNumber == Model.Page ? "page" : null)">@(pageNumber)</a>
+            }
+
+            <a class="pagination-page @(Model.HasNextPage ? "" : "is-disabled")"
+               href="@(Model.HasNextPage ? BuildPageUrl(Model.Page + 1) : "#")"
+               aria-disabled="@(!Model.HasNextPage)">Sau</a>
+        </div>
+    </nav>
+}
+
+@functions {
+    private string BuildPageUrl(int page)
+    {
+        var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
+        var request = ViewContext.HttpContext.Request;
+
+        foreach (var pair in request.Query)
+        {
+            if (pair.Key.Equals(Model.PageParameterName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            values[pair.Key] = pair.Value.ToString();
+        }
+
+        values[Model.PageParameterName] = page.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return $"{request.Path}{Microsoft.AspNetCore.Http.QueryString.Create(values)}";
+    }
+}

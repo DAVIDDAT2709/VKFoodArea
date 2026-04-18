@@ -16,10 +16,17 @@ public class ToursController : Controller
         _tourService = tourService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
         var tours = await _tourService.GetAllAsync();
-        return View(tours);
+        var vm = new TourIndexViewModel
+        {
+            Items = PagedListViewModel<Tour>.Create(tours, page),
+            TotalCount = tours.Count,
+            ActiveCount = tours.Count(x => x.IsActive)
+        };
+
+        return View(vm);
     }
 
     public async Task<IActionResult> Create()

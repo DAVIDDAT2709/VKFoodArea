@@ -16,10 +16,17 @@ public class AdminUsersController : Controller
         _adminUserService = adminUserService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
         var users = await _adminUserService.GetAllAsync();
-        return View(users);
+        var vm = new AdminUserIndexViewModel
+        {
+            Items = PagedListViewModel<AdminUser>.Create(users, page),
+            TotalCount = users.Count,
+            ActiveCount = users.Count(x => x.IsActive)
+        };
+
+        return View(vm);
     }
 
     public IActionResult Create()

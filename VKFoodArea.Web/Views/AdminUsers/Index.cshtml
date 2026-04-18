@@ -1,8 +1,8 @@
-@model IEnumerable<VKFoodArea.Web.Models.AdminUser>
+@model VKFoodArea.Web.ViewModels.AdminUserIndexViewModel
 @{
     ViewData["Title"] = "Quản trị viên";
-    var users = Model.ToList();
-    var activeCount = users.Count(x => x.IsActive);
+    var users = Model.Items.Items;
+    var activeCount = Model.ActiveCount;
 }
 
 <section class="page-header page-section">
@@ -17,7 +17,7 @@
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng admin</span>
-        <strong class="metric-card__value">@users.Count</strong>
+        <strong class="metric-card__value">@Model.TotalCount</strong>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Đang hoạt động</span>
@@ -25,7 +25,7 @@
     </article>
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">Đang khóa</span>
-        <strong class="metric-card__value">@(users.Count - activeCount)</strong>
+        <strong class="metric-card__value">@(Model.TotalCount - activeCount)</strong>
     </article>
 </section>
 
@@ -85,5 +85,7 @@
                 </tbody>
             </table>
         </div>
+        <partial name="_Pagination"
+                 model="@(VKFoodArea.Web.ViewModels.PaginationViewModel.From(Model.Items))" />
     }
 </section>

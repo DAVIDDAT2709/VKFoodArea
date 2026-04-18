@@ -17,10 +17,19 @@ public class QrCodeItemsController : Controller
         _qrCodeItemService = qrCodeItemService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
         var data = await _qrCodeItemService.GetAllAsync();
-        return View(data);
+        var vm = new QrCodeItemIndexViewModel
+        {
+            Items = PagedListViewModel<QrCodeItemListItemViewModel>.Create(data, page),
+            TotalCount = data.Count,
+            ActiveCount = data.Count(x => x.IsActive),
+            CoveredPoiCount = data.Count(x => string.Equals(x.TargetType, "poi", StringComparison.OrdinalIgnoreCase)),
+            CoveredTourCount = data.Count(x => string.Equals(x.TargetType, "tour", StringComparison.OrdinalIgnoreCase))
+        };
+
+        return View(vm);
     }
 
     [AllowAnonymous]

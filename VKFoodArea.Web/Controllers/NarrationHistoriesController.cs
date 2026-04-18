@@ -21,7 +21,8 @@ public class NarrationHistoriesController : Controller
         DateTime? toDate,
         string? language,
         string? mode,
-        string? source)
+        string? source,
+        int page = 1)
     {
         var vm = await _narrationHistoryService.GetIndexAsync(
             query,
@@ -29,7 +30,8 @@ public class NarrationHistoriesController : Controller
             toDate,
             language,
             mode,
-            source);
+            source,
+            page);
 
         return View(vm);
     }

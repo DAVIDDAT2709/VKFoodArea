@@ -1,7 +1,7 @@
-@model IEnumerable<VKFoodArea.Web.Models.Tour>
+@model VKFoodArea.Web.ViewModels.TourIndexViewModel
 @{
     ViewData["Title"] = "Quan ly tour";
-    var tours = Model.ToList();
+    var tours = Model.Items.Items;
 }
 
 <section class="page-header page-section">
@@ -63,5 +63,7 @@
                 </tbody>
             </table>
         </div>
+        <partial name="_Pagination"
+                 model="@(VKFoodArea.Web.ViewModels.PaginationViewModel.From(Model.Items))" />
     }
 </section>

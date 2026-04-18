@@ -1,11 +1,11 @@
-@model IEnumerable<VKFoodArea.Web.ViewModels.QrCodeItemListItemViewModel>
+@model VKFoodArea.Web.ViewModels.QrCodeItemIndexViewModel
 @inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Mã QR";
-    var items = Model.ToList();
-    var activeCount = items.Count(x => x.IsActive);
-    var coveredPoiCount = items.Count(x => string.Equals(x.TargetType, "poi", StringComparison.OrdinalIgnoreCase));
-    var coveredTourCount = items.Count(x => string.Equals(x.TargetType, "tour", StringComparison.OrdinalIgnoreCase));
+    var items = Model.Items.Items;
+    var activeCount = Model.ActiveCount;
+    var coveredPoiCount = Model.CoveredPoiCount;
+    var coveredTourCount = Model.CoveredTourCount;
     var configuredBaseUrl = (Configuration["PublicBaseUrl"] ?? string.Empty).Trim();
     var forwardedScheme = Context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
     var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
@@ -25,7 +25,7 @@
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng mã</span>
-        <strong class="metric-card__value">@items.Count</strong>
+        <strong class="metric-card__value">@Model.TotalCount</strong>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Đang hoạt động</span>
@@ -112,5 +112,7 @@
                 </article>
             }
         </div>
+        <partial name="_Pagination"
+                 model="@(VKFoodArea.Web.ViewModels.PaginationViewModel.From(Model.Items))" />
     }
 </section>

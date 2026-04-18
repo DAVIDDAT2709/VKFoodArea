@@ -62,7 +62,6 @@
                 <option value="">Tất cả</option>
                 <option value="@VKFoodArea.Web.Models.PoiApprovalStatus.Pending" selected="@(Model.ApprovalStatus == VKFoodArea.Web.Models.PoiApprovalStatus.Pending)">Chờ duyệt</option>
                 <option value="@VKFoodArea.Web.Models.PoiApprovalStatus.Approved" selected="@(Model.ApprovalStatus == VKFoodArea.Web.Models.PoiApprovalStatus.Approved)">Đã duyệt</option>
-                <option value="@VKFoodArea.Web.Models.PoiApprovalStatus.Rejected" selected="@(Model.ApprovalStatus == VKFoodArea.Web.Models.PoiApprovalStatus.Rejected)">Từ chối</option>
             </select>
         </div>
         <div class="search-actions">
@@ -75,7 +74,7 @@
 <section class="card-surface page-section">
     <div class="section-heading">
         <h2>Danh sách POI</h2>
-        <span class="soft-pill soft-pill--neutral">@pois.Count kết quả</span>
+        <span class="soft-pill soft-pill--neutral">@Model.TotalItems kết quả</span>
     </div>
 
     @if (!pois.Any())
@@ -179,6 +178,8 @@
                 </article>
             }
         </div>
+        <partial name="_Pagination"
+                 model="@(new VKFoodArea.Web.ViewModels.PaginationViewModel { Page = Model.Page, PageSize = Model.PageSize, TotalItems = Model.TotalItems })" />
     }
 </section>
 

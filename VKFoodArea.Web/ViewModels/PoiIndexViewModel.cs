@@ -8,6 +8,9 @@ public class PoiIndexViewModel
     public string ApprovalStatus { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
     public List<Poi> Items { get; set; } = new();
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = PagedListViewModel<Poi>.DefaultPageSize;
+    public int TotalItems { get; set; }
     public int TotalCount { get; set; }
     public int ActiveCount { get; set; }
     public int PendingCount { get; set; }

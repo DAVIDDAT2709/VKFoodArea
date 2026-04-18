@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Lịch sử nghe";
     var items = Model.Items;
-    var tourCount = items.Count(x => x.TriggerSource == "tour" || x.TourId.HasValue || !string.IsNullOrWhiteSpace(x.TourName));
+    var tourCount = Model.TourCount;
 }
 
 <section class="page-header page-section">
@@ -14,7 +14,7 @@
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng lượt nghe</span>
-        <strong class="metric-card__value">@items.Count</strong>
+        <strong class="metric-card__value">@Model.TotalItems</strong>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Hôm nay</span>
@@ -196,6 +196,8 @@
                 </tbody>
             </table>
         </div>
+        <partial name="_Pagination"
+                 model="@(new VKFoodArea.Web.ViewModels.PaginationViewModel { Page = Model.Page, PageSize = Model.PageSize, TotalItems = Model.TotalItems })" />
     }
 </section>
 

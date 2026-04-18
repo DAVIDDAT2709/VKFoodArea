@@ -11,7 +11,8 @@ public interface INarrationHistoryService
         DateTime? toDate,
         string? language,
         string? mode,
-        string? source);
+        string? source,
+        int page = 1);
     Task<List<NarrationHistory>> GetAllAsync(string? source);
     Task<List<NarrationHistoryApiViewModel>> GetRecentForApiAsync(string? source, string? userKey, int top = 100);
     Task<NarrationHistoryApiViewModel?> CreateFromAppAsync(NarrationHistoryCreateApiViewModel vm);
