@@ -28,13 +28,15 @@ public class PoiFormViewModel
     [Display(Name = "Ảnh từ máy tính")]
     public IFormFile? ImageFile { get; set; }
 
+    [Required(ErrorMessage = "Vui lòng nhập vĩ độ.")]
     [Range(-90, 90, ErrorMessage = "Vĩ độ không hợp lệ.")]
     [Display(Name = "Vĩ độ")]
-    public double Latitude { get; set; }
+    public double? Latitude { get; set; }
 
+    [Required(ErrorMessage = "Vui lòng nhập kinh độ.")]
     [Range(-180, 180, ErrorMessage = "Kinh độ không hợp lệ.")]
     [Display(Name = "Kinh độ")]
-    public double Longitude { get; set; }
+    public double? Longitude { get; set; }
 
     [Range(1, 500, ErrorMessage = "Bán kính nên nằm trong khoảng 1-500m.")]
     [Display(Name = "Bán kính (m)")]

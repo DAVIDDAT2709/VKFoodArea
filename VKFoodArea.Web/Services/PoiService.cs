@@ -40,8 +40,8 @@ public class PoiService : IPoiService
     {
         var vm = new PoiFormViewModel
         {
-            Latitude = 10.7618,
-            Longitude = 106.7022,
+            Latitude = _currentAdminService.IsAdmin ? 10.7618 : null,
+            Longitude = _currentAdminService.IsAdmin ? 106.7022 : null,
             RadiusMeters = 30,
             Priority = 1,
             IsActive = _currentAdminService.IsAdmin,
@@ -340,8 +340,8 @@ public class PoiService : IPoiService
         poi.Address = vm.Address.Trim();
         poi.PhoneNumber = (vm.PhoneNumber ?? string.Empty).Trim();
         poi.ImageUrl = (vm.ImageUrl ?? string.Empty).Trim();
-        poi.Latitude = vm.Latitude;
-        poi.Longitude = vm.Longitude;
+        poi.Latitude = vm.Latitude.GetValueOrDefault();
+        poi.Longitude = vm.Longitude.GetValueOrDefault();
         poi.RadiusMeters = vm.RadiusMeters;
         poi.Priority = vm.Priority;
         poi.Description = BuildShortDescription(vm.TtsScriptVi);
