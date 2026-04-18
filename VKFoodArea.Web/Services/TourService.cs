@@ -169,7 +169,7 @@ public class TourService : ITourService
             return ([], "Tên tour không hợp lệ.");
 
         var duplicateName = await _context.Tours.AnyAsync(x =>
-            x.Id != currentId &&
+            (!currentId.HasValue || x.Id != currentId.Value) &&
             x.Name.ToLower() == normalizedName.ToLower());
 
         if (duplicateName)
@@ -193,7 +193,7 @@ public class TourService : ITourService
             return ([], "Mỗi điểm dừng phải chọn một POI.");
 
         if (stopInputs.GroupBy(x => x.DisplayOrder).Any(x => x.Count() > 1))
-            return ([], "Thứ tự stop không được trùng nhau.");
+            return ([], "Thứ tự điểm dừng không được trùng nhau.");
 
         var poiIds = stopInputs
             .Where(x => x.PoiId.HasValue)

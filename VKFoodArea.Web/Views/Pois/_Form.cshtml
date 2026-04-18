@@ -63,12 +63,12 @@
         <div class="row g-3">
             <div class="col-md-3">
                 <label asp-for="Latitude" class="form-label"></label>
-                <input asp-for="Latitude" type="number" inputmode="decimal" class="form-control" step="0.000001" asp-format="{0:0.######}" placeholder="10.760000" />
+                <input asp-for="Latitude" type="number" inputmode="decimal" class="form-control" step="any" autocomplete="off" data-server-has-value="@Model.Latitude.HasValue.ToString().ToLowerInvariant()" asp-format="{0:0.#######}" placeholder="Nhập vĩ độ" />
                 <span asp-validation-for="Latitude" class="text-danger"></span>
             </div>
             <div class="col-md-3">
                 <label asp-for="Longitude" class="form-label"></label>
-                <input asp-for="Longitude" type="number" inputmode="decimal" class="form-control" step="0.000001" asp-format="{0:0.######}" placeholder="106.700000" />
+                <input asp-for="Longitude" type="number" inputmode="decimal" class="form-control" step="any" autocomplete="off" data-server-has-value="@Model.Longitude.HasValue.ToString().ToLowerInvariant()" asp-format="{0:0.#######}" placeholder="Nhập kinh độ" />
                 <span asp-validation-for="Longitude" class="text-danger"></span>
             </div>
             <div class="col-md-3">

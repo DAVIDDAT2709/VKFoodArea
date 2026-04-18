@@ -20,4 +20,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const coordinateInputs = [
+                document.getElementById('Latitude'),
+                document.getElementById('Longitude')
+            ];
+
+            coordinateInputs.forEach(input => {
+                if (input?.dataset.serverHasValue === 'false') {
+                    input.value = '';
+                }
+            });
+        })();
+    </script>
 }

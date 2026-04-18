@@ -1,11 +1,11 @@
 @model VKFoodArea.Web.Models.Tour
 @{
-    ViewData["Title"] = "Xoa tour";
+    ViewData["Title"] = "Xóa tour";
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Xoa tour</h2>
+        <h2>Xóa tour</h2>
     </div>
 </section>
 
@@ -16,13 +16,13 @@
             <div class="list-stack">
                 <div class="list-row">
                     <div class="list-row__content">
-                        <strong>Mo ta</strong>
+                        <strong>Mô tả</strong>
                         <p>@Model.Description</p>
                     </div>
                 </div>
                 <div class="list-row">
                     <div class="list-row__content">
-                        <strong>So stop</strong>
+                        <strong>Số điểm dừng</strong>
                         <p>@Model.Stops.Count</p>
                     </div>
                 </div>
@@ -30,12 +30,12 @@
         </div>
 
         <div class="warning-panel">
-            <h3>Xac nhan xoa</h3>
+            <h3>Xác nhận xóa</h3>
             <div class="page-actions">
-                <a asp-action="Index" class="btn btn-outline-secondary">Huy</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
                 <form asp-action="Delete" method="post">
                     <input type="hidden" asp-for="Id" />
-                    <button type="submit" class="btn btn-danger">Xoa tour</button>
+                    <button type="submit" class="btn btn-danger">Xóa tour</button>
                 </form>
             </div>
         </div>

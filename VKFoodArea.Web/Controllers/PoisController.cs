@@ -36,6 +36,7 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
 
+        await AddCoordinateValidationErrorsAsync(null, vm);
         AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
@@ -72,6 +73,7 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
 
+        await AddCoordinateValidationErrorsAsync(id, vm);
         AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
@@ -138,6 +140,16 @@ public class PoisController : Controller
         AddAudioValidationError(nameof(vm.AudioFileViUpload), vm.AudioFileViUpload);
         AddAudioValidationError(nameof(vm.AudioFileEnUpload), vm.AudioFileEnUpload);
         AddAudioValidationError(nameof(vm.AudioFileJaUpload), vm.AudioFileJaUpload);
+    }
+
+    private async Task AddCoordinateValidationErrorsAsync(int? currentPoiId, PoiFormViewModel vm)
+    {
+        var coordinateError = await _poiService.ValidateCoordinatesAsync(currentPoiId, vm.Latitude, vm.Longitude);
+        if (string.IsNullOrWhiteSpace(coordinateError))
+            return;
+
+        ModelState.AddModelError(nameof(vm.Latitude), coordinateError);
+        ModelState.AddModelError(nameof(vm.Longitude), coordinateError);
     }
 
     private void AddAudioValidationError(string fieldName, IFormFile? audioFile)

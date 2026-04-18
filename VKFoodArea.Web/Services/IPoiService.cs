@@ -23,6 +23,7 @@ public interface IPoiService
     Task<PoiDto?> GetByIdForApiAsync(int id);
 
     Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string? qrCode);
+    Task<string?> ValidateCoordinatesAsync(int? currentPoiId, double? latitude, double? longitude);
     string? ValidateImageFile(IFormFile? imageFile);
     string? ValidateAudioFile(IFormFile? audioFile);
 }

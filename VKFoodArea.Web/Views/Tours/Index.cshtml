@@ -1,15 +1,15 @@
 @model VKFoodArea.Web.ViewModels.TourIndexViewModel
 @{
-    ViewData["Title"] = "Quan ly tour";
+    ViewData["Title"] = "Quản lý tour";
     var tours = Model.Items.Items;
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Danh sach tour</h2>
+        <h2>Danh sách tour</h2>
     </div>
     <div class="page-actions">
-        <a asp-action="Create" class="btn btn-primary">Tao tour moi</a>
+        <a asp-action="Create" class="btn btn-primary">Tạo tour mới</a>
     </div>
 </section>
 
@@ -17,7 +17,7 @@
     @if (!tours.Any())
     {
         <div class="empty-state">
-            <p>Chua co tour nao.</p>
+            <p>Chưa có tour nào.</p>
         </div>
     }
     else
@@ -27,10 +27,10 @@
                 <thead>
                     <tr>
                         <th>Tour</th>
-                        <th>Mo ta</th>
-                        <th>So stop</th>
-                        <th>Trang thai</th>
-                        <th class="text-end">Thao tac</th>
+                        <th>Mô tả</th>
+                        <th>Số điểm dừng</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -45,17 +45,17 @@
                             <td>
                                 @if (item.IsActive)
                                 {
-                                    <span class="status-pill status-pill--success">Dang hoat dong</span>
+                                    <span class="status-pill status-pill--success">Đang hoạt động</span>
                                 }
                                 else
                                 {
-                                    <span class="status-pill status-pill--muted">Dang an</span>
+                                    <span class="status-pill status-pill--muted">Đang ẩn</span>
                                 }
                             </td>
                             <td>
                                 <div class="table-actions justify-content-end">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sua</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xoa</a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
                                 </div>
                             </td>
                         </tr>

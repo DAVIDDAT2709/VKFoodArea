@@ -40,8 +40,8 @@ public class PoiService : IPoiService
     {
         var vm = new PoiFormViewModel
         {
-            Latitude = _currentAdminService.IsAdmin ? 10.7618 : null,
-            Longitude = _currentAdminService.IsAdmin ? 106.7022 : null,
+            Latitude = null,
+            Longitude = null,
             RadiusMeters = 30,
             Priority = 1,
             IsActive = _currentAdminService.IsAdmin,
@@ -258,6 +258,32 @@ public class PoiService : IPoiService
             return "Mã QR mặc định bị trùng với một QR Code đã tạo trong module QR.";
 
         return null;
+    }
+
+    public async Task<string?> ValidateCoordinatesAsync(int? currentPoiId, double? latitude, double? longitude)
+    {
+        if (!latitude.HasValue || !longitude.HasValue)
+            return null;
+
+        const double coordinateTolerance = 0.0000005;
+        var minLatitude = latitude.Value - coordinateTolerance;
+        var maxLatitude = latitude.Value + coordinateTolerance;
+        var minLongitude = longitude.Value - coordinateTolerance;
+        var maxLongitude = longitude.Value + coordinateTolerance;
+
+        var hasDuplicate = await _context.Pois
+            .AsNoTracking()
+            .AnyAsync(x =>
+                (!currentPoiId.HasValue || x.Id != currentPoiId.Value) &&
+                PoiApprovalStatus.Normalize(x.ApprovalStatus) != PoiApprovalStatus.Rejected &&
+                x.Latitude >= minLatitude &&
+                x.Latitude <= maxLatitude &&
+                x.Longitude >= minLongitude &&
+                x.Longitude <= maxLongitude);
+
+        return hasDuplicate
+            ? "Tọa độ này đã được dùng cho một POI khác."
+            : null;
     }
 
     public string? ValidateImageFile(IFormFile? imageFile)

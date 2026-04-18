@@ -4,7 +4,7 @@
 
 <section class="card-surface">
     <div class="section-heading">
-        <h2>Thong tin tour</h2>
+        <h2>Thông tin tour</h2>
     </div>
 
     <div class="row g-3">
@@ -37,7 +37,6 @@
             <label asp-for="TtsScriptVi" class="form-label"></label>
             <textarea asp-for="TtsScriptVi" class="form-control" rows="4"></textarea>
             <span asp-validation-for="TtsScriptVi" class="text-danger"></span>
-            <div class="form-text">Nhap noi dung TTS tieng Viet. He thong se tu dong sinh cac ngon ngu con lai khi luu.</div>
         </div>
         <div class="col-md-6">
             <label asp-for="TtsScriptEn" class="form-label"></label>
@@ -60,8 +59,8 @@
 
 <section class="card-surface">
     <div class="section-heading">
-        <h2>Tour stop</h2>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="add-stop-button">Them stop</button>
+        <h2>Điểm dừng trong tour</h2>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="add-stop-button">Thêm điểm dừng</button>
     </div>
 
     <div id="tour-stops">
@@ -72,7 +71,7 @@
                     <input type="hidden" asp-for="Stops[i].Id" />
                     <label asp-for="Stops[i].PoiId" class="form-label"></label>
                     <select asp-for="Stops[i].PoiId" asp-items="Model.PoiOptions" class="form-select">
-                        <option value="">-- Chon POI --</option>
+                        <option value="">-- Chọn POI --</option>
                     </select>
                     <span asp-validation-for="Stops[i].PoiId" class="text-danger"></span>
                 </div>
@@ -85,7 +84,7 @@
                     <input asp-for="Stops[i].Note" class="form-control" />
                 </div>
                 <div class="col-md-1">
-                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-stop>X</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-stop>Xóa</button>
                 </div>
             </div>
         }
@@ -98,7 +97,7 @@
             <input name="Stops[__index__].Id" type="hidden" value="" />
             <label class="form-label" for="Stops___index___PoiId">POI</label>
             <select class="form-select" id="Stops___index___PoiId" name="Stops[__index__].PoiId">
-                <option value="">-- Chon POI --</option>
+                <option value="">-- Chọn POI --</option>
                 @foreach (var poi in Model.PoiOptions)
                 {
                     <option value="@poi.Value">@poi.Text</option>
@@ -106,15 +105,15 @@
             </select>
         </div>
         <div class="col-md-2">
-            <label class="form-label" for="Stops___index___DisplayOrder">Thu tu</label>
+            <label class="form-label" for="Stops___index___DisplayOrder">Thứ tự</label>
             <input class="form-control" id="Stops___index___DisplayOrder" name="Stops[__index__].DisplayOrder" type="number" value="__order__" />
         </div>
         <div class="col-md-4">
-            <label class="form-label" for="Stops___index___Note">Ghi chu</label>
+            <label class="form-label" for="Stops___index___Note">Ghi chú</label>
             <input class="form-control" id="Stops___index___Note" name="Stops[__index__].Note" type="text" value="" />
         </div>
         <div class="col-md-1">
-            <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-stop>X</button>
+            <button type="button" class="btn btn-outline-danger btn-sm w-100" data-remove-stop>Xóa</button>
         </div>
     </div>
 </template>
