@@ -14,9 +14,11 @@ public static class WebDataInitializer
         await db.Database.MigrateAsync();
         await EnsureAdminUsersTableAsync(db);
         await EnsureNarrationHistoryUserKeyColumnAsync(db);
+        await EnsureNarrationHistoryTourColumnsAsync(db);
         await EnsureAnonymousMovementLogKeysAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
         await EnsurePoiOwnerColumnAsync(db);
+        await EnsurePoiApprovalColumnsAsync(db);
         await EnsureTourNarrationColumnsAsync(db);
         await EnsureQrCodeImageColumnAsync(db);
         await SyncPoiContentTablesAsync(db);
@@ -79,6 +81,18 @@ public static class WebDataInitializer
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE NarrationHistories ADD COLUMN UserKey TEXT NOT NULL DEFAULT '';");
         }
+    }
+
+    private static async Task EnsureNarrationHistoryTourColumnsAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "NarrationHistories", "TourId"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE NarrationHistories ADD COLUMN TourId INTEGER NULL;");
+
+        if (!await HasColumnAsync(connection, "NarrationHistories", "TourName"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE NarrationHistories ADD COLUMN TourName TEXT NOT NULL DEFAULT '';");
     }
 
     private static async Task EnsureAnonymousMovementLogKeysAsync(AppDbContext db)
@@ -148,6 +162,37 @@ public static class WebDataInitializer
 
         await db.Database.ExecuteSqlRawAsync(
             "CREATE INDEX IF NOT EXISTS IX_Pois_OwnerAdminUserId ON Pois (OwnerAdminUserId);");
+    }
+
+    private static async Task EnsurePoiApprovalColumnsAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "Pois", "ApprovalStatus"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN ApprovalStatus TEXT NOT NULL DEFAULT 'Approved';");
+
+        if (!await HasColumnAsync(connection, "Pois", "SubmittedAt"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN SubmittedAt TEXT NULL;");
+
+        if (!await HasColumnAsync(connection, "Pois", "ReviewedAt"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN ReviewedAt TEXT NULL;");
+
+        if (!await HasColumnAsync(connection, "Pois", "ReviewedByAdminUserId"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN ReviewedByAdminUserId INTEGER NULL;");
+
+        if (!await HasColumnAsync(connection, "Pois", "ReviewNote"))
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Pois ADD COLUMN ReviewNote TEXT NOT NULL DEFAULT '';");
+
+        await db.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_Pois_ApprovalStatus ON Pois (ApprovalStatus);");
+
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            UPDATE Pois
+            SET ApprovalStatus = 'Approved'
+            WHERE ApprovalStatus IS NULL OR trim(ApprovalStatus) = '';
+            """);
     }
 
     private static async Task EnsureQrCodeImageColumnAsync(AppDbContext db)
@@ -430,6 +475,9 @@ public static class WebDataInitializer
         AudioFileEn = string.Empty,
         AudioFileJa = string.Empty,
         QrCode = source.QrCode,
-        IsActive = source.IsActive
+        IsActive = source.IsActive,
+        ApprovalStatus = PoiApprovalStatus.Approved,
+        SubmittedAt = DateTime.UtcNow,
+        ReviewedAt = DateTime.UtcNow
     };
 }

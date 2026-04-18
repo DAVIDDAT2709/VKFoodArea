@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -42,15 +44,21 @@ public class PoiService : IPoiService
             Longitude = 106.7022,
             RadiusMeters = 30,
             Priority = 1,
-            IsActive = true
+            IsActive = _currentAdminService.IsAdmin,
+            ApprovalStatus = _currentAdminService.IsAdmin
+                ? PoiApprovalStatus.Approved
+                : PoiApprovalStatus.Pending
         };
 
+        ApplyFormPermissions(vm);
         await PopulateOwnerOptionsAsync(vm);
         return vm;
     }
 
     public async Task<PoiFormViewModel> RebuildFormAsync(PoiFormViewModel vm)
     {
+        vm.ApprovalStatus = PoiApprovalStatus.Normalize(vm.ApprovalStatus);
+        ApplyFormPermissions(vm);
         await PopulateOwnerOptionsAsync(vm);
         return vm;
     }
@@ -65,6 +73,48 @@ public class PoiService : IPoiService
             .ToListAsync();
     }
 
+    public async Task<PoiIndexViewModel> GetIndexAsync(string? query, string? approvalStatus)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var normalizedApprovalStatus = NormalizeApprovalStatusFilter(approvalStatus);
+        var accessiblePois = await ApplyAccessFilter(_context.Pois)
+            .AsNoTracking()
+            .Include(x => x.OwnerAdminUser)
+            .OrderByDescending(x => x.IsActive)
+            .ThenByDescending(x => x.Priority)
+            .ThenBy(x => x.Name)
+            .ToListAsync();
+
+        var filteredPois = accessiblePois;
+
+        if (!string.IsNullOrWhiteSpace(normalizedApprovalStatus))
+        {
+            filteredPois = filteredPois
+                .Where(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == normalizedApprovalStatus)
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            filteredPois = filteredPois
+                .Where(x => MatchesSearch(x, normalizedQuery))
+                .ToList();
+        }
+
+        return new PoiIndexViewModel
+        {
+            Query = normalizedQuery,
+            ApprovalStatus = normalizedApprovalStatus,
+            IsAdmin = _currentAdminService.IsAdmin,
+            Items = filteredPois,
+            TotalCount = accessiblePois.Count,
+            ActiveCount = accessiblePois.Count(x => x.IsActive && PoiApprovalStatus.IsApproved(x.ApprovalStatus)),
+            PendingCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Pending),
+            RejectedCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Rejected),
+            ApprovedCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Approved)
+        };
+    }
+
     public async Task<PoiFormViewModel?> GetEditFormAsync(int id)
     {
         var poi = await ApplyAccessFilter(BuildPoiContentQuery())
@@ -73,6 +123,7 @@ public class PoiService : IPoiService
             return null;
 
         var vm = MapToViewModel(poi);
+        ApplyFormPermissions(vm);
         await PopulateOwnerOptionsAsync(vm);
         return vm;
     }
@@ -92,6 +143,7 @@ public class PoiService : IPoiService
 
         var poi = MapToEntity(vm, new Poi());
         ApplyOwner(vm, poi, isNew: true);
+        ApplyApprovalForCreate(poi);
         SyncContentCollections(poi, vm);
 
         _context.Pois.Add(poi);
@@ -109,12 +161,16 @@ public class PoiService : IPoiService
         if (poi is null)
             return false;
 
+        var originalApprovalStatus = PoiApprovalStatus.Normalize(poi.ApprovalStatus);
+        var originalIsActive = poi.IsActive;
+
         await PopulateGeneratedFieldsAsync(vm);
         await PopulateStoredImageAsync(vm);
         await PopulateStoredAudioAsync(vm);
 
         MapToEntity(vm, poi);
         ApplyOwner(vm, poi, isNew: false);
+        ApplyApprovalForUpdate(poi, originalApprovalStatus, originalIsActive);
         SyncContentCollections(poi, vm);
         await _context.SaveChangesAsync();
 
@@ -129,6 +185,44 @@ public class PoiService : IPoiService
             return false;
 
         _context.Pois.Remove(poi);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> ApproveAsync(int id)
+    {
+        if (!_currentAdminService.IsAdmin)
+            return false;
+
+        var poi = await _context.Pois.FirstOrDefaultAsync(x => x.Id == id);
+        if (poi is null)
+            return false;
+
+        poi.ApprovalStatus = PoiApprovalStatus.Approved;
+        poi.IsActive = true;
+        poi.ReviewedAt = DateTime.UtcNow;
+        poi.ReviewedByAdminUserId = _currentAdminService.UserId;
+        poi.ReviewNote = string.Empty;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> RejectAsync(int id)
+    {
+        if (!_currentAdminService.IsAdmin)
+            return false;
+
+        var poi = await _context.Pois.FirstOrDefaultAsync(x => x.Id == id);
+        if (poi is null)
+            return false;
+
+        poi.ApprovalStatus = PoiApprovalStatus.Rejected;
+        poi.IsActive = false;
+        poi.ReviewedAt = DateTime.UtcNow;
+        poi.ReviewedByAdminUserId = _currentAdminService.UserId;
+        poi.ReviewNote = "Admin từ chối POI.";
+
         await _context.SaveChangesAsync();
         return true;
     }
@@ -173,6 +267,7 @@ public class PoiService : IPoiService
         var pois = await BuildPoiContentQuery()
             .AsNoTracking()
             .Where(x => x.IsActive)
+            .Where(x => x.ApprovalStatus == PoiApprovalStatus.Approved)
             .OrderByDescending(x => x.Priority)
             .ThenBy(x => x.Name)
             .ToListAsync();
@@ -187,6 +282,7 @@ public class PoiService : IPoiService
         var poi = await BuildPoiContentQuery()
             .AsNoTracking()
             .Where(x => x.Id == id && x.IsActive)
+            .Where(x => x.ApprovalStatus == PoiApprovalStatus.Approved)
             .FirstOrDefaultAsync();
 
         return poi is null
@@ -230,6 +326,7 @@ public class PoiService : IPoiService
         AudioFileJa = GetAudioFile(poi, "ja", poi.AudioFileJa),
         QrCode = poi.QrCode,
         IsActive = poi.IsActive,
+        ApprovalStatus = PoiApprovalStatus.Normalize(poi.ApprovalStatus),
         OwnerAdminUserId = poi.OwnerAdminUserId
     };
 
@@ -254,7 +351,16 @@ public class PoiService : IPoiService
         poi.AudioFileJa = (vm.AudioFileJa ?? string.Empty).Trim();
         poi.QrCode = QrCodeHelper.Normalize(vm.QrCode);
         poi.IsActive = vm.IsActive;
+        poi.ApprovalStatus = PoiApprovalStatus.Normalize(vm.ApprovalStatus);
         return poi;
+    }
+
+    private void ApplyFormPermissions(PoiFormViewModel vm)
+    {
+        vm.CanEditActiveState = _currentAdminService.IsAdmin;
+
+        if (!_currentAdminService.IsAdmin)
+            vm.IsActive = false;
     }
 
     private void ApplyOwner(PoiFormViewModel vm, Poi poi, bool isNew)
@@ -269,6 +375,43 @@ public class PoiService : IPoiService
             poi.OwnerAdminUserId = _currentAdminService.UserId.Value;
         else if (isNew)
             poi.OwnerAdminUserId = null;
+    }
+
+    private void ApplyApprovalForCreate(Poi poi)
+    {
+        if (_currentAdminService.IsAdmin)
+        {
+            poi.ApprovalStatus = PoiApprovalStatus.Approved;
+            poi.SubmittedAt = DateTime.UtcNow;
+            poi.ReviewedAt = DateTime.UtcNow;
+            poi.ReviewedByAdminUserId = _currentAdminService.UserId;
+            return;
+        }
+
+        poi.ApprovalStatus = PoiApprovalStatus.Pending;
+        poi.IsActive = false;
+        poi.SubmittedAt = DateTime.UtcNow;
+        poi.ReviewedAt = null;
+        poi.ReviewedByAdminUserId = null;
+        poi.ReviewNote = string.Empty;
+    }
+
+    private void ApplyApprovalForUpdate(Poi poi, string originalApprovalStatus, bool originalIsActive)
+    {
+        if (_currentAdminService.IsAdmin)
+        {
+            poi.ApprovalStatus = PoiApprovalStatus.Normalize(poi.ApprovalStatus);
+            if (poi.ApprovalStatus != PoiApprovalStatus.Approved)
+                poi.IsActive = false;
+
+            return;
+        }
+
+        poi.ApprovalStatus = originalApprovalStatus;
+        poi.IsActive = originalApprovalStatus == PoiApprovalStatus.Approved && originalIsActive;
+
+        if (originalApprovalStatus == PoiApprovalStatus.Pending)
+            poi.SubmittedAt ??= DateTime.UtcNow;
     }
 
     private async Task PopulateOwnerOptionsAsync(PoiFormViewModel vm)
@@ -459,4 +602,73 @@ public class PoiService : IPoiService
                .FileUrl
                .Trim()
            ?? fallback;
+
+    private static string NormalizeApprovalStatusFilter(string? status)
+    {
+        var normalized = (status ?? string.Empty).Trim();
+        return normalized.Equals(PoiApprovalStatus.Pending, StringComparison.OrdinalIgnoreCase) ||
+               normalized.Equals(PoiApprovalStatus.Approved, StringComparison.OrdinalIgnoreCase) ||
+               normalized.Equals(PoiApprovalStatus.Rejected, StringComparison.OrdinalIgnoreCase)
+            ? PoiApprovalStatus.Normalize(normalized)
+            : string.Empty;
+    }
+
+    private static bool MatchesSearch(Poi poi, string query)
+    {
+        var normalizedQuery = NormalizeSearchText(query);
+        if (string.IsNullOrWhiteSpace(normalizedQuery))
+            return true;
+
+        var searchable = NormalizeSearchText(string.Join(
+            " ",
+            poi.Name,
+            poi.Address,
+            poi.PhoneNumber,
+            poi.QrCode,
+            poi.Description));
+
+        return normalizedQuery
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .All(token => searchable.Contains(token, StringComparison.Ordinal));
+    }
+
+    private static string NormalizeSearchText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var builder = new StringBuilder(value.Length);
+        var previousWasSpace = false;
+
+        foreach (var character in value
+                     .Trim()
+                     .ToLowerInvariant()
+                     .Normalize(NormalizationForm.FormD))
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            var normalizedCharacter = character switch
+            {
+                '\u0111' => 'd',
+                '\u0110' => 'd',
+                _ => character
+            };
+
+            if (char.IsWhiteSpace(normalizedCharacter))
+            {
+                if (previousWasSpace)
+                    continue;
+
+                builder.Append(' ');
+                previousWasSpace = true;
+                continue;
+            }
+
+            builder.Append(normalizedCharacter);
+            previousWasSpace = false;
+        }
+
+        return builder.ToString().Trim();
+    }
 }

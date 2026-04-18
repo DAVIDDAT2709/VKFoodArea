@@ -31,6 +31,11 @@ public class Poi
     public bool IsActive { get; set; } = true;
     public int? OwnerAdminUserId { get; set; }
     public AdminUser? OwnerAdminUser { get; set; }
+    public string ApprovalStatus { get; set; } = PoiApprovalStatus.Approved;
+    public DateTime? SubmittedAt { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+    public int? ReviewedByAdminUserId { get; set; }
+    public string ReviewNote { get; set; } = string.Empty;
 
     public List<NarrationHistory> NarrationHistories { get; set; } = new();
     public List<PoiTranslation> Translations { get; set; } = new();

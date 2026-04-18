@@ -231,6 +231,7 @@ public class QrCodeItemService : IQrCodeItemService
     {
         return await _context.Pois
             .AsNoTracking()
+            .Where(x => x.ApprovalStatus == PoiApprovalStatus.Approved)
             .OrderByDescending(x => x.IsActive)
             .ThenBy(x => x.Name)
             .Select(x => new SelectListItem
@@ -253,12 +254,20 @@ public class QrCodeItemService : IQrCodeItemService
             var tour = await _context.Tours
                 .AsNoTracking()
                 .Where(x => x.Id == vm.TourId.Value)
-                .Select(x => new { x.Id, x.IsActive })
+                .Select(x => new
+                {
+                    x.Id,
+                    IsTargetActive = x.IsActive &&
+                        x.Stops.All(stop =>
+                            stop.Poi != null &&
+                            stop.Poi.IsActive &&
+                            stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved)
+                })
                 .FirstOrDefaultAsync();
 
             return tour is null
                 ? (false, targetType, 0, false, "Tour không tồn tại.")
-                : (true, targetType, tour.Id, tour.IsActive, null);
+                : (true, targetType, tour.Id, tour.IsTargetActive, null);
         }
 
         if (!vm.PoiId.HasValue || vm.PoiId.Value <= 0)
@@ -267,18 +276,22 @@ public class QrCodeItemService : IQrCodeItemService
         var poi = await _context.Pois
             .AsNoTracking()
             .Where(x => x.Id == vm.PoiId.Value)
-            .Select(x => new { x.Id, x.IsActive })
+            .Select(x => new { x.Id, x.IsActive, x.ApprovalStatus })
             .FirstOrDefaultAsync();
 
         return poi is null
             ? (false, QrTargetTypes.Poi, 0, false, "Điểm POI không tồn tại.")
-            : (true, QrTargetTypes.Poi, poi.Id, poi.IsActive, null);
+            : (true, QrTargetTypes.Poi, poi.Id, poi.IsActive && PoiApprovalStatus.IsApproved(poi.ApprovalStatus), null);
     }
 
     private async Task<List<SelectListItem>> GetTourOptionsAsync()
     {
         return await _context.Tours
             .AsNoTracking()
+            .Where(x => x.Stops.All(stop =>
+                stop.Poi != null &&
+                stop.Poi.IsActive &&
+                stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved))
             .OrderByDescending(x => x.IsActive)
             .ThenBy(x => x.Name)
             .Select(x => new SelectListItem
@@ -309,7 +322,7 @@ public class QrCodeItemService : IQrCodeItemService
             .Where(x => distinctIds.Contains(x.Id))
             .ToDictionaryAsync(
                 x => x.Id,
-                x => (x.Name, x.IsActive));
+                x => (x.Name, x.IsActive && PoiApprovalStatus.IsApproved(x.ApprovalStatus)));
     }
 
     private async Task<Dictionary<int, (string Name, bool IsActive)>> LoadTourLookupAsync(IEnumerable<int> ids)

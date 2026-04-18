@@ -276,6 +276,8 @@ public class PoiRuntimeService : IDisposable
     {
         Poi? poiToPlay = null;
         var shouldAdvanceTour = false;
+        int? tourIdForHistory = null;
+        string? tourNameForHistory = null;
         var trackingProfile = _trackingPolicyService.GetCurrentProfile();
         var hasPendingTourStop = false;
 
@@ -304,6 +306,8 @@ public class PoiRuntimeService : IDisposable
                     {
                         poiToPlay = stopPoi;
                         shouldAdvanceTour = true;
+                        tourIdForHistory = activeTourSession.TourId;
+                        tourNameForHistory = activeTourSession.TourName;
                         geofenceReason = $"Tour stop reached: {stopPoi.Name}";
                     }
                     else
@@ -356,6 +360,8 @@ public class PoiRuntimeService : IDisposable
         await _narrationService.PlayPoiAsync(
             poi.Id,
             shouldAdvanceTour ? "tour" : "auto",
+            tourId: tourIdForHistory,
+            tourName: tourNameForHistory,
             ct: ct);
 
         if (shouldAdvanceTour)

@@ -6,6 +6,11 @@
 <input asp-for="AudioFileEn" type="hidden" />
 <input asp-for="AudioFileJa" type="hidden" />
 <input asp-for="QrCode" type="hidden" />
+<input asp-for="ApprovalStatus" type="hidden" />
+@if (!Model.CanEditActiveState)
+{
+    <input asp-for="IsActive" type="hidden" />
+}
 
 <div class="editor-layout">
     <section class="card-surface">
@@ -78,10 +83,20 @@
                 <span asp-validation-for="Priority" class="text-danger"></span>
             </div>
             <div class="col-md-4">
-                <div class="form-check form-switch field-switch">
-                    <input asp-for="IsActive" class="form-check-input" />
-                    <label asp-for="IsActive" class="form-check-label"></label>
-                </div>
+                @if (Model.CanEditActiveState)
+                {
+                    <div class="form-check form-switch field-switch">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                }
+                else
+                {
+                    <div class="field-switch">
+                        <span class="status-pill status-pill--info">@VKFoodArea.Web.Models.PoiApprovalStatus.DisplayName(Model.ApprovalStatus)</span>
+                        <div class="form-text">POI do chủ cửa hàng thêm cần admin phê duyệt trước khi hiển thị trên app.</div>
+                    </div>
+                }
             </div>
             @if (Model.CanAssignOwner)
             {

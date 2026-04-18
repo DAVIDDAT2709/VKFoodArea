@@ -6,7 +6,7 @@ using VKFoodArea.Web.Services;
 
 namespace VKFoodArea.Web.Controllers;
 
-[Authorize(Roles = AdminRoleNames.AdminOnly)]
+[Authorize(Roles = AdminRoleNames.AdminOrRestaurantOwner)]
 public class HomeController : Controller
 {
     private readonly IHomeService _homeService;

@@ -80,11 +80,16 @@ public partial class FullMapPage : ContentPage
     private static readonly string[] PoiPinPalette =
     [
         "#2F80ED",
-        "#9B51E0",
         "#EB5757",
         "#27AE60",
         "#F2994A",
-        "#00A3A3"
+        "#00A3A3",
+        "#7B61FF",
+        "#D946EF",
+        "#14B8A6",
+        "#E11D48",
+        "#CA8A04",
+        "#2563EB"
     ];
 
     private static readonly IReadOnlyList<double> OfflineMapResolutions = Enumerable
@@ -166,7 +171,10 @@ public partial class FullMapPage : ContentPage
         FoodSuggestionPanel.IsVisible = false;
 
         if (DemoMenuButtonView is not null)
+        {
             DemoMenuButtonView.Text = "Demo";
+            DemoMenuButtonView.IsVisible = true;
+        }
 
         if (RealGpsButtonView is not null)
             RealGpsButtonView.Text = "GPS thật";
@@ -264,13 +272,13 @@ public partial class FullMapPage : ContentPage
 
         var map = new Mapsui.Map
         {
-            BackColor = Mapsui.Styles.Color.FromString("#E7F0EC")
+            BackColor = Mapsui.Styles.Color.FromString("#F1F6F2")
         };
         map.Widgets.Clear();
 
         var nearestPoiId = GetNearestPoiIdForCurrentLocation();
-        var visiblePois = GetVisibleMapPois();
         var isTourMap = HasActiveTour();
+        var visiblePois = GetDisplayMapPois(GetVisibleMapPois(), isTourMap);
 
         if (_isOnlineMapMode)
         {
@@ -287,7 +295,7 @@ public partial class FullMapPage : ContentPage
         _poiLayer = new MemoryLayer("POIs")
         {
             Features = visiblePois
-                .Select(poi => CreatePoiFeature(poi, nearestPoiId == poi.Id, isTourMap))
+                .Select((poi, index) => CreatePoiFeature(poi, nearestPoiId == poi.Id, isTourMap, index + 1))
                 .Cast<IFeature>()
                 .ToList()
         };
@@ -306,6 +314,18 @@ public partial class FullMapPage : ContentPage
 
         CenterMap(map);
         return map;
+    }
+
+    private List<Poi> GetDisplayMapPois(IReadOnlyList<Poi> sourcePois, bool isTourMap)
+    {
+        if (_isOnlineMapMode || isTourMap)
+            return sourcePois.ToList();
+
+        return sourcePois
+            .OrderByDescending(x => x.Priority)
+            .ThenBy(x => x.Name)
+            .Take(10)
+            .ToList();
     }
 
     private void CenterMap(Mapsui.Map map)
@@ -438,7 +458,7 @@ public partial class FullMapPage : ContentPage
         MapSubtitleLabel.Text = $"GPS đang hoạt động • {nearestPoi.Name}";
     }
 
-    private static PointFeature CreatePoiFeature(Poi poi, bool isNearest, bool isTourMap)
+    private static PointFeature CreatePoiFeature(Poi poi, bool isNearest, bool isTourMap, int displayNumber)
     {
         var point = SphericalMercator
             .FromLonLat(poi.Longitude, poi.Latitude)
@@ -448,34 +468,55 @@ public partial class FullMapPage : ContentPage
         feature["Name"] = poi.Name;
         feature["Address"] = poi.Address;
         feature["PoiId"] = poi.Id;
+        feature["DisplayNumber"] = displayNumber;
 
         feature.Styles.Add(new ImageStyle
         {
-            Image = GetPoiPinSvg(poi, isNearest, isTourMap),
-            SymbolScale = isNearest ? 0.68 : 0.55,
-            Offset = new Offset(0, 18),
+            Image = GetPoiPinSvg(poi, isNearest, isTourMap, displayNumber),
+            SymbolScale = isNearest ? 0.74 : 0.62,
+            Offset = new Offset(0, 20),
             RotateWithMap = false
         });
 
         return feature;
     }
 
-    private static string GetPoiPinSvg(Poi poi, bool isNearest, bool isTourMap)
+    private static string GetPoiPinSvg(Poi poi, bool isNearest, bool isTourMap, int displayNumber)
     {
+        var label = Math.Clamp(displayNumber, 1, 99).ToString();
+
         if (isNearest)
-            return NearestPoiPinSvg;
+        {
+            return
+                "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='64' height='70' viewBox='0 0 64 70'>" +
+                "<ellipse cx='32' cy='62' rx='15' ry='5' fill='#173330' opacity='0.22'/>" +
+                "<circle cx='32' cy='27' r='24' fill='#F7D774' opacity='0.38'/>" +
+                "<path d='M32 5C19.85 5 10 14.85 10 27c0 16.25 22 37 22 37s22-20.75 22-37C54 14.85 44.15 5 32 5z' fill='#1F9D74'/>" +
+                "<circle cx='32' cy='27' r='13' fill='white'/>" +
+                "<text x='32' y='32' text-anchor='middle' font-size='15' font-family='Arial' font-weight='800' fill='#1F9D74'>" + label + "</text>" +
+                "</svg>";
+        }
 
         if (isTourMap)
-            return TourPoiPinSvg;
+        {
+            return
+                "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='60' height='66' viewBox='0 0 64 70'>" +
+                "<ellipse cx='32' cy='62' rx='14' ry='5' fill='#173330' opacity='0.18'/>" +
+                "<path d='M32 6C20.95 6 12 14.95 12 26c0 15 20 36 20 36s20-21 20-36C52 14.95 43.05 6 32 6z' fill='#F59E0B'/>" +
+                "<circle cx='32' cy='26' r='12' fill='white'/>" +
+                "<text x='32' y='31' text-anchor='middle' font-size='15' font-family='Arial' font-weight='800' fill='#B45309'>" + label + "</text>" +
+                "</svg>";
+        }
 
         var fillColor = PoiPinPalette[Math.Abs(poi.Id.GetHashCode()) % PoiPinPalette.Length];
 
         return
-            "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 64 64'>" +
-            "<circle cx='32' cy='26' r='19' fill='" + fillColor + "' opacity='0.18'/>" +
-            "<path d='M32 5C20.95 5 12 13.95 12 25c0 14 20 34 20 34s20-20 20-34C52 13.95 43.05 5 32 5z' fill='" + fillColor + "'/>" +
-            "<circle cx='32' cy='25' r='10' fill='white'/>" +
-            "<circle cx='32' cy='25' r='4' fill='" + fillColor + "'/>" +
+            "svg-content://<svg xmlns='http://www.w3.org/2000/svg' width='58' height='64' viewBox='0 0 64 70'>" +
+            "<ellipse cx='32' cy='62' rx='13' ry='5' fill='#173330' opacity='0.15'/>" +
+            "<circle cx='32' cy='26' r='22' fill='" + fillColor + "' opacity='0.18'/>" +
+            "<path d='M32 6C20.95 6 12 14.95 12 26c0 15 20 36 20 36s20-21 20-36C52 14.95 43.05 6 32 6z' fill='" + fillColor + "'/>" +
+            "<circle cx='32' cy='26' r='12' fill='white' opacity='0.96'/>" +
+            "<text x='32' y='31' text-anchor='middle' font-size='15' font-family='Arial' font-weight='800' fill='" + fillColor + "'>" + label + "</text>" +
             "</svg>";
     }
 
@@ -579,7 +620,9 @@ public partial class FullMapPage : ContentPage
             poi,
             _narrationService,
             _text,
-            _narrationUiState));
+            _narrationUiState,
+            _activeTourSession?.TourId,
+            _activeTourSession?.TourName));
     }
 
     private List<Poi> GetVisibleMapPois()

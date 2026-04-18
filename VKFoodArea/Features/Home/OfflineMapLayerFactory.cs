@@ -22,8 +22,10 @@ public static class OfflineMapLayerFactory
     {
         return
         [
+            CreateRiverLayer(),
             CreateAreaLayer(),
             CreateMinorRoadLayer(),
+            CreateDiningStreetLayer(),
             CreateMainRoadLayer(),
             CreateVietnameseLabelLayer()
         ];
@@ -90,6 +92,52 @@ public static class OfflineMapLayerFactory
         };
 
         return new MemoryLayer("Offline map areas")
+        {
+            Features = features
+        };
+    }
+
+    private static MemoryLayer CreateRiverLayer()
+    {
+        var features = new List<IFeature>
+        {
+            CreatePolygonFeature(
+                [
+                    (106.70125, 10.76334),
+                    (106.70762, 10.76312),
+                    (106.70754, 10.76278),
+                    (106.70135, 10.76298),
+                    (106.70125, 10.76334)
+                ],
+                "#CFEAF5",
+                "#B7D8E5")
+        };
+
+        return new MemoryLayer("Offline river")
+        {
+            Features = features
+        };
+    }
+
+    private static MemoryLayer CreateDiningStreetLayer()
+    {
+        var features = new List<IFeature>
+        {
+            CreateRoadFeature(
+                [
+                    (106.70182, 10.76174),
+                    (106.70255, 10.76139),
+                    (106.70324, 10.76083),
+                    (106.70418, 10.76064),
+                    (106.70568, 10.76120),
+                    (106.70696, 10.76082)
+                ],
+                20,
+                "#FFF3C4",
+                "#F3D46B")
+        };
+
+        return new MemoryLayer("Offline dining corridor")
         {
             Features = features
         };

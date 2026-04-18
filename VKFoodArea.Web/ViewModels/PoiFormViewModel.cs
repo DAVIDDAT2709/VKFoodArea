@@ -88,6 +88,9 @@ public class PoiFormViewModel
     [Display(Name = "Đang hoạt động")]
     public bool IsActive { get; set; } = true;
 
+    public string ApprovalStatus { get; set; } = "Approved";
+    public bool CanEditActiveState { get; set; } = true;
+
     [Display(Name = "Chủ nhà hàng")]
     public int? OwnerAdminUserId { get; set; }
 

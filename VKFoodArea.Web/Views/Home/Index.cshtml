@@ -1,6 +1,6 @@
 @model VKFoodArea.Web.ViewModels.HomeDashboardViewModel
 @{
-    ViewData["Title"] = "Tổng quan";
+    ViewData["Title"] = Model.IsRestaurantOwnerDashboard ? "Tổng quan chủ cửa hàng" : "Tổng quan";
 }
 
 <section class="metrics-grid page-section">
@@ -14,6 +14,10 @@
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">POI hoạt động</span>
         <strong class="metric-card__value">@Model.ActivePoiCount / @Model.PoiCount</strong>
+    </article>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">POI chờ duyệt</span>
+        <strong class="metric-card__value">@Model.PendingPoiCount</strong>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Mã QR đang bật</span>
@@ -54,7 +58,11 @@
             </div>
             <div class="summary-row">
                 <span>Nguồn phát sinh</span>
-                <strong>@Model.GpsNarrationCount / @Model.QrNarrationCount / @Model.ManualNarrationCount</strong>
+                <strong>@Model.GpsNarrationCount / @Model.QrNarrationCount / @Model.TourNarrationCount / @Model.ManualNarrationCount</strong>
+            </div>
+            <div class="summary-row">
+                <span>POI bị từ chối</span>
+                <strong>@Model.RejectedPoiCount</strong>
             </div>
         </div>
     </article>
@@ -256,6 +264,7 @@
             "gps" => "GPS",
             "auto" => "GPS",
             "qr" => "QR",
+            "tour" => "Tour",
             "manual" => "Thủ công",
             _ => "Khác"
         };

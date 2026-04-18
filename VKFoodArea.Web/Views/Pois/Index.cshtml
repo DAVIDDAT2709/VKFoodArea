@@ -1,8 +1,8 @@
-@model IEnumerable<VKFoodArea.Web.Models.Poi>
+@model VKFoodArea.Web.ViewModels.PoiIndexViewModel
 @{
     ViewData["Title"] = "Điểm POI";
-    var pois = Model.ToList();
-    var activeCount = pois.Count(x => x.IsActive);
+    var pois = Model.Items;
+    var activeCount = Model.ActiveCount;
     var multilingualCount = pois.Count(x => GetLanguageCodes(x).Count >= 2);
     var audioReadyCount = pois.Count(x =>
         !string.IsNullOrWhiteSpace(x.AudioFileVi) ||
@@ -22,7 +22,7 @@
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">Tổng POI</span>
-        <strong class="metric-card__value">@pois.Count</strong>
+        <strong class="metric-card__value">@Model.TotalCount</strong>
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Đang hoạt động</span>
@@ -36,12 +36,46 @@
         <span class="metric-card__label">Đa ngôn ngữ</span>
         <strong class="metric-card__value">@multilingualCount</strong>
     </article>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">Chờ duyệt</span>
+        <strong class="metric-card__value">@Model.PendingCount</strong>
+    </article>
+</section>
+
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <h2>Tìm kiếm POI</h2>
+        @if (Model.IsAdmin && Model.PendingCount > 0)
+        {
+            <span class="soft-pill">@Model.PendingCount điểm đang chờ admin duyệt</span>
+        }
+    </div>
+
+    <form method="get" class="search-grid">
+        <div class="search-grid__wide">
+            <label class="form-label" for="query">Tên, địa chỉ, điện thoại, mã QR</label>
+            <input id="query" name="query" class="form-control" value="@Model.Query" placeholder="Ví dụ: Ốc Oanh, Vĩnh Khánh, poi:oc-oanh..." />
+        </div>
+        <div>
+            <label class="form-label" for="approvalStatus">Trạng thái duyệt</label>
+            <select id="approvalStatus" name="approvalStatus" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="@VKFoodArea.Web.Models.PoiApprovalStatus.Pending" selected="@(Model.ApprovalStatus == VKFoodArea.Web.Models.PoiApprovalStatus.Pending)">Chờ duyệt</option>
+                <option value="@VKFoodArea.Web.Models.PoiApprovalStatus.Approved" selected="@(Model.ApprovalStatus == VKFoodArea.Web.Models.PoiApprovalStatus.Approved)">Đã duyệt</option>
+                <option value="@VKFoodArea.Web.Models.PoiApprovalStatus.Rejected" selected="@(Model.ApprovalStatus == VKFoodArea.Web.Models.PoiApprovalStatus.Rejected)">Từ chối</option>
+            </select>
+        </div>
+        <div class="search-actions">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+    </form>
 </section>
 
 <section class="card-surface page-section">
     <div class="section-heading">
         <h2>Danh sách POI</h2>
-        <span class="soft-pill soft-pill--neutral">@activeCount / @pois.Count đang hoạt động</span>
+        <span class="soft-pill soft-pill--neutral">@pois.Count kết quả</span>
     </div>
 
     @if (!pois.Any())
@@ -78,14 +112,17 @@
                                     <div class="inventory-card__meta">@poi.PhoneNumber</div>
                                 }
                             </div>
-                            @if (poi.IsActive)
-                            {
-                                <span class="status-pill status-pill--success">Đang hoạt động</span>
-                            }
-                            else
-                            {
-                                <span class="status-pill status-pill--muted">Đang ẩn</span>
-                            }
+                            <div class="pill-cloud">
+                                @RenderApprovalStatus(poi)
+                                @if (poi.IsActive && VKFoodArea.Web.Models.PoiApprovalStatus.IsApproved(poi.ApprovalStatus))
+                                {
+                                    <span class="status-pill status-pill--success">Đang hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill status-pill--muted">Đang ẩn</span>
+                                }
+                            </div>
                         </div>
 
                         <div class="inventory-card__stats">
@@ -115,6 +152,17 @@
                         </div>
 
                         <div class="inventory-card__actions">
+                            @if (Model.IsAdmin && VKFoodArea.Web.Models.PoiApprovalStatus.Normalize(poi.ApprovalStatus) == VKFoodArea.Web.Models.PoiApprovalStatus.Pending)
+                            {
+                                <form asp-action="Approve" asp-route-id="@poi.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-primary btn-sm">Phê duyệt</button>
+                                </form>
+                                <form asp-action="Reject" asp-route-id="@poi.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Từ chối</button>
+                                </form>
+                            }
                             <button type="button"
                                     class="audio-preview-button"
                                     data-audio="@VietnameseAudio(poi)"
@@ -135,6 +183,20 @@
 </section>
 
 @functions {
+    private static Microsoft.AspNetCore.Html.IHtmlContent RenderApprovalStatus(VKFoodArea.Web.Models.Poi poi)
+    {
+        var status = VKFoodArea.Web.Models.PoiApprovalStatus.Normalize(poi.ApprovalStatus);
+        var label = VKFoodArea.Web.Models.PoiApprovalStatus.DisplayName(status);
+        var cssClass = status switch
+        {
+            VKFoodArea.Web.Models.PoiApprovalStatus.Pending => "status-pill status-pill--info",
+            VKFoodArea.Web.Models.PoiApprovalStatus.Rejected => "status-pill status-pill--muted",
+            _ => "status-pill status-pill--success"
+        };
+
+        return new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"{cssClass}\">{label}</span>");
+    }
+
     private static List<string> GetLanguageCodes(VKFoodArea.Web.Models.Poi poi)
     {
         var result = new List<string>();

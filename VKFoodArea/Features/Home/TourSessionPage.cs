@@ -118,7 +118,7 @@ public class TourSessionPage : ContentPage
     {
         var session = _tourSessionService.GetCurrentSession();
         var currentStop = session?.CurrentStop;
-        if (currentStop?.Poi is null)
+        if (session is null || currentStop?.Poi is null)
             return;
 
         _narrationUiState.SetContext(currentStop.Poi);
@@ -126,7 +126,9 @@ public class TourSessionPage : ContentPage
             currentStop.Poi,
             _narrationService,
             _text,
-            _narrationUiState));
+            _narrationUiState,
+            session.TourId,
+            session.TourName));
     }
 
     private async void OnEndTourClicked(object? sender, EventArgs e)

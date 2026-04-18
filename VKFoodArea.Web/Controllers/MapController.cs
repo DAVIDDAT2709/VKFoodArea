@@ -27,7 +27,7 @@ public class MapController : Controller
         var vm = new AdminMapViewModel
         {
             ActivePois = pois
-                .Where(x => x.IsActive)
+                .Where(x => x.IsActive && PoiApprovalStatus.IsApproved(x.ApprovalStatus))
                 .Select(x => new AdminMapPoiViewModel
                 {
                     Id = x.Id,

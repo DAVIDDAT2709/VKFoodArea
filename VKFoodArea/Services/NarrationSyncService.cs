@@ -23,6 +23,8 @@ public class NarrationSyncService
         string mode,
         string? userKey,
         string triggerSource = "manual",
+        int? tourId = null,
+        string? tourName = null,
         DateTime? playedAt = null,
         int? durationSeconds = null,
         CancellationToken ct = default)
@@ -30,18 +32,20 @@ public class NarrationSyncService
         try
         {
             var payload = new NarrationHistoryPushDto
-{
-    // Không đẩy local PoiId lên web để tránh map nhầm quán khi Id local khác Id web.
-    PoiId = 0,
-    PoiName = poiName,
-    QrCode = qrCode,
-    UserKey = NormalizeUserKey(userKey),
-    Language = language,
-    TriggerSource = NormalizeTriggerSource(triggerSource),
-    Mode = mode.ToLowerInvariant(),
-    PlayedAt = playedAt ?? DateTime.UtcNow,
-    DurationSeconds = durationSeconds
-};
+            {
+                // Không đẩy local PoiId lên web để tránh map nhầm quán khi Id local khác Id web.
+                PoiId = 0,
+                PoiName = poiName,
+                TourId = tourId.HasValue && tourId.Value > 0 ? tourId.Value : null,
+                TourName = (tourName ?? string.Empty).Trim(),
+                QrCode = qrCode,
+                UserKey = NormalizeUserKey(userKey),
+                Language = language,
+                TriggerSource = NormalizeTriggerSource(triggerSource),
+                Mode = mode.ToLowerInvariant(),
+                PlayedAt = playedAt ?? DateTime.UtcNow,
+                DurationSeconds = durationSeconds
+            };
 
             var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories";
             using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);

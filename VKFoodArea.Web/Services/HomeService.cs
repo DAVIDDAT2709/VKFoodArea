@@ -11,57 +11,67 @@ public class HomeService : IHomeService
     private readonly AppDbContext _context;
 
     private readonly IAppDevicePresenceService _appDevicePresenceService;
+    private readonly ICurrentAdminService _currentAdminService;
 
-    public HomeService(AppDbContext context, IAppDevicePresenceService appDevicePresenceService)
+    public HomeService(
+        AppDbContext context,
+        IAppDevicePresenceService appDevicePresenceService,
+        ICurrentAdminService currentAdminService)
     {
         _context = context;
         _appDevicePresenceService = appDevicePresenceService;
+        _currentAdminService = currentAdminService;
     }
 
     public async Task<HomeDashboardViewModel> GetDashboardAsync()
     {
-        var activePois = await _context.Pois
-            .AsNoTracking()
-            .Where(x => x.IsActive)
+        var poisQuery = BuildPoiScope();
+        var narrationQuery = BuildNarrationScope();
+        var ownerPoiIds = _currentAdminService.IsRestaurantOwner
+            ? await poisQuery.Select(x => x.Id).ToListAsync()
+            : null;
+
+        var activePois = await poisQuery
+            .Where(x => x.IsActive && x.ApprovalStatus == PoiApprovalStatus.Approved)
             .ToListAsync();
 
-        var narrationHistoryCount = await _context.NarrationHistories.CountAsync();
+        var narrationHistoryCount = await narrationQuery.CountAsync();
         var today = WebDisplayTime.TodayStartUtc;
         var tomorrow = WebDisplayTime.TomorrowStartUtc;
-        var gpsNarrationCount = await _context.NarrationHistories.CountAsync(x =>
+        var gpsNarrationCount = await narrationQuery.CountAsync(x =>
             x.TriggerSource == "gps" ||
             x.TriggerSource == "auto");
-        var durationQuery = _context.NarrationHistories
-            .AsNoTracking()
+        var durationQuery = narrationQuery
             .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0);
         var averageListenSampleCount = await durationQuery.CountAsync();
-        var averageListenSeconds = await _context.NarrationHistories
-            .AsNoTracking()
-            .Where(x => x.DurationSeconds.HasValue && x.DurationSeconds.Value > 0)
+        var averageListenSeconds = await durationQuery
             .Select(x => (double?)x.DurationSeconds!.Value)
             .AverageAsync() ?? 0;
         var presence = await _appDevicePresenceService.GetSummaryAsync();
 
         return new HomeDashboardViewModel
         {
-            PoiCount = await _context.Pois.CountAsync(),
+            IsRestaurantOwnerDashboard = _currentAdminService.IsRestaurantOwner,
+            PoiCount = await poisQuery.CountAsync(),
             ActivePoiCount = activePois.Count,
-            ActiveQrCount = await _context.QrCodeItems.CountAsync(x => x.IsActive),
+            PendingPoiCount = await poisQuery.CountAsync(x => x.ApprovalStatus == PoiApprovalStatus.Pending),
+            RejectedPoiCount = await poisQuery.CountAsync(x => x.ApprovalStatus == PoiApprovalStatus.Rejected),
+            ActiveQrCount = await CountActiveQrAsync(ownerPoiIds),
             ActiveDeviceCount = presence.ActiveDeviceCount,
             ActiveUserCount = presence.ActiveUserCount,
             DeviceTimeoutSeconds = presence.TimeoutSeconds,
             ActiveDevices = presence.Devices,
             NarrationHistoryCount = narrationHistoryCount,
-            TodayNarrationCount = await _context.NarrationHistories.CountAsync(x => x.PlayedAt >= today && x.PlayedAt < tomorrow),
+            TodayNarrationCount = await narrationQuery.CountAsync(x => x.PlayedAt >= today && x.PlayedAt < tomorrow),
             ConfiguredLanguageCount = CountConfiguredLanguages(activePois),
             GpsNarrationCount = gpsNarrationCount,
-            QrNarrationCount = await _context.NarrationHistories.CountAsync(x => x.TriggerSource == "qr"),
-            ManualNarrationCount = await _context.NarrationHistories.CountAsync(x => x.TriggerSource == "manual"),
-            ActiveTourCount = await _context.Tours.CountAsync(x => x.IsActive),
+            QrNarrationCount = await narrationQuery.CountAsync(x => x.TriggerSource == "qr"),
+            ManualNarrationCount = await narrationQuery.CountAsync(x => x.TriggerSource == "manual"),
+            TourNarrationCount = await narrationQuery.CountAsync(x => x.TriggerSource == "tour"),
+            ActiveTourCount = await CountActiveToursAsync(ownerPoiIds),
             AverageListenSeconds = averageListenSeconds,
             AverageListenSampleCount = averageListenSampleCount,
-            RecentNarrations = await _context.NarrationHistories
-                .AsNoTracking()
+            RecentNarrations = await narrationQuery
                 .OrderByDescending(x => x.PlayedAt)
                 .Take(6)
                 .Select(x => new RecentNarrationItemViewModel
@@ -76,16 +86,18 @@ public class HomeService : IHomeService
                 })
                 .ToListAsync(),
             LanguageBreakdown = await GetBreakdownAsync(
+                narrationQuery,
                 x => x.Language,
                 value => value.ToUpperInvariant()),
             TriggerSourceBreakdown = await GetBreakdownAsync(
+                narrationQuery,
                 x => x.TriggerSource,
                 MapSourceLabel),
             PlaybackModeBreakdown = await GetBreakdownAsync(
+                narrationQuery,
                 x => x.Mode,
                 value => value.ToUpperInvariant()),
-            TopPois = await _context.NarrationHistories
-                .AsNoTracking()
+            TopPois = await narrationQuery
                 .GroupBy(x => new { x.PoiId, x.PoiName })
                 .Select(x => new TopPoiPerformanceViewModel
                 {
@@ -102,11 +114,11 @@ public class HomeService : IHomeService
     }
 
     private async Task<List<DashboardBreakdownItemViewModel>> GetBreakdownAsync(
+        IQueryable<NarrationHistory> query,
         Expression<Func<NarrationHistory, string>> selector,
         Func<string, string> labelMapper)
     {
-        var items = await _context.NarrationHistories
-            .AsNoTracking()
+        var items = await query
             .GroupBy(selector)
             .Select(x => new
             {
@@ -132,6 +144,62 @@ public class HomeService : IHomeService
             .ToList();
     }
 
+    private IQueryable<Poi> BuildPoiScope()
+    {
+        var query = _context.Pois.AsNoTracking();
+
+        if (_currentAdminService.IsRestaurantOwner)
+        {
+            query = _currentAdminService.UserId.HasValue
+                ? query.Where(x => x.OwnerAdminUserId == _currentAdminService.UserId.Value)
+                : query.Where(x => false);
+        }
+
+        return query;
+    }
+
+    private IQueryable<NarrationHistory> BuildNarrationScope()
+    {
+        var query = _context.NarrationHistories
+            .Include(x => x.Poi)
+            .AsNoTracking();
+
+        if (_currentAdminService.IsRestaurantOwner)
+        {
+            query = _currentAdminService.UserId.HasValue
+                ? query.Where(x => x.Poi != null && x.Poi.OwnerAdminUserId == _currentAdminService.UserId.Value)
+                : query.Where(x => false);
+        }
+
+        return query;
+    }
+
+    private async Task<int> CountActiveQrAsync(IReadOnlyCollection<int>? ownerPoiIds)
+    {
+        var query = _context.QrCodeItems.AsNoTracking().Where(x => x.IsActive);
+        if (ownerPoiIds is null)
+            return await query.CountAsync();
+
+        if (ownerPoiIds.Count == 0)
+            return 0;
+
+        return await query.CountAsync(x =>
+            x.TargetType.ToLower() == QrTargetTypes.Poi &&
+            ownerPoiIds.Contains(x.TargetId));
+    }
+
+    private async Task<int> CountActiveToursAsync(IReadOnlyCollection<int>? ownerPoiIds)
+    {
+        var query = _context.Tours.AsNoTracking().Where(x => x.IsActive);
+        if (ownerPoiIds is null)
+            return await query.CountAsync();
+
+        if (ownerPoiIds.Count == 0)
+            return 0;
+
+        return await query.CountAsync(x => x.Stops.Any(stop => ownerPoiIds.Contains(stop.PoiId)));
+    }
+
     private static int CountConfiguredLanguages(IEnumerable<Poi> pois)
     {
         var count = 0;
@@ -152,6 +220,7 @@ public class HomeService : IHomeService
             "auto" => "GPS",
             "gps" => "GPS",
             "qr" => "QR",
+            "tour" => "Tour",
             "manual" => "Thủ công",
             _ => "Khác"
         };

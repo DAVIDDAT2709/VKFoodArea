@@ -81,7 +81,7 @@
         <div class="map-panel__header">
             <div>
                 <h2>Bản đồ TP.HCM</h2>
-                <p>Tâm bản đồ đặt tại khu Vĩnh Khánh, Quận 4. Marker đỏ là POI được nghe nhiều nhất.</p>
+                <p>Tâm bản đồ được ghim tại TP.HCM, Việt Nam. Marker đỏ là POI được nghe nhiều nhất.</p>
             </div>
             <div class="map-panel__badges">
                 <span class="map-badge map-badge--poi">POI @activePois.Count</span>
@@ -226,12 +226,18 @@
             return;
         }
 
-        const defaultCenter = [10.7618, 106.7040];
+        const hcmcCenter = [10.7769, 106.7009];
+        const hcmcBounds = [
+            [10.33, 106.35],
+            [11.17, 107.05]
+        ];
         const routePalette = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#be185d", "#65a30d"];
         const map = L.map(mapElement, {
             zoomControl: true,
-            preferCanvas: true
-        }).setView(defaultCenter, 16);
+            preferCanvas: true,
+            maxBounds: hcmcBounds,
+            maxBoundsViscosity: 0.55
+        }).setView(hcmcCenter, 12);
 
         const bounds = [];
         const poiLayer = L.layerGroup();
@@ -242,6 +248,14 @@
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
+
+        L.circleMarker(hcmcCenter, {
+            radius: 8,
+            color: "#0f766e",
+            fillColor: "#0f766e",
+            fillOpacity: 0.82,
+            weight: 3
+        }).addTo(map).bindPopup("<strong>TP.HCM, Việt Nam</strong>");
 
         pois.forEach((poi) => {
             const latLng = [poi.Latitude, poi.Longitude];
@@ -356,13 +370,6 @@
         }
 
         addLegend(routePalette, routes);
-
-        if (bounds.length > 0) {
-            map.fitBounds(bounds, {
-                padding: [34, 34],
-                maxZoom: 17
-            });
-        }
 
         setTimeout(() => map.invalidateSize(), 0);
 

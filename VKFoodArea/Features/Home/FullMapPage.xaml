@@ -49,7 +49,7 @@
                                                 <Button x:Name="DemoMenuButton"
                                                         Text="Demo"
                                                         Clicked="OnDemoMenuClicked"
-                                                        IsVisible="False"
+                                                        IsVisible="True"
                                                         HeightRequest="30"
                                                         Padding="14,0"
                                                         CornerRadius="8"

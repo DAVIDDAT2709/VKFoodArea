@@ -84,13 +84,15 @@ public class NarrationService
         string triggerSource = "manual",
         string? overrideLanguage = null,
         string? overrideMode = null,
+        int? tourId = null,
+        string? tourName = null,
         CancellationToken ct = default)
     {
         var poi = await _db.Pois.FirstOrDefaultAsync(x => x.Id == poiId && x.IsActive, ct);
         if (poi is null)
             return;
 
-        await PlayPoiAsync(poi, triggerSource, overrideLanguage, overrideMode, ct);
+        await PlayPoiAsync(poi, triggerSource, overrideLanguage, overrideMode, tourId, tourName, ct);
     }
 
     public async Task PlayPoiAsync(
@@ -98,6 +100,8 @@ public class NarrationService
         string triggerSource = "manual",
         string? overrideLanguage = null,
         string? overrideMode = null,
+        int? tourId = null,
+        string? tourName = null,
         CancellationToken ct = default)
     {
         if (poi is null || !poi.IsActive)
@@ -108,7 +112,7 @@ public class NarrationService
             await _autoPlaybackQueueLock.WaitAsync(ct);
             try
             {
-                await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, ct);
+                await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, tourId, tourName, ct);
             }
             finally
             {
@@ -118,7 +122,7 @@ public class NarrationService
             return;
         }
 
-        await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, ct);
+        await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, tourId, tourName, ct);
     }
 
     private async Task PlayPoiInternalAsync(
@@ -126,6 +130,8 @@ public class NarrationService
         string triggerSource,
         string? overrideLanguage,
         string? overrideMode,
+        int? tourId,
+        string? tourName,
         CancellationToken ct)
     {
         if (IsCurrentPoiPlaying(poi.Id))
@@ -211,6 +217,8 @@ public class NarrationService
                         playbackLanguage,
                         playbackMode,
                         triggerSource,
+                        tourId,
+                        tourName,
                         playedAtUtc,
                         durationSeconds,
                         CancellationToken.None);
@@ -354,6 +362,8 @@ public class NarrationService
         string language,
         string mode,
         string triggerSource,
+        int? tourId,
+        string? tourName,
         DateTime playedAtUtc,
         int? durationSeconds,
         CancellationToken ct)
@@ -376,6 +386,8 @@ public class NarrationService
             mode,
             _authService.GetCurrentUserSyncKey(),
             triggerSource,
+            tourId,
+            tourName,
             playedAtUtc,
             durationSeconds,
             ct);

@@ -8,6 +8,8 @@ public partial class PoiDetailPage : ContentPage
     private readonly NarrationService _narrationService;
     private readonly AppTextService _text;
     private readonly NarrationUiStateService _narrationUiState;
+    private readonly int? _tourId;
+    private readonly string _tourName;
 
     public Poi Poi { get; }
 
@@ -15,7 +17,9 @@ public partial class PoiDetailPage : ContentPage
         Poi poi,
         NarrationService narrationService,
         AppTextService text,
-        NarrationUiStateService narrationUiState)
+        NarrationUiStateService narrationUiState,
+        int? tourId = null,
+        string? tourName = null)
     {
         InitializeComponent();
 
@@ -23,6 +27,8 @@ public partial class PoiDetailPage : ContentPage
         _narrationService = narrationService;
         _text = text;
         _narrationUiState = narrationUiState;
+        _tourId = tourId.HasValue && tourId.Value > 0 ? tourId.Value : null;
+        _tourName = (tourName ?? string.Empty).Trim();
 
         BindingContext = this;
     }
@@ -44,7 +50,11 @@ public partial class PoiDetailPage : ContentPage
             }
 
             _narrationUiState.SetContext(Poi);
-            await _narrationService.PlayPoiAsync(Poi.Id);
+            await _narrationService.PlayPoiAsync(
+                Poi.Id,
+                _tourId.HasValue ? "tour" : "manual",
+                tourId: _tourId,
+                tourName: _tourName);
         }
         catch
         {

@@ -57,7 +57,7 @@ public class NarrationHistoryService : INarrationHistoryService
         if (!string.IsNullOrWhiteSpace(normalizedQuery))
         {
             items = items
-                .Where(x => MatchesSearch(x.PoiName, normalizedQuery))
+                .Where(x => MatchesSearch($"{x.PoiName} {x.TourName}", normalizedQuery))
                 .ToList();
         }
 
@@ -107,6 +107,8 @@ public class NarrationHistoryService : INarrationHistoryService
                 Id = x.Id,
                 PoiId = x.PoiId,
                 PoiName = x.PoiName,
+                TourId = x.TourId,
+                TourName = x.TourName,
                 UserKey = x.UserKey,
                 Language = x.Language,
                 TriggerSource = x.TriggerSource,
@@ -133,6 +135,8 @@ public class NarrationHistoryService : INarrationHistoryService
         {
             PoiId = poi.Id,
             PoiName = poi.Name,
+            TourId = vm.TourId.HasValue && vm.TourId.Value > 0 ? vm.TourId.Value : null,
+            TourName = NormalizeTourName(vm.TourName),
             UserKey = NormalizeUserKey(vm.UserKey),
             Language = language,
             TriggerSource = triggerSource,
@@ -151,6 +155,8 @@ public class NarrationHistoryService : INarrationHistoryService
             Id = entity.Id,
             PoiId = entity.PoiId,
             PoiName = entity.PoiName,
+            TourId = entity.TourId,
+            TourName = entity.TourName,
             UserKey = entity.UserKey,
             Language = entity.Language,
             TriggerSource = entity.TriggerSource,
@@ -172,6 +178,8 @@ public class NarrationHistoryService : INarrationHistoryService
                 Id = x.Id,
                 PoiId = x.PoiId,
                 PoiName = x.PoiName,
+                TourId = x.TourId,
+                TourName = x.TourName,
                 UserKey = x.UserKey,
                 Language = x.Language,
                 TriggerSource = x.TriggerSource,
@@ -243,6 +251,7 @@ public class NarrationHistoryService : INarrationHistoryService
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
                     x.IsActive &&
+                    x.ApprovalStatus == PoiApprovalStatus.Approved &&
                     !string.IsNullOrWhiteSpace(x.QrCode) &&
                     x.QrCode.ToLower() == normalizedQrCode);
 
@@ -255,7 +264,7 @@ public class NarrationHistoryService : INarrationHistoryService
         {
             var poiByName = await _context.Pois
                 .AsNoTracking()
-                .Where(x => x.IsActive)
+                .Where(x => x.IsActive && x.ApprovalStatus == PoiApprovalStatus.Approved)
                 .FirstOrDefaultAsync(x => x.Name == normalizedPoiName);
 
             if (poiByName is not null)
@@ -266,7 +275,10 @@ public class NarrationHistoryService : INarrationHistoryService
         {
             var poiById = await _context.Pois
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == vm.PoiId && x.IsActive);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == vm.PoiId &&
+                    x.IsActive &&
+                    x.ApprovalStatus == PoiApprovalStatus.Approved);
 
             if (poiById is not null)
                 return poiById;
@@ -358,6 +370,12 @@ public class NarrationHistoryService : INarrationHistoryService
 
     private static string NormalizeUserKey(string? userKey)
         => (userKey ?? string.Empty).Trim().ToLowerInvariant();
+
+    private static string NormalizeTourName(string? tourName)
+    {
+        var normalized = (tourName ?? string.Empty).Trim();
+        return normalized.Length <= 120 ? normalized : normalized[..120];
+    }
 
     private static string? NormalizeSimpleFilter(string? value)
     {

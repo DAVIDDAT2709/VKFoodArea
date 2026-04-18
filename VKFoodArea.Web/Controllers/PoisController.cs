@@ -17,10 +17,10 @@ public class PoisController : Controller
         _poiService = poiService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? query, string? approvalStatus)
     {
-        var pois = await _poiService.GetAllAsync();
-        return View(pois);
+        var vm = await _poiService.GetIndexAsync(query, approvalStatus);
+        return View(vm);
     }
 
     public async Task<IActionResult> Create()
@@ -46,7 +46,9 @@ public class PoisController : Controller
 
         var createdId = await _poiService.CreateAsync(vm);
 
-        TempData["SuccessMessage"] = "Đã tạo POI mới, ảnh đã được lưu và TTS đã được sinh tự động.";
+        TempData["SuccessMessage"] = User.IsInRole(AdminRoleNames.Admin)
+            ? "Đã tạo POI mới, ảnh đã được lưu và TTS đã được sinh tự động."
+            : "Đã gửi POI mới đến admin. Địa điểm sẽ hiển thị trên app sau khi được phê duyệt.";
         return RedirectToAction(nameof(Edit), new { id = createdId });
     }
 
@@ -103,6 +105,32 @@ public class PoisController : Controller
 
         TempData["SuccessMessage"] = "Đã xóa POI.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = AdminRoleNames.AdminOnly)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Approve(int id)
+    {
+        var updated = await _poiService.ApproveAsync(id);
+        if (!updated)
+            return NotFound();
+
+        TempData["SuccessMessage"] = "Đã phê duyệt POI và bật hiển thị trên app.";
+        return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = AdminRoleNames.AdminOnly)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reject(int id)
+    {
+        var updated = await _poiService.RejectAsync(id);
+        if (!updated)
+            return NotFound();
+
+        TempData["SuccessMessage"] = "Đã từ chối POI. Địa điểm này sẽ không hiển thị trên app.";
+        return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
     }
 
     private void AddAudioValidationErrors(PoiFormViewModel vm)

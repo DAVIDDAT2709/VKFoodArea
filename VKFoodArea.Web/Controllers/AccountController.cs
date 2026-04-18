@@ -65,7 +65,7 @@ public class AccountController : Controller
         if (string.IsNullOrWhiteSpace(vm.ReturnUrl) &&
             role == AdminRoleNames.RestaurantOwner)
         {
-            return RedirectToAction("Index", "Pois");
+            return RedirectToAction("Index", "Home");
         }
 
         return RedirectToLocal(vm.ReturnUrl);
@@ -92,7 +92,7 @@ public class AccountController : Controller
             return Redirect(returnUrl);
 
         if (User.IsInRole(AdminRoleNames.RestaurantOwner))
-            return RedirectToAction("Index", "Pois");
+            return RedirectToAction("Index", "Home");
 
         return RedirectToAction("Index", "Home");
     }

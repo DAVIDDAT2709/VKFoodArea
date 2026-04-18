@@ -4,7 +4,7 @@
     var showDashboardTopbar = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase);
     var isAdmin = User.IsInRole("Admin");
     var isRestaurantOwner = User.IsInRole("RestaurantOwner");
-    var brandController = isRestaurantOwner && !isAdmin ? "Pois" : "Home";
+    var brandController = "Home";
 
     string NavClass(string controller) =>
         string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
@@ -31,15 +31,12 @@
             </a>
 
             <nav class="app-nav" aria-label="Menu quản trị">
-                @if (isAdmin)
-                {
                 <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">
                     <span class="app-nav__icon">DB</span>
                     <span class="app-nav__content">
                         <span class="app-nav__title">Tổng quan</span>
                     </span>
                 </a>
-                }
 
                 <a class="@NavClass("Pois")" asp-controller="Pois" asp-action="Index">
                     <span class="app-nav__icon">POI</span>
@@ -112,8 +109,11 @@
                             </form>
                         }
                         <a asp-controller="Pois" asp-action="Create" class="btn btn-primary">Thêm POI</a>
-                        <a asp-controller="Tours" asp-action="Create" class="btn btn-outline-secondary">Thêm Tour</a>
-                        <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-secondary">Thêm QR</a>
+                        @if (isAdmin)
+                        {
+                            <a asp-controller="Tours" asp-action="Create" class="btn btn-outline-secondary">Thêm Tour</a>
+                            <a asp-controller="QrCodeItems" asp-action="Create" class="btn btn-outline-secondary">Thêm QR</a>
+                        }
                     </div>
                 </header>
             }

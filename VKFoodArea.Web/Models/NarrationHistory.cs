@@ -9,6 +9,11 @@ public class NarrationHistory
     public int PoiId { get; set; }
     public Poi? Poi { get; set; }
 
+    public int? TourId { get; set; }
+
+    [StringLength(120)]
+    public string TourName { get; set; } = string.Empty;
+
     [Required, StringLength(120)]
     public string PoiName { get; set; } = string.Empty;
 

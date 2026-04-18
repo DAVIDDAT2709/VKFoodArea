@@ -13,7 +13,7 @@
     <partial name="_Form" model="Model" />
 
     <div class="page-actions">
-        <button type="submit" class="btn btn-primary">SAVE POI</button>
+        <button type="submit" class="btn btn-primary">@(Model.CanEditActiveState ? "Lưu POI" : "Gửi admin duyệt")</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
     </div>
 </form>

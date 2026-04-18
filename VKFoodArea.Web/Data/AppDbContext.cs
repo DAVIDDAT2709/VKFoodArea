@@ -41,6 +41,13 @@ public class AppDbContext : DbContext
             .HasForeignKey(x => x.PoiId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<NarrationHistory>()
+            .Property(x => x.TourName)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<NarrationHistory>()
+            .HasIndex(x => x.TourId);
+
         modelBuilder.Entity<Poi>()
             .HasOne(x => x.OwnerAdminUser)
             .WithMany()
@@ -49,6 +56,17 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Poi>()
             .HasIndex(x => x.OwnerAdminUserId);
+
+        modelBuilder.Entity<Poi>()
+            .Property(x => x.ApprovalStatus)
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<Poi>()
+            .Property(x => x.ReviewNote)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<Poi>()
+            .HasIndex(x => x.ApprovalStatus);
 
         modelBuilder.Entity<AdminUser>()
             .HasIndex(x => x.Username)

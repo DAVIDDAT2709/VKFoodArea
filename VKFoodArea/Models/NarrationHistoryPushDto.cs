@@ -4,6 +4,8 @@ public class NarrationHistoryPushDto
 {
     public int PoiId { get; set; }
     public string PoiName { get; set; } = string.Empty;
+    public int? TourId { get; set; }
+    public string TourName { get; set; } = string.Empty;
     public string QrCode { get; set; } = string.Empty;
     public string UserKey { get; set; } = string.Empty;
     public string Language { get; set; } = "vi";

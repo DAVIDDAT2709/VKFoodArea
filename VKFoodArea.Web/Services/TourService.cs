@@ -135,7 +135,12 @@ public class TourService : ITourService
     {
         var tours = await BuildTourQuery()
             .AsNoTracking()
-            .Where(x => x.IsActive)
+            .Where(x =>
+                x.IsActive &&
+                x.Stops.All(stop =>
+                    stop.Poi != null &&
+                    stop.Poi.IsActive &&
+                    stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved))
             .OrderBy(x => x.Name)
             .ToListAsync();
 
@@ -146,7 +151,13 @@ public class TourService : ITourService
     {
         var tour = await BuildTourQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id && x.IsActive);
+            .FirstOrDefaultAsync(x =>
+                x.Id == id &&
+                x.IsActive &&
+                x.Stops.All(stop =>
+                    stop.Poi != null &&
+                    stop.Poi.IsActive &&
+                    stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved));
 
         return tour is null ? null : ApiDtoMapper.ToTourDto(tour);
     }
@@ -193,14 +204,19 @@ public class TourService : ITourService
         var poiLookup = await _context.Pois
             .AsNoTracking()
             .Where(x => poiIds.Contains(x.Id))
-            .Select(x => new { x.Id, x.IsActive })
+            .Select(x => new { x.Id, x.IsActive, x.ApprovalStatus })
             .ToDictionaryAsync(x => x.Id);
 
         if (poiLookup.Count != poiIds.Count)
             return ([], "Có POI trong tour không tồn tại.");
 
-        if (vm.IsActive && stopInputs.Any(x => x.PoiId.HasValue && !poiLookup[x.PoiId.Value].IsActive))
-            return ([], "Tour đang hoạt động chỉ được chứa POI đang hoạt động.");
+        if (vm.IsActive && stopInputs.Any(x =>
+                x.PoiId.HasValue &&
+                (!poiLookup[x.PoiId.Value].IsActive ||
+                 !PoiApprovalStatus.IsApproved(poiLookup[x.PoiId.Value].ApprovalStatus))))
+        {
+            return ([], "Tour đang hoạt động chỉ được chứa POI đã duyệt và đang hoạt động.");
+        }
 
         var stops = stopInputs
             .OrderBy(x => x.DisplayOrder)
@@ -261,6 +277,7 @@ public class TourService : ITourService
     {
         return await _context.Pois
             .AsNoTracking()
+            .Where(x => x.ApprovalStatus == PoiApprovalStatus.Approved)
             .OrderByDescending(x => x.IsActive)
             .ThenBy(x => x.Name)
             .Select(x => new SelectListItem

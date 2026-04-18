@@ -10,11 +10,14 @@ public interface IPoiService
     Task<PoiFormViewModel> BuildCreateFormAsync();
     Task<PoiFormViewModel> RebuildFormAsync(PoiFormViewModel vm);
     Task<List<Poi>> GetAllAsync();
+    Task<PoiIndexViewModel> GetIndexAsync(string? query, string? approvalStatus);
     Task<PoiFormViewModel?> GetEditFormAsync(int id);
     Task<Poi?> GetDeleteModelAsync(int id);
     Task<int> CreateAsync(PoiFormViewModel vm);
     Task<bool> UpdateAsync(int id, PoiFormViewModel vm);
     Task<bool> DeleteAsync(int id);
+    Task<bool> ApproveAsync(int id);
+    Task<bool> RejectAsync(int id);
 
     Task<List<PoiDto>> GetActiveForApiAsync();
     Task<PoiDto?> GetByIdForApiAsync(int id);

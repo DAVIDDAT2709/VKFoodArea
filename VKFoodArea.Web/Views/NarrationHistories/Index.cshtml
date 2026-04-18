@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Lịch sử nghe";
     var items = Model.Items;
+    var tourCount = items.Count(x => x.TriggerSource == "tour" || x.TourId.HasValue || !string.IsNullOrWhiteSpace(x.TourName));
 }
 
 <section class="page-header page-section">
@@ -27,6 +28,10 @@
         <span class="metric-card__label">QR</span>
         <strong class="metric-card__value">@Model.QrCount</strong>
     </article>
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Tour</span>
+        <strong class="metric-card__value">@tourCount</strong>
+    </article>
 </section>
 
 <section class="card-surface page-section">
@@ -36,8 +41,8 @@
 
     <form method="get" class="search-grid">
         <div class="search-grid__wide">
-            <label class="form-label" for="query">Tên quán</label>
-            <input id="query" name="query" class="form-control" value="@Model.Query" placeholder="Nhập tên quán hoặc POI" />
+            <label class="form-label" for="query">Tên quán hoặc tour</label>
+            <input id="query" name="query" class="form-control" value="@Model.Query" placeholder="Nhập tên quán, POI hoặc tour" />
         </div>
         <div>
             <label class="form-label" for="fromDate">Từ ngày</label>
@@ -71,6 +76,7 @@
             <select id="source" name="source" class="form-select">
                 <option value="">Tất cả</option>
                 <option value="gps" selected="@(Model.Source == "gps")">GPS</option>
+                <option value="tour" selected="@(Model.Source == "tour")">Tour</option>
                 <option value="qr" selected="@(Model.Source == "qr")">QR</option>
                 <option value="manual" selected="@(Model.Source == "manual")">Thủ công</option>
             </select>
@@ -151,6 +157,7 @@
                 <thead>
                     <tr>
                         <th>Quán</th>
+                        <th>Tour</th>
                         <th>Ngôn ngữ</th>
                         <th>Kiểu phát</th>
                         <th>Nguồn</th>
@@ -166,6 +173,17 @@
                         <td>
                             <div class="table-title">@item.PoiName</div>
                             <div class="table-meta">#@item.PoiId</div>
+                        </td>
+                        <td>
+                            @if (item.TourId.HasValue || !string.IsNullOrWhiteSpace(item.TourName))
+                            {
+                                <div class="table-title">@(!string.IsNullOrWhiteSpace(item.TourName) ? item.TourName : $"Tour #{item.TourId}")</div>
+                                <div class="table-meta">@(item.TourId.HasValue ? $"#{item.TourId.Value}" : "Đã lưu theo tour")</div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
                         </td>
                         <td><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
                         <td>@item.Mode.ToUpperInvariant()</td>
@@ -188,6 +206,7 @@
             "gps" => "GPS",
             "auto" => "GPS",
             "qr" => "QR",
+            "tour" => "Tour",
             "manual" => "Thủ công",
             _ => "Khác"
         };

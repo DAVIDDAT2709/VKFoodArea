@@ -42,6 +42,7 @@ public class QrResolveService : IQrResolveService
             .AsNoTracking()
             .FirstOrDefaultAsync(x =>
                 x.IsActive &&
+                x.ApprovalStatus == PoiApprovalStatus.Approved &&
                 !string.IsNullOrWhiteSpace(x.QrCode) &&
                 x.QrCode.ToLower() == normalized);
 
@@ -66,7 +67,13 @@ public class QrResolveService : IQrResolveService
         {
             var tour = await BuildTourQuery()
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == qrItem.TargetId && x.IsActive);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == qrItem.TargetId &&
+                    x.IsActive &&
+                    x.Stops.All(stop =>
+                        stop.Poi != null &&
+                        stop.Poi.IsActive &&
+                        stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved));
 
             if (tour is null)
                 return null;
@@ -83,7 +90,10 @@ public class QrResolveService : IQrResolveService
 
         var poi = await BuildPoiQuery()
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == qrItem.TargetId && x.IsActive);
+            .FirstOrDefaultAsync(x =>
+                x.Id == qrItem.TargetId &&
+                x.IsActive &&
+                x.ApprovalStatus == PoiApprovalStatus.Approved);
 
         if (poi is null)
             return null;

@@ -12,6 +12,13 @@ public class NarrationHistoryCreateApiViewModel
     [Display(Name = "Ten POI")]
     public string? PoiName { get; set; }
 
+    [Display(Name = "Tour Id")]
+    public int? TourId { get; set; }
+
+    [StringLength(120)]
+    [Display(Name = "Ten tour")]
+    public string? TourName { get; set; }
+
     [StringLength(100)]
     [Display(Name = "Ma QR")]
     public string? QrCode { get; set; }
