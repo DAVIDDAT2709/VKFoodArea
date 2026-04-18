@@ -48,7 +48,6 @@
     <div>
         <p class="section-kicker">Map Analytics</p>
         <h2>Bản đồ vận hành POI</h2>
-        <p>Quản lý vị trí POI, tuyến thiết bị và điểm nóng lượt nghe trên cùng một bản đồ.</p>
     </div>
     <div class="page-actions">
         <a asp-controller="NarrationHistories" asp-action="Index" class="btn btn-outline-secondary">Lịch sử nghe</a>
@@ -81,7 +80,6 @@
         <div class="map-panel__header">
             <div>
                 <h2>Bản đồ TP.HCM</h2>
-                <p>Tâm bản đồ được ghim tại TP.HCM, Việt Nam. Marker đỏ là POI được nghe nhiều nhất.</p>
             </div>
             <div class="map-panel__badges">
                 <span class="map-badge map-badge--poi">POI @activePois.Count</span>
@@ -189,7 +187,6 @@
         <div class="map-panel__header">
             <div>
                 <h2>Danh sách POI trên bản đồ</h2>
-                <p>Thứ tự marker trên map trùng với số trong bảng.</p>
             </div>
         </div>
         <div class="poi-table">
@@ -248,14 +245,6 @@
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
-
-        L.circleMarker(hcmcCenter, {
-            radius: 8,
-            color: "#0f766e",
-            fillColor: "#0f766e",
-            fillOpacity: 0.82,
-            weight: 3
-        }).addTo(map).bindPopup("<strong>TP.HCM, Việt Nam</strong>");
 
         pois.forEach((poi) => {
             const latLng = [poi.Latitude, poi.Longitude];
@@ -369,35 +358,7 @@
             }).addTo(map);
         }
 
-        addLegend(routePalette, routes);
-
         setTimeout(() => map.invalidateSize(), 0);
-
-        function addLegend(palette, routeItems) {
-            const legend = L.control({ position: "bottomleft" });
-            legend.onAdd = function () {
-                const container = L.DomUtil.create("div", "analytics-map__legend");
-                const routeRows = Array.isArray(routeItems)
-                    ? routeItems.slice(0, 8).map((route, index) => `
-                        <div class="analytics-map__legend-row">
-                            <span style="background:${palette[index % palette.length]}"></span>
-                            <strong>Thiết bị ${index + 1}</strong>
-                        </div>
-                    `).join("")
-                    : "";
-
-                container.innerHTML = `
-                    <div class="analytics-map__legend-title">Chú giải</div>
-                    <div class="analytics-map__legend-row"><span style="background:#0f766e"></span><strong>POI</strong></div>
-                    <div class="analytics-map__legend-row"><span style="background:#dc2626"></span><strong>POI nghe nhiều</strong></div>
-                    <div class="analytics-map__legend-row"><span style="background:linear-gradient(90deg,#60a5fa,#facc15,#dc2626)"></span><strong>Heatmap</strong></div>
-                    ${routeRows}
-                `;
-                return container;
-            };
-
-            legend.addTo(map);
-        }
 
         function normalizeHeatWeight(point, maxHeatCount) {
             const count = Number(point?.Count) || 0;

@@ -25,7 +25,8 @@ public class NarrationHistoryService : INarrationHistoryService
         DateTime? toDate,
         string? language,
         string? mode,
-        string? source)
+        string? source,
+        int page = 1)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
         var normalizedLanguage = NormalizeSimpleFilter(language);
@@ -61,6 +62,8 @@ public class NarrationHistoryService : INarrationHistoryService
                 .ToList();
         }
 
+        var pagedItems = PagedListViewModel<NarrationHistory>.Create(items, page);
+
         return new NarrationHistoryIndexViewModel
         {
             Query = normalizedQuery,
@@ -69,12 +72,18 @@ public class NarrationHistoryService : INarrationHistoryService
             Language = normalizedLanguage,
             Mode = normalizedMode,
             Source = normalizedSource,
-            Items = items,
+            Items = pagedItems.Items,
+            Page = pagedItems.Page,
+            PageSize = pagedItems.PageSize,
+            TotalItems = pagedItems.TotalItems,
             TodayCount = items.Count(x => x.PlayedAt >= WebDisplayTime.TodayStartUtc &&
                                           x.PlayedAt < WebDisplayTime.TomorrowStartUtc),
             GpsCount = items.Count(x => x.TriggerSource == "gps" || x.TriggerSource == "auto"),
             QrCount = items.Count(x => x.TriggerSource == "qr"),
             ManualCount = items.Count(x => x.TriggerSource == "manual"),
+            TourCount = items.Count(x => x.TriggerSource == "tour" ||
+                                         x.TourId.HasValue ||
+                                         !string.IsNullOrWhiteSpace(x.TourName)),
             TopPois = items
                 .GroupBy(x => new { x.PoiId, x.PoiName })
                 .Select(x => new TopPoiPerformanceViewModel

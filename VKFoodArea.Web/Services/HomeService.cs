@@ -146,7 +146,9 @@ public class HomeService : IHomeService
 
     private IQueryable<Poi> BuildPoiScope()
     {
-        var query = _context.Pois.AsNoTracking();
+        var query = _context.Pois
+            .AsNoTracking()
+            .Where(x => x.ApprovalStatus != PoiApprovalStatus.Rejected);
 
         if (_currentAdminService.IsRestaurantOwner)
         {

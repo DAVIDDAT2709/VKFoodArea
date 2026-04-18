@@ -17,9 +17,9 @@ public class PoisController : Controller
         _poiService = poiService;
     }
 
-    public async Task<IActionResult> Index(string? query, string? approvalStatus)
+    public async Task<IActionResult> Index(string? query, string? approvalStatus, int page = 1)
     {
-        var vm = await _poiService.GetIndexAsync(query, approvalStatus);
+        var vm = await _poiService.GetIndexAsync(query, approvalStatus, page);
         return View(vm);
     }
 
@@ -116,7 +116,7 @@ public class PoisController : Controller
         if (!updated)
             return NotFound();
 
-        TempData["SuccessMessage"] = "Đã phê duyệt POI và bật hiển thị trên app.";
+        TempData["SuccessMessage"] = "Điểm POI mới đã được phê duyệt.";
         return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
     }
 
@@ -129,7 +129,7 @@ public class PoisController : Controller
         if (!updated)
             return NotFound();
 
-        TempData["SuccessMessage"] = "Đã từ chối POI. Địa điểm này sẽ không hiển thị trên app.";
+        TempData["SuccessMessage"] = "Điểm POI mới đã bị từ chối.";
         return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
     }
 

@@ -4,13 +4,16 @@
 }
 
 <section class="metrics-grid page-section">
-    <article class="metric-card metric-card--green">
-        <span class="metric-card__label">Thiết bị đang hoạt động</span>
-        <strong class="metric-card__value" id="active-device-count">@Model.ActiveDeviceCount</strong>
-        <span class="metric-card__footer">
-            <span id="active-user-count">@Model.ActiveUserCount</span> người dùng online
-        </span>
-    </article>
+    @if (!Model.IsRestaurantOwnerDashboard)
+    {
+        <article class="metric-card metric-card--green">
+            <span class="metric-card__label">Thiết bị đang hoạt động</span>
+            <strong class="metric-card__value" id="active-device-count">@Model.ActiveDeviceCount</strong>
+            <span class="metric-card__footer">
+                <span id="active-user-count">@Model.ActiveUserCount</span> người dùng online
+            </span>
+        </article>
+    }
     <article class="metric-card metric-card--blue">
         <span class="metric-card__label">POI hoạt động</span>
         <strong class="metric-card__value">@Model.ActivePoiCount / @Model.PoiCount</strong>
@@ -19,10 +22,13 @@
         <span class="metric-card__label">POI chờ duyệt</span>
         <strong class="metric-card__value">@Model.PendingPoiCount</strong>
     </article>
-    <article class="metric-card metric-card--green">
-        <span class="metric-card__label">Mã QR đang bật</span>
-        <strong class="metric-card__value">@Model.ActiveQrCount</strong>
-    </article>
+    @if (!Model.IsRestaurantOwnerDashboard)
+    {
+        <article class="metric-card metric-card--green">
+            <span class="metric-card__label">Mã QR đang bật</span>
+            <strong class="metric-card__value">@Model.ActiveQrCount</strong>
+        </article>
+    }
     <article class="metric-card metric-card--orange">
         <span class="metric-card__label">Lượt nghe hôm nay</span>
         <strong class="metric-card__value">@Model.TodayNarrationCount</strong>
@@ -31,10 +37,13 @@
         <span class="metric-card__label">Ngôn ngữ</span>
         <strong class="metric-card__value">@Model.ConfiguredLanguageCount</strong>
     </article>
-    <article class="metric-card metric-card--blue">
-        <span class="metric-card__label">Tour hoạt động</span>
-        <strong class="metric-card__value">@Model.ActiveTourCount</strong>
-    </article>
+    @if (!Model.IsRestaurantOwnerDashboard)
+    {
+        <article class="metric-card metric-card--blue">
+            <span class="metric-card__label">Tour hoạt động</span>
+            <strong class="metric-card__value">@Model.ActiveTourCount</strong>
+        </article>
+    }
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Tổng lượt nghe</span>
         <strong class="metric-card__value">@Model.NarrationHistoryCount</strong>
@@ -52,17 +61,16 @@
                 <span>POI</span>
                 <strong>@Model.PoiCount</strong>
             </div>
-            <div class="summary-row">
-                <span>Mã QR đang bật</span>
-                <strong>@Model.ActiveQrCount</strong>
-            </div>
+            @if (!Model.IsRestaurantOwnerDashboard)
+            {
+                <div class="summary-row">
+                    <span>Mã QR đang bật</span>
+                    <strong>@Model.ActiveQrCount</strong>
+                </div>
+            }
             <div class="summary-row">
                 <span>Nguồn phát sinh</span>
                 <strong>@Model.GpsNarrationCount / @Model.QrNarrationCount / @Model.TourNarrationCount / @Model.ManualNarrationCount</strong>
-            </div>
-            <div class="summary-row">
-                <span>POI bị từ chối</span>
-                <strong>@Model.RejectedPoiCount</strong>
             </div>
         </div>
     </article>
@@ -168,38 +176,42 @@
         </div>
     }
 </section>
-<section class="card-surface page-section">
-    <div class="section-heading">
-        <h2>Thiết bị online realtime</h2>
-        <span class="soft-pill">Timeout @Model.DeviceTimeoutSeconds giây</span>
-    </div>
+@if (!Model.IsRestaurantOwnerDashboard)
+{
+    <section class="card-surface page-section">
+        <div class="section-heading">
+            <h2>Thiết bị online realtime</h2>
+        </div>
 
-    <div class="list-stack" id="active-device-list">
-        @if (!Model.ActiveDevices.Any())
-        {
-            <div class="empty-state">
-                <p>Chưa có thiết bị online.</p>
-            </div>
-        }
-        else
-        {
-            @foreach (var item in Model.ActiveDevices)
+        <div class="list-stack" id="active-device-list">
+            @if (!Model.ActiveDevices.Any())
             {
-                <div class="list-row">
-                    <div class="list-row__content">
-                        <strong>@(string.IsNullOrWhiteSpace(item.FullName) ? item.DeviceName : item.FullName)</strong>
-                        <p>@item.Platform · @item.DeviceName · v@item.AppVersion</p>
-                    </div>
-                    <span class="status-pill status-pill--info">
-                        @WebDisplayTime.Format(item.LastHeartbeatAt, "dd/MM HH:mm:ss")
-                    </span>
+                <div class="empty-state">
+                    <p>Chưa có thiết bị online.</p>
                 </div>
             }
-        }
-    </div>
-</section>
+            else
+            {
+                @foreach (var item in Model.ActiveDevices)
+                {
+                    <div class="list-row">
+                        <div class="list-row__content">
+                            <strong>@(string.IsNullOrWhiteSpace(item.FullName) ? item.DeviceName : item.FullName)</strong>
+                            <p>@item.Platform · @item.DeviceName · v@item.AppVersion</p>
+                        </div>
+                        <span class="status-pill status-pill--info">
+                            @WebDisplayTime.Format(item.LastHeartbeatAt, "dd/MM HH:mm:ss")
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+}
 @section Scripts {
-    <script>
+    @if (!Model.IsRestaurantOwnerDashboard)
+    {
+        <script>
         const activeDeviceCountEl = document.getElementById('active-device-count');
         const activeUserCountEl = document.getElementById('active-user-count');
         const activeDeviceListEl = document.getElementById('active-device-list');
@@ -254,7 +266,8 @@
 
         refreshActiveDevices();
         setInterval(refreshActiveDevices, 5000);
-    </script>
+        </script>
+    }
 }
 
 @functions {

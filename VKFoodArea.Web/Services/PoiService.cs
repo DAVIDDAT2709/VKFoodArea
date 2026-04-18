@@ -73,7 +73,7 @@ public class PoiService : IPoiService
             .ToListAsync();
     }
 
-    public async Task<PoiIndexViewModel> GetIndexAsync(string? query, string? approvalStatus)
+    public async Task<PoiIndexViewModel> GetIndexAsync(string? query, string? approvalStatus, int page = 1)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
         var normalizedApprovalStatus = NormalizeApprovalStatusFilter(approvalStatus);
@@ -84,6 +84,10 @@ public class PoiService : IPoiService
             .ThenByDescending(x => x.Priority)
             .ThenBy(x => x.Name)
             .ToListAsync();
+
+        accessiblePois = accessiblePois
+            .Where(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) != PoiApprovalStatus.Rejected)
+            .ToList();
 
         var filteredPois = accessiblePois;
 
@@ -101,16 +105,21 @@ public class PoiService : IPoiService
                 .ToList();
         }
 
+        var pagedPois = PagedListViewModel<Poi>.Create(filteredPois, page);
+
         return new PoiIndexViewModel
         {
             Query = normalizedQuery,
             ApprovalStatus = normalizedApprovalStatus,
             IsAdmin = _currentAdminService.IsAdmin,
-            Items = filteredPois,
+            Items = pagedPois.Items,
+            Page = pagedPois.Page,
+            PageSize = pagedPois.PageSize,
+            TotalItems = pagedPois.TotalItems,
             TotalCount = accessiblePois.Count,
             ActiveCount = accessiblePois.Count(x => x.IsActive && PoiApprovalStatus.IsApproved(x.ApprovalStatus)),
             PendingCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Pending),
-            RejectedCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Rejected),
+            RejectedCount = 0,
             ApprovedCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Approved)
         };
     }
@@ -217,12 +226,7 @@ public class PoiService : IPoiService
         if (poi is null)
             return false;
 
-        poi.ApprovalStatus = PoiApprovalStatus.Rejected;
-        poi.IsActive = false;
-        poi.ReviewedAt = DateTime.UtcNow;
-        poi.ReviewedByAdminUserId = _currentAdminService.UserId;
-        poi.ReviewNote = "Admin từ chối POI.";
-
+        _context.Pois.Remove(poi);
         await _context.SaveChangesAsync();
         return true;
     }
@@ -607,8 +611,7 @@ public class PoiService : IPoiService
     {
         var normalized = (status ?? string.Empty).Trim();
         return normalized.Equals(PoiApprovalStatus.Pending, StringComparison.OrdinalIgnoreCase) ||
-               normalized.Equals(PoiApprovalStatus.Approved, StringComparison.OrdinalIgnoreCase) ||
-               normalized.Equals(PoiApprovalStatus.Rejected, StringComparison.OrdinalIgnoreCase)
+               normalized.Equals(PoiApprovalStatus.Approved, StringComparison.OrdinalIgnoreCase)
             ? PoiApprovalStatus.Normalize(normalized)
             : string.Empty;
     }

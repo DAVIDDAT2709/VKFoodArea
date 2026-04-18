@@ -38,7 +38,6 @@
                 <label asp-for="ImageFile" class="form-label"></label>
                 <input asp-for="ImageFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
                 <span asp-validation-for="ImageFile" class="text-danger"></span>
-                <div class="form-text">Ảnh sẽ được lưu trên web và dùng lại cho app.</div>
             </div>
             @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
             {
@@ -64,12 +63,12 @@
         <div class="row g-3">
             <div class="col-md-3">
                 <label asp-for="Latitude" class="form-label"></label>
-                <input asp-for="Latitude" class="form-control" step="any" placeholder="10.760000" />
+                <input asp-for="Latitude" type="number" inputmode="decimal" class="form-control" step="0.000001" asp-format="{0:0.######}" placeholder="10.760000" />
                 <span asp-validation-for="Latitude" class="text-danger"></span>
             </div>
             <div class="col-md-3">
                 <label asp-for="Longitude" class="form-label"></label>
-                <input asp-for="Longitude" class="form-control" step="any" placeholder="106.700000" />
+                <input asp-for="Longitude" type="number" inputmode="decimal" class="form-control" step="0.000001" asp-format="{0:0.######}" placeholder="106.700000" />
                 <span asp-validation-for="Longitude" class="text-danger"></span>
             </div>
             <div class="col-md-3">
@@ -94,7 +93,6 @@
                 {
                     <div class="field-switch">
                         <span class="status-pill status-pill--info">@VKFoodArea.Web.Models.PoiApprovalStatus.DisplayName(Model.ApprovalStatus)</span>
-                        <div class="form-text">POI do chủ cửa hàng thêm cần admin phê duyệt trước khi hiển thị trên app.</div>
                     </div>
                 }
             </div>
@@ -104,7 +102,6 @@
                     <label asp-for="OwnerAdminUserId" class="form-label"></label>
                     <select asp-for="OwnerAdminUserId" asp-items="Model.OwnerOptions" class="form-select"></select>
                     <span asp-validation-for="OwnerAdminUserId" class="text-danger"></span>
-                    <div class="form-text">Chủ nhà hàng chỉ xem và chỉnh sửa POI được gán cho tài khoản của họ.</div>
                 </div>
             }
         </div>
@@ -204,9 +201,7 @@
         return new Microsoft.AspNetCore.Html.HtmlString(
             $"""
             <div class="audio-current">
-                <div class="form-text">Tệp hiện tại</div>
                 <audio controls preload="none" src="{source}"></audio>
-                <div class="small text-muted mono">{encoded}</div>
             </div>
             """);
     }
