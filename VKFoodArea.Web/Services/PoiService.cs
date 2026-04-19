@@ -77,6 +77,7 @@ public class PoiService : IPoiService
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
         var normalizedApprovalStatus = NormalizeApprovalStatusFilter(approvalStatus);
+
         var accessiblePois = await ApplyAccessFilter(_context.Pois)
             .AsNoTracking()
             .Include(x => x.OwnerAdminUser)
@@ -128,6 +129,7 @@ public class PoiService : IPoiService
     {
         var poi = await ApplyAccessFilter(BuildPoiContentQuery())
             .FirstOrDefaultAsync(x => x.Id == id);
+
         if (poi is null)
             return null;
 
@@ -167,6 +169,7 @@ public class PoiService : IPoiService
             .Include(x => x.Translations)
             .Include(x => x.AudioAssets)
             .FirstOrDefaultAsync(x => x.Id == id);
+
         if (poi is null)
             return false;
 
@@ -181,8 +184,8 @@ public class PoiService : IPoiService
         ApplyOwner(vm, poi, isNew: false);
         ApplyApprovalForUpdate(poi, originalApprovalStatus, originalIsActive);
         SyncContentCollections(poi, vm);
-        await _context.SaveChangesAsync();
 
+        await _context.SaveChangesAsync();
         return true;
     }
 
@@ -190,6 +193,7 @@ public class PoiService : IPoiService
     {
         var poi = await ApplyAccessFilter(_context.Pois)
             .FirstOrDefaultAsync(x => x.Id == id);
+
         if (poi is null)
             return false;
 
@@ -271,15 +275,23 @@ public class PoiService : IPoiService
         var minLongitude = longitude.Value - coordinateTolerance;
         var maxLongitude = longitude.Value + coordinateTolerance;
 
-        var hasDuplicate = await _context.Pois
+        var candidatePois = await _context.Pois
             .AsNoTracking()
-            .AnyAsync(x =>
+            .Where(x =>
                 (!currentPoiId.HasValue || x.Id != currentPoiId.Value) &&
-                PoiApprovalStatus.Normalize(x.ApprovalStatus) != PoiApprovalStatus.Rejected &&
                 x.Latitude >= minLatitude &&
                 x.Latitude <= maxLatitude &&
                 x.Longitude >= minLongitude &&
-                x.Longitude <= maxLongitude);
+                x.Longitude <= maxLongitude)
+            .Select(x => new
+            {
+                x.Id,
+                x.ApprovalStatus
+            })
+            .ToListAsync();
+
+        var hasDuplicate = candidatePois.Any(x =>
+            PoiApprovalStatus.Normalize(x.ApprovalStatus) != PoiApprovalStatus.Rejected);
 
         return hasDuplicate
             ? "Tọa độ này đã được dùng cho một POI khác."
