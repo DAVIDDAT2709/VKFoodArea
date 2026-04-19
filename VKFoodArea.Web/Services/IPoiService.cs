@@ -9,6 +9,7 @@ public interface IPoiService
 {
     Task<PoiFormViewModel> BuildCreateFormAsync();
     Task<PoiFormViewModel> RebuildFormAsync(PoiFormViewModel vm);
+    Task PreserveUploadsForRetryAsync(PoiFormViewModel vm);
     Task<List<Poi>> GetAllAsync();
     Task<PoiIndexViewModel> GetIndexAsync(string? query, string? approvalStatus, int page = 1);
     Task<PoiFormViewModel?> GetEditFormAsync(int id);

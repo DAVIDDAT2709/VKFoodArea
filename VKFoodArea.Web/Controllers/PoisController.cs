@@ -41,6 +41,7 @@ public class PoisController : Controller
 
         if (!ModelState.IsValid)
         {
+            await _poiService.PreserveUploadsForRetryAsync(vm);
             vm = await _poiService.RebuildFormAsync(vm);
             return View(vm);
         }
@@ -78,6 +79,7 @@ public class PoisController : Controller
 
         if (!ModelState.IsValid)
         {
+            await _poiService.PreserveUploadsForRetryAsync(vm);
             vm = await _poiService.RebuildFormAsync(vm);
             return View(vm);
         }

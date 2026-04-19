@@ -63,6 +63,12 @@ public class PoiService : IPoiService
         return vm;
     }
 
+    public async Task PreserveUploadsForRetryAsync(PoiFormViewModel vm)
+    {
+        await PopulateStoredImageAsync(vm);
+        await PopulateStoredAudioAsync(vm);
+    }
+
     public async Task<List<Poi>> GetAllAsync()
     {
         return await ApplyAccessFilter(_context.Pois)
