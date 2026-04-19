@@ -81,6 +81,8 @@ public sealed partial class AppTextService
             ["Status.SyncSummarySuccess"] = "Web: synced {0} POIs",
             ["Status.SyncSummaryFallback"] = "Web failed, using {0} local POIs",
             ["Status.SyncSummaryFallbackWithError"] = "Web failed, using {0} local POIs ({1})",
+            ["Status.WebSetupMissing"] = "Web data is not connected on this device. Using {0} local POIs.",
+            ["Status.SyncSummaryNoWeb"] = "Web is not connected, using {0} local POIs",
             ["Map.PageTitle"] = "Explore map",
             ["Map.InfoNoPermission"] = "Location permission not granted.",
             ["Map.InfoGpsUnsupported"] = "This device does not support GPS.",

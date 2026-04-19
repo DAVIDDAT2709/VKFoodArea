@@ -43,7 +43,10 @@ public partial class HistoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
+            await DisplayAlertAsync(
+                _text["History.LoadErrorTitle"],
+                FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.History),
+                _text["Common.Ok"]);
         }
     }
 
@@ -105,7 +108,10 @@ public partial class HistoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync(_text["History.LoadErrorTitle"], ex.Message, _text["Common.Ok"]);
+            await DisplayAlertAsync(
+                _text["History.LoadErrorTitle"],
+                FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.History),
+                _text["Common.Ok"]);
         }
     }
 

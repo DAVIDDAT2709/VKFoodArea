@@ -35,7 +35,9 @@ public class AppUserSyncService
                 IsActive = user.IsActive
             };
 
-            var url = $"{_apiBaseUrlService.BaseUrl}api/app-users/sync";
+            if (!_apiBaseUrlService.TryBuildApiUrl("api/app-users/sync", out var url))
+                return;
+
             using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
             response.EnsureSuccessStatusCode();
         }
@@ -53,7 +55,13 @@ public class AppUserSyncService
 
         try
         {
-            var url = $"{_apiBaseUrlService.BaseUrl}api/app-users/status?userKey={Uri.EscapeDataString(normalizedUserKey)}";
+            if (!_apiBaseUrlService.TryBuildApiUrl(
+                    $"api/app-users/status?userKey={Uri.EscapeDataString(normalizedUserKey)}",
+                    out var url))
+            {
+                return null;
+            }
+
             return await _httpClient.GetFromJsonAsync<AppUserStatusDto>(url, ct);
         }
         catch (Exception ex)

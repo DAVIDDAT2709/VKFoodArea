@@ -10,6 +10,8 @@ namespace VKFoodArea.Features.Home;
 
 public partial class QrScannerPage : ContentPage
 {
+    private static readonly TimeSpan DemoUnlockHoldDuration = TimeSpan.FromSeconds(5);
+
     private readonly QrLookupService _qrLookupService;
     private readonly PoiRepository _poiRepository;
     private readonly NarrationService _narrationService;
@@ -21,6 +23,8 @@ public partial class QrScannerPage : ContentPage
 
     private bool _isHandlingResult;
     private bool _isTorchOn;
+    private bool _showDemoOptions;
+    private CancellationTokenSource? _demoUnlockHoldCts;
 
     public QrScannerPage(
         QrLookupService qrLookupService,
@@ -83,6 +87,7 @@ public partial class QrScannerPage : ContentPage
     {
         base.OnDisappearing();
         QrReader.IsDetecting = false;
+        CancelDemoUnlockHold();
     }
 
     private async void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
@@ -91,6 +96,9 @@ public partial class QrScannerPage : ContentPage
             return;
 
         var rawValue = e.Results?.FirstOrDefault()?.Value?.Trim();
+        if (Uri.TryCreate(rawValue, UriKind.Absolute, out var rawUri))
+            _apiBaseUrlService.TryCaptureBaseUrlFromUri(rawUri);
+
         var value = QrCodePayload.Normalize(rawValue);
 
         if (string.IsNullOrWhiteSpace(value))
@@ -139,7 +147,7 @@ public partial class QrScannerPage : ContentPage
             var retry = await MainThread.InvokeOnMainThreadAsync(() =>
                 DisplayAlertAsync(
                     _text["Qr.ConnectionErrorTitle"],
-                    ex.Message,
+                    FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.QrScan),
                     _text["Common.Again"],
                     _text["Common.Close"]));
 
@@ -220,12 +228,15 @@ public partial class QrScannerPage : ContentPage
         TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
     }
 
-    private async void OnApiClicked(object sender, EventArgs e)
+    private async void OnDemoEndpointClicked(object sender, EventArgs e)
     {
+        if (!_showDemoOptions)
+            return;
+
         var value = await DisplayPromptAsync(
-            "API demo",
-            "Nhap URL ngrok cua Web, bo trong de ve mac dinh.",
-            "Luu",
+            "Web",
+            "Nhập địa chỉ web. Để trống để quay lại địa chỉ hiện có.",
+            "Lưu",
             _text["Common.Close"],
             initialValue: _apiBaseUrlService.BaseUrl,
             keyboard: Keyboard.Url);
@@ -236,7 +247,7 @@ public partial class QrScannerPage : ContentPage
         var result = _apiBaseUrlService.SaveDemoBaseUrl(value);
         ApplyLocalizedText();
         await DisplayAlertAsync(
-            result.Success ? "API demo" : _text["Common.Error"],
+            result.Success ? "Web" : _text["Common.Error"],
             result.Message,
             _text["Common.Ok"]);
     }
@@ -244,6 +255,73 @@ public partial class QrScannerPage : ContentPage
     private async void OnCloseClicked(object sender, EventArgs e)
     {
         await Navigation.PopAsync();
+    }
+
+    private void OnDemoUnlockPressed(object sender, EventArgs e)
+    {
+        if (!_apiBaseUrlService.CanUseDemoTools)
+            return;
+
+        CancelDemoUnlockHold();
+        _demoUnlockHoldCts = new CancellationTokenSource();
+        _ = WaitForDemoUnlockAsync(_demoUnlockHoldCts);
+    }
+
+    private void OnDemoUnlockReleased(object sender, EventArgs e)
+    {
+        CancelDemoUnlockHold();
+    }
+
+    private async Task WaitForDemoUnlockAsync(CancellationTokenSource holdCts)
+    {
+        try
+        {
+            await Task.Delay(DemoUnlockHoldDuration, holdCts.Token);
+
+            if (!ReferenceEquals(_demoUnlockHoldCts, holdCts))
+                return;
+
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                _showDemoOptions = !_showDemoOptions;
+                ApplyLocalizedText();
+
+                var message = _showDemoOptions
+                    ? GetDemoModeEnabledMessage()
+                    : GetDemoModeDisabledMessage();
+
+                await DisplayAlertAsync("Tùy chọn", message, _text["Common.Ok"]);
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            if (ReferenceEquals(_demoUnlockHoldCts, holdCts))
+            {
+                _demoUnlockHoldCts.Dispose();
+                _demoUnlockHoldCts = null;
+            }
+            else
+            {
+                holdCts.Dispose();
+            }
+        }
+    }
+
+    private void CancelDemoUnlockHold()
+    {
+        if (_demoUnlockHoldCts is null)
+            return;
+
+        try
+        {
+            _demoUnlockHoldCts.Cancel();
+        }
+        catch
+        {
+        }
     }
 
     private static QrResolveResult? BuildLocalPoiFallback(string qrCode, Poi? localPoi)
@@ -331,10 +409,61 @@ public partial class QrScannerPage : ContentPage
     {
         Title = _text["Qr.PageTitle"];
         ScannerTitleLabel.Text = _text["Qr.HeaderTitle"];
-        ScannerSupportLabel.Text =
-    $"Quet QR tai diem dung de nghe thuyet minh ngay.\nAPI: {_apiBaseUrlService.BaseUrl}";
+        ScannerSupportLabel.Text = BuildScannerSupportText();
         ScannerHintLabel.Text = _text["Qr.Hint"];
         TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
         CloseButton.Text = _text["Common.Close"];
+        DemoEndpointButton.Text = "Web";
+        DemoEndpointButton.IsVisible = _apiBaseUrlService.CanUseDemoTools && _showDemoOptions;
+    }
+
+    private string BuildScannerSupportText()
+    {
+        var supportText = _text.CurrentLanguage switch
+        {
+            "en" => "Scan the code at each stop to open the place and start narration right away.",
+            "zh" => "扫描每个站点的二维码，立即打开地点并开始讲解。",
+            "ja" => "各スポットのQRコードを読み取ると、その場で案内を開いて再生できます。",
+            "de" => "Scannen Sie den Code am jeweiligen Stopp, um den Ort zu öffnen und die Audioführung sofort zu starten.",
+            _ => "Quét mã tại mỗi điểm dừng để mở quán và nghe thuyết minh ngay."
+        };
+
+        if (!_apiBaseUrlService.CanUseDemoTools || !_showDemoOptions)
+            return supportText;
+
+        var demoText = _text.CurrentLanguage switch
+        {
+            "en" => "Web options are available here.",
+            "zh" => "此处可使用网页选项。",
+            "ja" => "ここでは Web オプションを利用できます。",
+            "de" => "Hier sind Web-Optionen verfügbar.",
+            _ => "Đã mở mục Web."
+        };
+
+        return $"{supportText}\n{demoText}";
+    }
+
+    private string GetDemoModeEnabledMessage()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "Web options are now available.",
+            "zh" => "网页选项现已可用。",
+            "ja" => "Web オプションを利用できるようになりました。",
+            "de" => "Web-Optionen sind jetzt verfügbar.",
+            _ => "Đã mở mục Web."
+        };
+    }
+
+    private string GetDemoModeDisabledMessage()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "Web options are hidden again.",
+            "zh" => "网页选项已再次隐藏。",
+            "ja" => "Web オプションを再び非表示にしました。",
+            "de" => "Web-Optionen wurden wieder ausgeblendet.",
+            _ => "Đã ẩn mục Web."
+        };
     }
 }

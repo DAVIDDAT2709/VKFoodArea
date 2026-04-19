@@ -254,7 +254,6 @@ public class HomeViewModel : INotifyPropertyChanged
             OnPropertyChanged();
             OnPropertyChanged(nameof(MiniPlayerActionGlyph));
             OnPropertyChanged(nameof(MiniPlayerStatusText));
-            OnPropertyChanged(nameof(MiniPlayerProgress));
             OnPropertyChanged(nameof(MiniPlayerStateTag));
             OnPropertyChanged(nameof(MiniPlayerHintText));
         }
@@ -265,8 +264,6 @@ public class HomeViewModel : INotifyPropertyChanged
     public string MiniPlayerStatusText => IsNarrationPlaying
         ? _text["Home.NarrationStatusPlaying"]
         : _text["Home.NarrationStatusReady"];
-
-    public double MiniPlayerProgress => IsNarrationPlaying ? 0.76 : 0.10;
 
     public string MiniPlayerStateTag => IsNarrationPlaying
         ? _text["Home.NarrationTagLive"]
@@ -305,7 +302,10 @@ public class HomeViewModel : INotifyPropertyChanged
         var activePoiCount = _poiRuntimeService.GetSnapshot().Pois.Count;
 
         if (syncResult is not null)
+        {
             _syncSummary = BuildSyncSummary(syncResult, activePoiCount);
+            detail ??= BuildSyncDetail(syncResult, activePoiCount);
+        }
 
         await SyncFromRuntimeStateAsync(
             detail,
@@ -641,9 +641,7 @@ public class HomeViewModel : INotifyPropertyChanged
             _syncSummary = BuildSyncSummary(syncResult, activePoiCount);
 
             await SyncFromRuntimeStateAsync(
-                syncResult.Success
-                    ? _text.Format("Status.SyncCompleted", activePoiCount)
-                    : _text.Format("Status.SyncFailed", activePoiCount),
+                BuildSyncDetail(syncResult, activePoiCount),
                 refreshSearch: !string.IsNullOrWhiteSpace(_currentSearchKeyword));
         }
         finally
@@ -652,15 +650,25 @@ public class HomeViewModel : INotifyPropertyChanged
         }
     }
 
+    private string BuildSyncDetail(PoiSyncService.PoiSyncResult syncResult, int activePoiCount)
+    {
+        if (syncResult.Success)
+            return _text.Format("Status.SyncCompleted", activePoiCount);
+
+        return syncResult.IsEndpointUnavailable
+            ? _text.Format("Status.WebSetupMissing", activePoiCount)
+            : _text.Format("Status.SyncFailed", activePoiCount);
+    }
+
     private string BuildSyncSummary(PoiSyncService.PoiSyncResult syncResult, int activePoiCount)
     {
         if (syncResult.Success)
             return _text.Format("Status.SyncSummarySuccess", syncResult.RemoteCount);
 
-        if (string.IsNullOrWhiteSpace(syncResult.ErrorMessage))
-            return _text.Format("Status.SyncSummaryFallback", activePoiCount);
+        if (syncResult.IsEndpointUnavailable)
+            return _text.Format("Status.SyncSummaryNoWeb", activePoiCount);
 
-        return _text.Format("Status.SyncSummaryFallbackWithError", activePoiCount, syncResult.ErrorMessage);
+        return _text.Format("Status.SyncSummaryFallback", activePoiCount);
     }
 
     private static List<Poi> OrderPoisForDisplay(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)

@@ -124,11 +124,7 @@ public partial class HomeDesignPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(async () =>
         {
-            var detail = e.Result.Success
-                ? _text.Format("Status.SyncCompleted", e.Result.RemoteCount)
-                : _text["Status.UsingLocalData"];
-
-            await _viewModel.RefreshVisiblePoisAsync(e.Result, detail);
+            await _viewModel.RefreshVisiblePoisAsync(e.Result);
             await RefreshPoiDataAsync();
         });
     }

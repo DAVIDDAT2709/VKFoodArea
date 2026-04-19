@@ -35,7 +35,9 @@ public class MovementLogSyncService
                 RecordedAt = DateTime.UtcNow
             };
 
-            var url = $"{_apiBaseUrlService.BaseUrl}api/movement-logs";
+            if (!_apiBaseUrlService.TryBuildApiUrl("api/movement-logs", out var url))
+                return;
+
             using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
             response.EnsureSuccessStatusCode();
         }

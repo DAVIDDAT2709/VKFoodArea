@@ -17,6 +17,9 @@
                         StrokeThickness="1"
                         Padding="10"
                         StrokeShape="RoundRectangle 8">
+                        <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDeveloperHeaderTapped"/>
+                        </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="Auto,*,Auto"
                               ColumnSpacing="12">
                                 <Button Text="←"
@@ -47,9 +50,9 @@
                                         <HorizontalStackLayout Margin="0,6,0,0"
                                                                Spacing="8">
                                                 <Button x:Name="DemoMenuButton"
-                                                        Text="Demo"
+                                                        Text="Mẫu"
                                                         Clicked="OnDemoMenuClicked"
-                                                        IsVisible="True"
+                                                        IsVisible="False"
                                                         HeightRequest="30"
                                                         Padding="14,0"
                                                         CornerRadius="8"
@@ -59,7 +62,7 @@
                                                         FontAttributes="Bold"/>
 
                                                 <Button x:Name="RealGpsButton"
-                                                        Text="GPS thật"
+                                                        Text="GPS"
                                                         Clicked="OnRealGpsClicked"
                                                         IsVisible="False"
                                                         HeightRequest="30"
@@ -463,13 +466,17 @@
                                                      Grid.Column="2"
                                                      Grid.ColumnSpan="2"
                                                      Spacing="6">
-                                        <ProgressBar Progress="{Binding MiniPlayerProgress}"
-                                                     HeightRequest="4"
-                                                     BackgroundColor="#DCE6E2"
-                                                     ProgressColor="#1F6F64"/>
-                                        <Label Text="{Binding MiniPlayerHintText}"
-                                               FontSize="10"
-                                               TextColor="#617A74"/>
+                                        <HorizontalStackLayout Spacing="8">
+                                                <ActivityIndicator IsRunning="{Binding IsNarrationPlaying}"
+                                                                   IsVisible="{Binding IsNarrationPlaying}"
+                                                                   Color="#1F6F64"
+                                                                   WidthRequest="14"
+                                                                   HeightRequest="14"/>
+                                                <Label Text="{Binding MiniPlayerHintText}"
+                                                       FontSize="10"
+                                                       TextColor="#617A74"
+                                                       VerticalTextAlignment="Center"/>
+                                        </HorizontalStackLayout>
                                 </VerticalStackLayout>
                         </Grid>
                 </Border>

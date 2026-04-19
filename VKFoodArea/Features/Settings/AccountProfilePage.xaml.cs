@@ -62,7 +62,7 @@ public partial class AccountProfilePage : ContentPage
         {
             await DisplayAlertAsync(
                 _text["Settings.PreviewErrorTitle"],
-                _text.Format("Settings.PreviewErrorMessage", ex.Message),
+                FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.Preview),
                 _text["Common.Ok"]);
         }
     }
@@ -77,7 +77,7 @@ public partial class AccountProfilePage : ContentPage
     {
         Title = _text["User.AccountInfo"];
         HeaderTitleLabel.Text = _text["User.AccountInfo"];
-        HeaderSubtitleLabel.Text = _text["User.QuickActions"];
+        HeaderSubtitleLabel.Text = GetHeaderSubtitleText();
         ProfileSectionLabel.Text = _text["User.AccountInfo"];
         UsernameLabel.Text = _text["User.Username"];
         FullNameLabel.Text = _text["Register.FullName"];
@@ -107,5 +107,17 @@ public partial class AccountProfilePage : ContentPage
         _viewModel.SelectedLanguage = LanguagePicker.SelectedItem as AccountSettingsViewModel.LanguageOption
                                       ?? _viewModel.LanguageOptions.First();
         _viewModel.SelectedOutputMode = ModePicker.SelectedItem?.ToString() ?? "TTS";
+    }
+
+    private string GetHeaderSubtitleText()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "Profile details stay with your account. Narration language and mode can be adjusted here.",
+            "zh" => "资料会跟随当前账号保存，讲解语言与播放方式也可以在这里调整。",
+            "ja" => "プロフィール情報は現在のアカウントに保存され、音声ガイドの言語と再生方法もここで調整できます。",
+            "de" => "Ihre Profildaten bleiben mit diesem Konto verknüpft. Sprache und Wiedergabe der Audioführung können hier angepasst werden.",
+            _ => "Thông tin hồ sơ sẽ đi cùng tài khoản hiện tại. Bạn cũng có thể chỉnh ngôn ngữ và cách phát thuyết minh ở đây."
+        };
     }
 }

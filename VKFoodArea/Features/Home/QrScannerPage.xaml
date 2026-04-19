@@ -19,16 +19,45 @@
                 BackgroundColor="#8A071112"
                 StrokeThickness="0"
                 StrokeShape="RoundRectangle 24">
-            <VerticalStackLayout Spacing="4">
-                <Label x:Name="ScannerTitleLabel"
-                       FontSize="24"
-                       FontAttributes="Bold"
-                       FontFamily="OpenSansSemibold"
-                       TextColor="White" />
-                <Label x:Name="ScannerSupportLabel"
-                       FontSize="13"
-                       TextColor="#E5F5F2" />
-            </VerticalStackLayout>
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="12">
+                <Grid WidthRequest="42"
+                      HeightRequest="42">
+                    <Border BackgroundColor="#E8FFFA"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14">
+                        <Label Text="VK"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontAttributes="Bold"
+                               FontSize="14"
+                               TextColor="#129488" />
+                    </Border>
+
+                    <Button BackgroundColor="Transparent"
+                            BorderWidth="0"
+                            CornerRadius="14"
+                            FontSize="1"
+                            Opacity="0.01"
+                            Padding="0"
+                            Pressed="OnDemoUnlockPressed"
+                            Released="OnDemoUnlockReleased"
+                            Text=""
+                            TextColor="Transparent" />
+                </Grid>
+
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="4">
+                    <Label x:Name="ScannerTitleLabel"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           FontFamily="OpenSansSemibold"
+                           TextColor="White" />
+                    <Label x:Name="ScannerSupportLabel"
+                           FontSize="13"
+                           TextColor="#E5F5F2" />
+                </VerticalStackLayout>
+            </Grid>
         </Border>
 
         <Grid Grid.Row="1"
@@ -64,10 +93,11 @@
                    VerticalOptions="Center"
                    FontSize="14" />
 
-            <Button x:Name="ApiButton"
+            <Button x:Name="DemoEndpointButton"
                     Grid.Column="1"
-                    Text="API"
-                    Clicked="OnApiClicked"
+                    Text="Web"
+                    Clicked="OnDemoEndpointClicked"
+                    IsVisible="False"
                     BackgroundColor="#0F766E"
                     TextColor="White"
                     CornerRadius="12" />

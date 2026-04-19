@@ -65,7 +65,7 @@ public partial class SettingsPage : ContentPage
         {
             await DisplayAlertAsync(
                 _text["Settings.PreviewErrorTitle"],
-                _text.Format("Settings.PreviewErrorMessage", ex.Message),
+                FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.Preview),
                 _text["Common.Ok"]);
         }
     }
@@ -80,7 +80,7 @@ public partial class SettingsPage : ContentPage
     {
         Title = _text["Settings.PageTitle"];
         HeaderTitleLabel.Text = _text["Settings.PageTitle"];
-        HeaderSubtitleLabel.Text = _text["Settings.HeaderTitle"];
+        HeaderSubtitleLabel.Text = GetHeaderSubtitleText();
         LanguageSectionLabel.Text = _text["Settings.LanguageSection"];
         ModeSectionLabel.Text = _text["Settings.ModeSection"];
         PreviewTitleLabel.Text = _text["Settings.PreviewTitle"];
@@ -104,5 +104,17 @@ public partial class SettingsPage : ContentPage
         _viewModel.SelectedLanguage = LanguagePicker.SelectedItem as SoundSettingsViewModel.LanguageOption
                                       ?? _viewModel.LanguageOptions.First();
         _viewModel.SelectedOutputMode = ModePicker.SelectedItem?.ToString() ?? "TTS";
+    }
+
+    private string GetHeaderSubtitleText()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "This page changes narration language and playback mode only. App interface language is changed from the app entry flow.",
+            "zh" => "这里仅调整讲解语言与播放方式。界面语言请在进入应用时修改。",
+            "ja" => "ここでは音声ガイドの言語と再生方法だけを変更します。画面言語はアプリ開始時の設定から変更できます。",
+            "de" => "Hier ändern Sie nur Sprache und Wiedergabe der Audioführung. Die App-Sprache wird beim Einstieg angepasst.",
+            _ => "Trang này chỉ đổi ngôn ngữ thuyết minh và chế độ phát. Ngôn ngữ giao diện được đổi ở bước vào app."
+        };
     }
 }

@@ -212,7 +212,7 @@ public class TourCatalogPage : ContentPage
         catch (Exception ex)
         {
             _tourListLayout.Children.Clear();
-            _statusLabel.Text = _text.Format("Tour.LoadError", ex.Message);
+            _statusLabel.Text = FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.TourCatalog);
         }
         finally
         {

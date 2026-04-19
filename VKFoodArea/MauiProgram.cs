@@ -45,6 +45,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<TourSessionService>();
 
         builder.Services.AddSingleton<AppSettingsService>();
+        builder.Services.AddSingleton<AppBuildMetadataService>();
         builder.Services.AddSingleton<AppLanguageService>();
         builder.Services.AddSingleton<AppTextService>();
         builder.Services.AddSingleton<AppRootNavigationService>();

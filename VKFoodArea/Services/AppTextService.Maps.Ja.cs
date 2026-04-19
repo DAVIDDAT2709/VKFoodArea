@@ -81,6 +81,8 @@ public sealed partial class AppTextService
             ["Status.SyncSummarySuccess"] = "Web: {0} 件の POI を同期済み",
             ["Status.SyncSummaryFallback"] = "Web 失敗、{0} 件のローカル POI を使用中",
             ["Status.SyncSummaryFallbackWithError"] = "Web 失敗、{0} 件のローカル POI を使用中 ({1})",
+            ["Status.WebSetupMissing"] = "Web data is not connected on this device. Using {0} local POIs.",
+            ["Status.SyncSummaryNoWeb"] = "Web is not connected, using {0} local POIs",
             ["Map.PageTitle"] = "探索マップ",
             ["Map.InfoNoPermission"] = "位置情報の権限がありません。",
             ["Map.InfoGpsUnsupported"] = "この端末は GPS に対応していません。",

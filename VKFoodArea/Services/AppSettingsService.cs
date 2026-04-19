@@ -7,6 +7,8 @@ public class AppSettingsService
     private const string LanguageKey = "narration_language";
     private const string OutputModeKey = "narration_output_mode";
     private const string ApiBaseUrlKey = "api_base_url";
+    private const string AutoDetectedApiBaseUrlKey = "auto_detected_api_base_url";
+    private const string EntryFlowCompletedKey = "entry_flow_completed";
 
     public string NarrationLanguage
     {
@@ -24,5 +26,17 @@ public class AppSettingsService
     {
         get => Preferences.Default.Get(ApiBaseUrlKey, string.Empty);
         set => Preferences.Default.Set(ApiBaseUrlKey, value);
+    }
+
+    public string AutoDetectedApiBaseUrl
+    {
+        get => Preferences.Default.Get(AutoDetectedApiBaseUrlKey, string.Empty);
+        set => Preferences.Default.Set(AutoDetectedApiBaseUrlKey, value);
+    }
+
+    public bool HasCompletedEntryFlow
+    {
+        get => Preferences.Default.Get(EntryFlowCompletedKey, false);
+        set => Preferences.Default.Set(EntryFlowCompletedKey, value);
     }
 }

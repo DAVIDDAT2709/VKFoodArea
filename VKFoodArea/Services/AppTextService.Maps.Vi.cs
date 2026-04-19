@@ -81,6 +81,8 @@ public sealed partial class AppTextService
             ["Status.SyncSummarySuccess"] = "Web: đã đồng bộ {0} POI",
             ["Status.SyncSummaryFallback"] = "Web lỗi, đang dùng {0} POI local",
             ["Status.SyncSummaryFallbackWithError"] = "Web lỗi, đang dùng {0} POI local ({1})",
+            ["Status.WebSetupMissing"] = "Chua ket noi du lieu web, dang dung {0} POI local.",
+            ["Status.SyncSummaryNoWeb"] = "Chua noi web, dang dung {0} POI local",
             ["Map.PageTitle"] = "Bản đồ khám phá",
             ["Map.InfoNoPermission"] = "Chưa được cấp quyền vị trí.",
             ["Map.InfoGpsUnsupported"] = "Thiết bị không hỗ trợ GPS.",

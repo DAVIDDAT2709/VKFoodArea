@@ -62,7 +62,7 @@ public partial class UserPage : ContentPage
             : isActive ? _text["User.Active"] : _text["User.Disabled"];
 
         CurrentLanguageValueLabel.Text = _text.GetLanguageDisplay(currentLanguage);
-        CurrentLanguageHintLabel.Text = _text.GetUserTypeDisplay(_languageService.UserType);
+        CurrentLanguageHintLabel.Text = BuildLanguageHint(isLoggedIn);
         UserTypeValueLabel.Text = _text.GetUserTypeDisplay(_languageService.UserType);
         NarrationModeValueLabel.Text = _text.GetModeDisplay(currentMode);
 
@@ -71,7 +71,7 @@ public partial class UserPage : ContentPage
         StatusValueLabel.Text = !isLoggedIn
             ? _text["User.Ready"]
             : isActive ? _text["User.Ready"] : _text["User.Locked"];
-        FooterNoteLabel.Text = _text["User.FooterNote"];
+        FooterNoteLabel.Text = BuildFooterNote(isLoggedIn);
     }
 
     private async void OnOpenSettingsClicked(object sender, EventArgs e)
@@ -112,7 +112,6 @@ public partial class UserPage : ContentPage
 
     private async void OnChooseLanguageClicked(object sender, EventArgs e)
     {
-        _authService.Logout();
         await _rootNavigationService.SetRootAsync<HomeEntryPage>();
     }
 
@@ -189,6 +188,50 @@ public partial class UserPage : ContentPage
         };
     }
 
+    private string BuildLanguageHint(bool isLoggedIn)
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => isLoggedIn
+                ? "This account keeps your current narration preferences."
+                : "Your current setup is stored on this device.",
+            "zh" => isLoggedIn
+                ? "当前账号会记住你的讲解设置。"
+                : "当前设置会保存在这台设备上。",
+            "ja" => isLoggedIn
+                ? "現在のアカウントに音声案内設定が保存されます。"
+                : "現在の設定はこの端末に保存されます。",
+            "de" => isLoggedIn
+                ? "Dieses Konto merkt sich Ihre aktuellen Audioeinstellungen."
+                : "Die aktuellen Einstellungen werden auf diesem Gerät gespeichert.",
+            _ => isLoggedIn
+                ? "Tài khoản này sẽ nhớ ngôn ngữ và cách phát hiện tại."
+                : "Thiết lập hiện tại đang được lưu trên thiết bị này."
+        };
+    }
+
+    private string BuildFooterNote(bool isLoggedIn)
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => isLoggedIn
+                ? "You can change the app entry language later without signing out."
+                : "You can change the app entry language later in this screen.",
+            "zh" => isLoggedIn
+                ? "之后可以再改进入应用时的语言，不会让你退出账号。"
+                : "之后也可以在这里再改进入应用时的语言。",
+            "ja" => isLoggedIn
+                ? "あとからアプリ開始時の言語を変えても、ログアウトにはなりません。"
+                : "アプリ開始時の言語はあとからここで変更できます。",
+            "de" => isLoggedIn
+                ? "Sie können die Einstiegssprache später ändern, ohne sich abzumelden."
+                : "Die Einstiegssprache kann später hier geändert werden.",
+            _ => isLoggedIn
+                ? "Bạn có thể đổi lại ngôn ngữ khi vào app mà không bị đăng xuất."
+                : "Bạn có thể đổi lại cách vào app ngay tại màn hình này."
+        };
+    }
+
     private void ApplyLocalizedText()
     {
         Title = _text["User.PageTitle"];
@@ -201,7 +244,14 @@ public partial class UserPage : ContentPage
         StatusTitleLabel.Text = _text["User.Status"];
         QuickActionsTitleLabel.Text = _text["User.QuickActions"];
         OpenSettingsButton.Text = _text["User.SoundSettings"];
-        ChooseLanguageButton.Text = _text["Settings.LanguagePickerTitle"];
+        ChooseLanguageButton.Text = _text.CurrentLanguage switch
+        {
+            "en" => "Change app language",
+            "zh" => "调整进入应用的语言",
+            "ja" => "開始時の言語を変更",
+            "de" => "App-Sprache beim Start ändern",
+            _ => "Đổi ngôn ngữ khi vào app"
+        };
         NavHomeButton.Text = _text["Nav.Home"];
         NavMapButton.Text = _text["Nav.Map"];
         NavHistoryButton.Text = _text["Nav.History"];

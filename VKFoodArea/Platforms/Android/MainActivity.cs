@@ -11,13 +11,6 @@ namespace VKFoodArea
     [IntentFilter(
         new[] { Intent.ActionView },
         Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
-        DataScheme = "https",
-        DataHost = AppLinkConstants.Host,
-        DataPathPrefix = AppLinkConstants.QrPathPrefix,
-        AutoVerify = true)]
-    [IntentFilter(
-        new[] { Intent.ActionView },
-        Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
         DataScheme = AppLinkConstants.CustomScheme,
         DataHost = AppLinkConstants.CustomSchemeHost)]
     public class MainActivity : MauiAppCompatActivity

@@ -16,7 +16,7 @@ public class TourCatalogService
 
     public async Task<IReadOnlyList<Tour>> GetActiveToursAsync(CancellationToken ct = default)
     {
-        var url = $"{_apiBaseUrlService.BaseUrl}api/tours";
+        var url = _apiBaseUrlService.BuildApiUrl("api/tours");
         var remoteTours = await _httpClient.GetFromJsonAsync<List<RemoteTourDto>>(url, ct);
 
         if (remoteTours is null)

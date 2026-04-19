@@ -13,6 +13,8 @@ public class SoundSettingsViewModel : INotifyPropertyChanged
     private LanguageOption? _selectedLanguage;
     private string _selectedOutputMode = "TTS";
     private string _summaryText = string.Empty;
+    private bool _isPreviewing;
+    private string _previewStateText = string.Empty;
 
     public ObservableCollection<LanguageOption> LanguageOptions { get; } = [];
 
@@ -67,6 +69,29 @@ public class SoundSettingsViewModel : INotifyPropertyChanged
         }
     }
 
+    public bool IsPreviewing
+    {
+        get => _isPreviewing;
+        private set
+        {
+            _isPreviewing = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanPreview));
+        }
+    }
+
+    public bool CanPreview => !IsPreviewing;
+
+    public string PreviewStateText
+    {
+        get => _previewStateText;
+        private set
+        {
+            _previewStateText = value;
+            OnPropertyChanged();
+        }
+    }
+
     public async Task<SoundSettingsViewResult> LoadSoundSettingsAsync()
     {
         RefreshLanguageOptions();
@@ -96,9 +121,7 @@ public class SoundSettingsViewModel : INotifyPropertyChanged
 
     public Task PreviewSoundAsync()
     {
-        return _previewService.PlayPreviewAsync(
-            SelectedLanguage?.Code,
-            SelectedOutputMode);
+        return PreviewSoundCoreAsync();
     }
 
     private void ApplySnapshot(SoundSettingsSnapshot snapshot)
@@ -134,6 +157,49 @@ public class SoundSettingsViewModel : INotifyPropertyChanged
             "Settings.CurrentSummary",
             _text.GetLanguageDisplay(language),
             _text.GetModeDisplay(SelectedOutputMode));
+        PreviewStateText = BuildPreviewStateText(IsPreviewing);
+    }
+
+    private async Task PreviewSoundCoreAsync()
+    {
+        IsPreviewing = true;
+        PreviewStateText = BuildPreviewStateText(isPreviewing: true);
+
+        try
+        {
+            await _previewService.PlayPreviewAsync(
+                SelectedLanguage?.Code,
+                SelectedOutputMode);
+        }
+        finally
+        {
+            IsPreviewing = false;
+            PreviewStateText = BuildPreviewStateText(isPreviewing: false);
+        }
+    }
+
+    private string BuildPreviewStateText(bool isPreviewing)
+    {
+        if (isPreviewing)
+        {
+            return _text.CurrentLanguage switch
+            {
+                "en" => "Playing a real preview with your current selection.",
+                "zh" => "正在按当前选择播放真实试听。",
+                "ja" => "現在の設定で実際の試聴を再生しています。",
+                "de" => "Es läuft eine echte Vorschau mit Ihrer aktuellen Auswahl.",
+                _ => "Đang phát nghe thử thật theo lựa chọn hiện tại."
+            };
+        }
+
+        return _text.CurrentLanguage switch
+        {
+            "en" => "Preview uses the current narration language and playback mode.",
+            "zh" => "试听会按当前讲解语言与播放方式来播放。",
+            "ja" => "試聴は現在の音声ガイド言語と再生方法で再生されます。",
+            "de" => "Die Vorschau nutzt die aktuell gewählte Sprache und Wiedergabeart.",
+            _ => "Bản nghe thử sẽ chạy đúng theo ngôn ngữ và chế độ phát hiện tại."
+        };
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

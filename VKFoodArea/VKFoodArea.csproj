@@ -17,6 +17,13 @@
 		<DefaultItemExcludes>$(DefaultItemExcludes);obj_codex\**;obj_loginfix\**;.codexbuild\**</DefaultItemExcludes>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == '' and '$(Configuration)' == 'Release'">https://disprovable-helpingly-addisyn.ngrok-free.dev/</VKFoodAreaOfficialBaseUrl>
+		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == ''"></VKFoodAreaOfficialBaseUrl>
+		<VKFoodAreaEnableInternalDemo Condition="'$(VKFoodAreaEnableInternalDemo)' == '' and '$(Configuration)' == 'Debug'">true</VKFoodAreaEnableInternalDemo>
+		<VKFoodAreaEnableInternalDemo Condition="'$(VKFoodAreaEnableInternalDemo)' == ''">false</VKFoodAreaEnableInternalDemo>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#16A34A" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#16A34A" BaseSize="128,128" />
@@ -39,6 +46,11 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyMetadata Include="VKFoodAreaOfficialBaseUrl" Value="$(VKFoodAreaOfficialBaseUrl)" />
+		<AssemblyMetadata Include="VKFoodAreaEnableInternalDemo" Value="$(VKFoodAreaEnableInternalDemo)" />
 	</ItemGroup>
 
 	<ItemGroup>

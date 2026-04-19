@@ -47,7 +47,9 @@ public class NarrationSyncService
                 DurationSeconds = durationSeconds
             };
 
-            var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories";
+            if (!_apiBaseUrlService.TryBuildApiUrl("api/narration-histories", out var url))
+                return;
+
             using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
             response.EnsureSuccessStatusCode();
         }
@@ -67,7 +69,8 @@ public class NarrationSyncService
         var normalizedTop = Math.Clamp(top, 1, 200);
         var normalizedSource = NormalizeTriggerSource(source);
         var normalizedUserKey = NormalizeUserKey(userKey);
-        var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories?top={normalizedTop}";
+        if (!_apiBaseUrlService.TryBuildApiUrl($"api/narration-histories?top={normalizedTop}", out var url))
+            return [];
 
         if (!string.IsNullOrWhiteSpace(normalizedSource))
             url += $"&source={Uri.EscapeDataString(normalizedSource)}";
@@ -97,7 +100,9 @@ public class NarrationSyncService
         if (!string.IsNullOrWhiteSpace(normalizedSource))
             query.Add($"source={Uri.EscapeDataString(normalizedSource)}");
 
-        var url = $"{_apiBaseUrlService.BaseUrl}api/narration-histories?{string.Join("&", query)}";
+        if (!_apiBaseUrlService.TryBuildApiUrl($"api/narration-histories?{string.Join("&", query)}", out var url))
+            return;
+
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
         using var response = await _httpClient.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();

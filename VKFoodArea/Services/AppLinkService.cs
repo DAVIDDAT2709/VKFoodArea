@@ -18,6 +18,7 @@ public class AppLinkService
     private readonly NarrationUiStateService _narrationUiState;
     private readonly AppRootNavigationService _rootNavigationService;
     private readonly TourSessionService _tourSessionService;
+    private readonly ApiBaseUrlService _apiBaseUrlService;
     private readonly IServiceProvider _serviceProvider;
     private readonly SemaphoreSlim _handleLock = new(1, 1);
 
@@ -31,6 +32,7 @@ public class AppLinkService
         NarrationUiStateService narrationUiState,
         AppRootNavigationService rootNavigationService,
         TourSessionService tourSessionService,
+        ApiBaseUrlService apiBaseUrlService,
         IServiceProvider serviceProvider)
     {
         _qrLookupService = qrLookupService;
@@ -40,6 +42,7 @@ public class AppLinkService
         _narrationUiState = narrationUiState;
         _rootNavigationService = rootNavigationService;
         _tourSessionService = tourSessionService;
+        _apiBaseUrlService = apiBaseUrlService;
         _serviceProvider = serviceProvider;
     }
 
@@ -94,7 +97,9 @@ public class AppLinkService
             }
             catch (Exception ex)
             {
-                await ShowAlertAsync(_text["Qr.ConnectionErrorTitle"], ex.Message);
+                await ShowAlertAsync(
+                    _text["Qr.ConnectionErrorTitle"],
+                    FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.QrScan));
                 return false;
             }
         }
@@ -106,6 +111,8 @@ public class AppLinkService
 
     private async Task HandleUriCoreAsync(Uri uri, CancellationToken ct)
     {
+        _apiBaseUrlService.TryCaptureBaseUrlFromUri(uri);
+
         var code = QrCodePayload.Normalize(uri.ToString());
         if (string.IsNullOrWhiteSpace(code))
             throw new AppLinkTargetNotFoundException();

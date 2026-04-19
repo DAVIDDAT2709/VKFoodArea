@@ -7,6 +7,7 @@ namespace VKFoodArea.Features.Startup;
 public partial class HomeEntryPage : ContentPage
 {
     private readonly LanguageSelectionFlowService _languageSelectionFlowService;
+    private readonly AppSettingsService _settingsService;
     private readonly AppRootNavigationService _rootNavigationService;
     private readonly AppLinkService _appLinkService;
     private readonly AppTextService _text;
@@ -17,6 +18,7 @@ public partial class HomeEntryPage : ContentPage
 
     public HomeEntryPage(
         LanguageSelectionFlowService languageSelectionFlowService,
+        AppSettingsService settingsService,
         AppRootNavigationService rootNavigationService,
         AppLinkService appLinkService,
         AppTextService text,
@@ -24,6 +26,7 @@ public partial class HomeEntryPage : ContentPage
     {
         InitializeComponent();
         _languageSelectionFlowService = languageSelectionFlowService;
+        _settingsService = settingsService;
         _rootNavigationService = rootNavigationService;
         _appLinkService = appLinkService;
         _text = text;
@@ -57,6 +60,7 @@ public partial class HomeEntryPage : ContentPage
         else
             _languageSelectionFlowService.ApplyTourist(_selectedLanguage);
 
+        _settingsService.HasCompletedEntryFlow = true;
         await _rootNavigationService.SetRootAsync<HomeDesignPage>();
         await _appLinkService.TryHandlePendingAsync();
     }
@@ -90,16 +94,16 @@ public partial class HomeEntryPage : ContentPage
     private void ApplyLocalizedText()
     {
         Title = _text["Nav.Home"];
-        HeroSubtitleLabel.Text = _text["Login.SelectionSubtitle"];
+        HeroSubtitleLabel.Text = GetHeroSubtitleText();
         SelectionTitleLabel.Text = _text["Login.SelectionTitle"];
-        SelectionSubtitleLabel.Text = _text["Home.MapStatusDefault"];
+        SelectionSubtitleLabel.Text = GetSelectionSubtitleText();
         DomesticTitleLabel.Text = _text["Login.DomesticTitle"];
         DomesticDescriptionLabel.Text = _text["Login.DomesticDescription"];
         TouristTitleLabel.Text = _text["Login.TouristTitle"];
         TouristDescriptionLabel.Text = _text["Login.TouristDescription"];
         LanguageTitleLabel.Text = _text["Login.LanguageTitle"];
         EnterButton.Text = _text["Login.EnterButton"];
-        FooterNoteLabel.Text = _text["User.FooterNote"];
+        FooterNoteLabel.Text = GetFooterNoteText();
     }
 
     private void BuildLanguageButtons()
@@ -180,5 +184,41 @@ public partial class HomeEntryPage : ContentPage
                 ? Colors.White
                 : Color.FromArgb("#35534D");
         }
+    }
+
+    private string GetHeroSubtitleText()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "Choose the way you want the app to speak and guide you.",
+            "zh" => "选择应用要如何陪你使用与讲解。",
+            "ja" => "アプリの案内と言語の使い方を選びます。",
+            "de" => "Wählen Sie, wie die App Sie sprachlich begleiten soll.",
+            _ => "Chọn cách app sẽ đồng hành và thuyết minh cho bạn."
+        };
+    }
+
+    private string GetSelectionSubtitleText()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "You can change this later in Account. It only tunes language and narration behavior.",
+            "zh" => "之后可以在“账户”里再改。这里仅影响语言与讲解方式。",
+            "ja" => "あとからアカウントで変更できます。ここでは言語と音声案内だけを調整します。",
+            "de" => "Sie können dies später im Konto ändern. Hier werden nur Sprache und Audioführung festgelegt.",
+            _ => "Bạn có thể đổi lại sau trong Tài khoản. Mục này chỉ chỉnh ngôn ngữ và cách phát thuyết minh."
+        };
+    }
+
+    private string GetFooterNoteText()
+    {
+        return _text.CurrentLanguage switch
+        {
+            "en" => "Changing this later does not remove your saved data or account.",
+            "zh" => "之后再修改也不会删除你的数据或账户。",
+            "ja" => "あとで変更しても、保存済みデータやアカウントは消えません。",
+            "de" => "Eine spätere Änderung löscht weder gespeicherte Daten noch Ihr Konto.",
+            _ => "Đổi lại sau cũng không làm mất dữ liệu hay tài khoản đang có."
+        };
     }
 }

@@ -81,6 +81,8 @@ public sealed partial class AppTextService
             ["Status.SyncSummarySuccess"] = "网页：已同步 {0} 个 POI",
             ["Status.SyncSummaryFallback"] = "网页失败，正在使用 {0} 个本地 POI",
             ["Status.SyncSummaryFallbackWithError"] = "网页失败，正在使用 {0} 个本地 POI（{1}）",
+            ["Status.WebSetupMissing"] = "Web data is not connected on this device. Using {0} local POIs.",
+            ["Status.SyncSummaryNoWeb"] = "Web is not connected, using {0} local POIs",
             ["Map.PageTitle"] = "探索地图",
             ["Map.InfoNoPermission"] = "尚未授予定位权限。",
             ["Map.InfoGpsUnsupported"] = "设备不支持 GPS。",

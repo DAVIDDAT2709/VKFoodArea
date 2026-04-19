@@ -22,7 +22,7 @@ public class QrLookupService
         if (string.IsNullOrWhiteSpace(normalized))
             return null;
 
-        var url = $"{_apiBaseUrlService.BaseUrl}api/resolve-qr?code={Uri.EscapeDataString(normalized)}";
+        var url = _apiBaseUrlService.BuildApiUrl($"api/resolve-qr?code={Uri.EscapeDataString(normalized)}");
 
         using var response = await _httpClient.GetAsync(url, ct);
 

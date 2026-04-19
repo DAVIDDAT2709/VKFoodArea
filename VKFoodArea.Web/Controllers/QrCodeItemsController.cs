@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using System.Net;
 using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
@@ -42,8 +43,10 @@ public class QrCodeItemsController : Controller
         var normalizedCode = code.Trim();
         var encodedCode = Uri.EscapeDataString(normalizedCode);
         var htmlCode = WebUtility.HtmlEncode(normalizedCode);
-        var customSchemeUrl = $"vkfoodarea://qr/{encodedCode}";
-        var androidIntentUrl = $"intent://qr/{encodedCode}#Intent;scheme=vkfoodarea;package=com.companyname.vkfoodarea;end";
+        var requestBaseUrl = BuildRequestBaseUrl();
+        var encodedSourceBaseUrl = Uri.EscapeDataString(requestBaseUrl);
+        var customSchemeUrl = $"vkfoodarea://qr/{encodedCode}?source={encodedSourceBaseUrl}";
+        var androidIntentUrl = $"intent://qr/{encodedCode}?source={encodedSourceBaseUrl}#Intent;scheme=vkfoodarea;package=com.companyname.vkfoodarea;end";
         var apiUrl = $"/api/resolve-qr?code={encodedCode}";
 
         var html = $$"""
@@ -163,6 +166,28 @@ public class QrCodeItemsController : Controller
 """;
 
         return Content(html, "text/html; charset=utf-8");
+    }
+
+    private string BuildRequestBaseUrl()
+    {
+        var forwardedScheme = GetFirstForwardedValue("X-Forwarded-Proto");
+        var forwardedHost = GetFirstForwardedValue("X-Forwarded-Host");
+        var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Request.Scheme : forwardedScheme;
+        var host = string.IsNullOrWhiteSpace(forwardedHost) ? Request.Host.Value : forwardedHost;
+        return $"{scheme}://{host}".TrimEnd('/');
+    }
+
+    private string GetFirstForwardedValue(string headerName)
+    {
+        if (!Request.Headers.TryGetValue(headerName, out StringValues values))
+            return string.Empty;
+
+        var rawValue = values.FirstOrDefault() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return string.Empty;
+
+        return rawValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault() ?? string.Empty;
     }
 
     public async Task<IActionResult> Create()

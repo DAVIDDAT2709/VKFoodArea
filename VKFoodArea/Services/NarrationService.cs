@@ -836,10 +836,16 @@ public class NarrationService
     private string ResolveRelativeAudioUrl(string audioPath)
     {
         if (audioPath.StartsWith("/", StringComparison.Ordinal))
-            return new Uri(new Uri(_apiBaseUrlService.BaseUrl), audioPath.TrimStart('/')).ToString();
+        {
+            var resolved = _apiBaseUrlService.ResolveRemoteUrl(audioPath);
+            return string.IsNullOrWhiteSpace(resolved) ? audioPath : resolved;
+        }
 
         if (audioPath.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
-            return new Uri(new Uri(_apiBaseUrlService.BaseUrl), audioPath).ToString();
+        {
+            var resolved = _apiBaseUrlService.ResolveRemoteUrl(audioPath);
+            return string.IsNullOrWhiteSpace(resolved) ? audioPath : resolved;
+        }
 
         return audioPath;
     }

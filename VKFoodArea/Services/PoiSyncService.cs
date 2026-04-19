@@ -29,9 +29,15 @@ public class PoiSyncService
 
     public async Task<PoiSyncResult> SyncPoisAsync(CancellationToken ct = default)
     {
+        if (!_apiBaseUrlService.TryBuildApiUrl("api/pois", out var url))
+        {
+            var result = PoiSyncResult.EndpointUnavailable();
+            NotifySyncCompleted(result);
+            return result;
+        }
+
         try
         {
-            var url = $"{_apiBaseUrlService.BaseUrl}api/pois";
             WritePlatformLog($"POI sync started: {url}");
             var remotePois = await _httpClient.GetFromJsonAsync<List<RemotePoiDto>>(url, ct);
 
@@ -172,11 +178,29 @@ public class PoiSyncService
     private static string CreateMapUrl(double latitude, double longitude)
         => $"https://maps.google.com/?q={latitude},{longitude}";
 
-    public sealed record PoiSyncResult(bool Success, int RemoteCount, string? ErrorMessage)
+    public sealed record PoiSyncResult(
+        bool Success,
+        int RemoteCount,
+        string? ErrorMessage,
+        PoiSyncFailureReason FailureReason)
     {
-        public static PoiSyncResult Succeeded(int remoteCount) => new(true, remoteCount, null);
+        public bool IsEndpointUnavailable => FailureReason == PoiSyncFailureReason.RemoteEndpointUnavailable;
 
-        public static PoiSyncResult Failed(string? errorMessage) => new(false, 0, errorMessage);
+        public static PoiSyncResult Succeeded(int remoteCount)
+            => new(true, remoteCount, null, PoiSyncFailureReason.None);
+
+        public static PoiSyncResult Failed(string? errorMessage)
+            => new(false, 0, errorMessage, PoiSyncFailureReason.RemoteRequestFailed);
+
+        public static PoiSyncResult EndpointUnavailable()
+            => new(false, 0, null, PoiSyncFailureReason.RemoteEndpointUnavailable);
+    }
+
+    public enum PoiSyncFailureReason
+    {
+        None,
+        RemoteEndpointUnavailable,
+        RemoteRequestFailed
     }
 
     public sealed class PoiSyncCompletedEventArgs : EventArgs

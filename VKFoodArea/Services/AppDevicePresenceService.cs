@@ -102,7 +102,9 @@ public sealed class AppDevicePresenceService : IAsyncDisposable
                 IsOnline = isOnline
             };
 
-            var url = $"{_apiBaseUrlService.BaseUrl}api/device-presence/heartbeat";
+            if (!_apiBaseUrlService.TryBuildApiUrl("api/device-presence/heartbeat", out var url))
+                return;
+
             using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
             response.EnsureSuccessStatusCode();
         }

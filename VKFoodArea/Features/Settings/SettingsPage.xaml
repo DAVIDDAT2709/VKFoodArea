@@ -82,16 +82,25 @@
                             <Label x:Name="SummaryLabel" FontSize="13" TextColor="#B8C0C3" />
                         </VerticalStackLayout>
                     </Grid>
-                    <ProgressBar Progress="0.72"
-                                 HeightRequest="4"
-                                 BackgroundColor="#273235"
-                                 ProgressColor="#F1C95D" />
+                    <HorizontalStackLayout Spacing="8">
+                        <ActivityIndicator IsRunning="{Binding IsPreviewing}"
+                                           IsVisible="{Binding IsPreviewing}"
+                                           Color="#F1C95D"
+                                           WidthRequest="16"
+                                           HeightRequest="16" />
+                        <Label x:Name="PreviewStateLabel"
+                               Text="{Binding PreviewStateText}"
+                               FontSize="12"
+                               TextColor="#D6DEE0"
+                               VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
                     <Button x:Name="PreviewButton"
                             Clicked="OnPreviewClicked"
                             BackgroundColor="#129488"
                             TextColor="White"
                             CornerRadius="16"
                             HeightRequest="50"
+                            IsEnabled="{Binding CanPreview}"
                             FontAttributes="Bold" />
                 </VerticalStackLayout>
             </Border>

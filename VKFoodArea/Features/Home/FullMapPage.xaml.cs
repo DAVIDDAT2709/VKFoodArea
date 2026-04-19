@@ -29,6 +29,7 @@ public partial class FullMapPage : ContentPage
     private readonly TourSessionService _tourSessionService;
     private readonly TourNarrationService _tourNarrationService;
     private readonly FoodRepository _foodRepository;
+    private readonly AppBuildMetadataService _buildMetadataService;
 
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
@@ -40,6 +41,9 @@ public partial class FullMapPage : ContentPage
 
     private Location? _currentGpsLocation;
     private bool _followMyLocation = true;
+    private bool _showDeveloperOptions;
+    private int _developerTapCount;
+    private DateTimeOffset _developerTapWindowStart = DateTimeOffset.MinValue;
 
     private const double OcVuLatitude = 10.761403;
     private const double OcVuLongitude = 106.702705;
@@ -106,7 +110,8 @@ public partial class FullMapPage : ContentPage
         LocationTrackerService locationTrackerService,
         TourSessionService tourSessionService,
         TourNarrationService tourNarrationService,
-        FoodRepository foodRepository)
+        FoodRepository foodRepository,
+        AppBuildMetadataService buildMetadataService)
     {
         InitializeComponent();
 
@@ -119,6 +124,7 @@ public partial class FullMapPage : ContentPage
         _tourSessionService = tourSessionService;
         _tourNarrationService = tourNarrationService;
         _foodRepository = foodRepository;
+        _buildMetadataService = buildMetadataService;
 
         BindingContext = _viewModel;
     }
@@ -172,18 +178,47 @@ public partial class FullMapPage : ContentPage
 
         if (DemoMenuButtonView is not null)
         {
-            DemoMenuButtonView.Text = "Demo";
-            DemoMenuButtonView.IsVisible = true;
+            DemoMenuButtonView.Text = "Mẫu";
+            DemoMenuButtonView.IsVisible = _buildMetadataService.DemoToolsEnabled && _showDeveloperOptions;
         }
 
         if (RealGpsButtonView is not null)
-            RealGpsButtonView.Text = "GPS thật";
+            RealGpsButtonView.Text = "GPS";
 
         NavHomeButton.Text = "Trang chủ";
         NavMapButton.Text = "Bản đồ";
         NavHistoryButton.Text = "Lịch sử";
         NavAccountButton.Text = "Tài khoản";
         MiniPlayerStopButton.Text = "Dừng";
+    }
+    private void OnDeveloperHeaderTapped(object sender, TappedEventArgs e)
+    {
+        if (!_buildMetadataService.DemoToolsEnabled)
+            return;
+
+        var now = DateTimeOffset.UtcNow;
+
+        if (now - _developerTapWindowStart > TimeSpan.FromSeconds(6))
+        {
+            _developerTapWindowStart = now;
+            _developerTapCount = 0;
+        }
+
+        _developerTapCount++;
+
+        if (_developerTapCount < 5)
+            return;
+
+        _showDeveloperOptions = !_showDeveloperOptions;
+        _developerTapCount = 0;
+        _developerTapWindowStart = DateTimeOffset.MinValue;
+
+        if (DemoMenuButtonView is not null)
+            DemoMenuButtonView.IsVisible = _showDeveloperOptions;
+
+        InfoLabel.Text = _showDeveloperOptions
+            ? "Đã mở vị trí mẫu."
+            : "Đã ẩn vị trí mẫu.";
     }
 
     private void SetDemoUi(bool isDemoMode, string? label = null)
@@ -195,7 +230,7 @@ public partial class FullMapPage : ContentPage
         {
             DemoModeLabelView.IsVisible = isDemoMode;
             DemoModeLabelView.Text = isDemoMode
-                ? $"Đang demo: {label}"
+                ? $"Vị trí mẫu: {label}"
                 : string.Empty;
         }
     }
@@ -581,7 +616,7 @@ public partial class FullMapPage : ContentPage
         if (!await _viewModel.RefreshCurrentLocationAsync())
         {
             if (_currentGpsLocation is null)
-                InfoLabel.Text = "Không lấy được GPS thật.";
+                InfoLabel.Text = "Không lấy được vị trí hiện tại.";
             return;
         }
 
@@ -777,8 +812,11 @@ public partial class FullMapPage : ContentPage
 
     private async void OnDemoMenuClicked(object sender, EventArgs e)
     {
+        if (!_buildMetadataService.DemoToolsEnabled || !_showDeveloperOptions)
+            return;
+
         var choice = await DisplayActionSheetAsync(
-            "Chọn điểm demo",
+            "Chọn vị trí mẫu",
             "Hủy",
             null,
             "Ốc Vũ",
@@ -828,7 +866,7 @@ public partial class FullMapPage : ContentPage
         if (refreshed)
             RefreshMapLocationFromViewModel(true);
         else
-            InfoLabel.Text = "Đã quay về GPS thật.";
+            InfoLabel.Text = "Đã quay về vị trí hiện tại.";
     }
 
     private async void OnEndTourClicked(object sender, EventArgs e)
