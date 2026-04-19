@@ -9,6 +9,9 @@ namespace VKFoodArea.Web.Data;
 
 public static class WebDataInitializer
 {
+    private const string DemoTourName = "Tour Vĩnh Khánh 30 phút";
+    private const string DemoTourQrCode = "tour:vinh-khanh-30-phut";
+
     public static async Task InitializeAsync(AppDbContext db, IWebHostEnvironment environment, bool seedDevelopmentAdmin)
     {
         await db.Database.MigrateAsync();
@@ -28,12 +31,8 @@ public static class WebDataInitializer
         {
             db.Pois.AddRange(SeedData.Pois.Select(MapPoi));
             await db.SaveChangesAsync();
-            await EnsurePoiImageUrlsAsync(db, environment);
-            await SyncPoiContentTablesAsync(db);
-            return;
         }
-
-        if (string.Equals(
+        else if (string.Equals(
                 Environment.GetEnvironmentVariable("VKFOODAREA_IMPORT_SEED_POIS"),
                 "1",
                 StringComparison.Ordinal))
@@ -41,8 +40,10 @@ public static class WebDataInitializer
             await ImportMissingSeedPoisAsync(db);
         }
 
+        await RefreshSeedPoiContentAsync(db);
         await EnsurePoiImageUrlsAsync(db, environment);
         await SyncPoiContentTablesAsync(db);
+        await SeedDemoPathAsync(db);
     }
 
     private static async Task ImportMissingSeedPoisAsync(AppDbContext db)
@@ -70,6 +71,40 @@ public static class WebDataInitializer
 
     private static string NormalizeQrCode(string? qrCode)
         => (qrCode ?? string.Empty).Trim().ToLowerInvariant();
+
+    private static async Task RefreshSeedPoiContentAsync(AppDbContext db)
+    {
+        var seedPois = SeedData.Pois.ToList();
+        var existingPois = await db.Pois.ToListAsync();
+
+        var existingByQr = existingPois
+            .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
+            .GroupBy(x => NormalizeQrCode(x.QrCode))
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
+
+        var existingByIdentity = existingPois
+            .GroupBy(x => BuildIdentityKey(x.Name, x.Address))
+            .Where(x => !string.IsNullOrWhiteSpace(x.Key))
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
+
+        foreach (var seedPoi in seedPois)
+        {
+            var qrKey = NormalizeQrCode(seedPoi.QrCode);
+            var identityKey = BuildIdentityKey(seedPoi.Name, seedPoi.Address);
+            var existing = !string.IsNullOrWhiteSpace(qrKey) && existingByQr.TryGetValue(qrKey, out var byQr)
+                ? byQr
+                : !string.IsNullOrWhiteSpace(identityKey) && existingByIdentity.TryGetValue(identityKey, out var byIdentity)
+                    ? byIdentity
+                    : null;
+
+            if (existing is null)
+                continue;
+
+            BackfillSeedPoiContent(existing, seedPoi);
+        }
+
+        await db.SaveChangesAsync();
+    }
 
     private static async Task EnsureNarrationHistoryUserKeyColumnAsync(AppDbContext db)
     {
@@ -440,6 +475,160 @@ public static class WebDataInitializer
         await db.SaveChangesAsync();
     }
 
+    private static async Task SeedDemoPathAsync(AppDbContext db)
+    {
+        var seedQrCodes = SeedData.Pois
+            .Select(x => NormalizeQrCode(x.QrCode))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var seedPois = await db.Pois
+            .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
+            .ToListAsync();
+
+        seedPois = seedPois
+            .Where(x => seedQrCodes.Contains(NormalizeQrCode(x.QrCode)))
+            .ToList();
+
+        var qrItems = await db.QrCodeItems.ToListAsync();
+        foreach (var poi in seedPois)
+        {
+            UpsertQrCodeItem(
+                db,
+                qrItems,
+                poi.QrCode,
+                poi.Name,
+                QrTargetTypes.Poi,
+                poi.Id,
+                poi.ImageUrl);
+        }
+
+        var stopDefinitions = new[]
+        {
+            new DemoTourStopDefinition("poi:oc-vu", 1, "Bắt đầu bằng món dễ gọi, vị me chua ngọt rõ."),
+            new DemoTourStopDefinition("poi:oc-thao", 2, "Điểm dừng giữa tour, hợp gọi nghêu hấp sả hoặc món nhẹ."),
+            new DemoTourStopDefinition("poi:oc-oanh", 3, "Điểm nổi bật để kết tour, hợp đi nhóm và gọi nhiều món."),
+            new DemoTourStopDefinition("poi:ot-xiem-quan", 4, "Điểm đổi vị nếu muốn món nóng và no hơn.")
+        };
+
+        var seedPoiByQr = seedPois
+            .GroupBy(x => NormalizeQrCode(x.QrCode))
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
+
+        var tourStops = stopDefinitions
+            .Select(x => new
+            {
+                Definition = x,
+                Poi = seedPoiByQr.GetValueOrDefault(NormalizeQrCode(x.QrCode))
+            })
+            .Where(x => x.Poi is not null)
+            .ToList();
+
+        if (tourStops.Count >= 2)
+        {
+            var tour = await db.Tours
+                .Include(x => x.Stops)
+                .FirstOrDefaultAsync(x => x.Name == DemoTourName);
+
+            if (tour is null)
+            {
+                tour = new Tour
+                {
+                    CreatedAt = DateTime.UtcNow
+                };
+                db.Tours.Add(tour);
+            }
+
+            tour.Name = DemoTourName;
+            tour.Description = "Lộ trình mẫu cho buổi demo: bắt đầu bằng quán ốc dễ gọi, đi qua một điểm địa phương, kết ở điểm nổi bật và có lựa chọn đổi vị.";
+            tour.TtsScriptVi = "Tour Vĩnh Khánh bắt đầu. Bạn sẽ đi qua vài điểm ăn dễ gọi, có món gợi ý và khoảng cách rõ ràng trên bản đồ. Hãy bật GPS nếu muốn app tự nhận điểm gần nhất khi đến nơi.";
+            tour.TtsScriptEn = "The Vinh Khanh demo tour starts now. You will pass several easy-to-order food stops with practical suggestions and clear map guidance.";
+            tour.TtsScriptZh = string.Empty;
+            tour.TtsScriptJa = string.Empty;
+            tour.TtsScriptDe = string.Empty;
+            tour.IsActive = true;
+
+            SyncDemoTourStops(tour, tourStops.Select(x => (x.Definition, Poi: x.Poi!)).ToList());
+            await db.SaveChangesAsync();
+
+            qrItems = await db.QrCodeItems.ToListAsync();
+            UpsertQrCodeItem(
+                db,
+                qrItems,
+                DemoTourQrCode,
+                DemoTourName,
+                QrTargetTypes.Tour,
+                tour.Id,
+                string.Empty);
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    private static void SyncDemoTourStops(Tour tour, IReadOnlyList<(DemoTourStopDefinition Definition, Poi Poi)> stops)
+    {
+        var desiredOrders = stops
+            .Select(x => x.Definition.DisplayOrder)
+            .ToHashSet();
+
+        foreach (var stop in tour.Stops.Where(x => !desiredOrders.Contains(x.DisplayOrder)).ToList())
+            tour.Stops.Remove(stop);
+
+        foreach (var stop in stops.OrderBy(x => x.Definition.DisplayOrder))
+        {
+            var existing = tour.Stops.FirstOrDefault(x => x.DisplayOrder == stop.Definition.DisplayOrder);
+            if (existing is null)
+            {
+                tour.Stops.Add(new TourStop
+                {
+                    DisplayOrder = stop.Definition.DisplayOrder,
+                    PoiId = stop.Poi.Id,
+                    Note = stop.Definition.Note
+                });
+                continue;
+            }
+
+            existing.PoiId = stop.Poi.Id;
+            existing.Note = stop.Definition.Note;
+        }
+    }
+
+    private static void UpsertQrCodeItem(
+        AppDbContext db,
+        List<QrCodeItem> qrItems,
+        string? code,
+        string title,
+        string targetType,
+        int targetId,
+        string? imageUrl)
+    {
+        var normalizedCode = (code ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedCode) || targetId <= 0)
+            return;
+
+        var existing = qrItems.FirstOrDefault(x =>
+            NormalizeQrCode(x.Code) == NormalizeQrCode(normalizedCode));
+
+        if (existing is null)
+        {
+            existing = new QrCodeItem
+            {
+                Code = normalizedCode,
+                CreatedAt = DateTime.Now
+            };
+            qrItems.Add(existing);
+            db.QrCodeItems.Add(existing);
+        }
+
+        existing.Title = title.Trim();
+        existing.TargetType = QrTargetTypes.Normalize(targetType);
+        existing.TargetId = targetId;
+        existing.ImageUrl = imageUrl ?? string.Empty;
+        existing.IsActive = true;
+    }
+
+    private sealed record DemoTourStopDefinition(string QrCode, int DisplayOrder, string Note);
+
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
     {
         await using var command = connection.CreateCommand();
@@ -455,29 +644,86 @@ public static class WebDataInitializer
         return false;
     }
 
-    private static Poi MapPoi(SeedPoiData source) => new()
+    private static Poi MapPoi(SeedPoiData source)
     {
-        Name = source.Name,
-        Address = source.Address,
-        PhoneNumber = source.PhoneNumber,
-        ImageUrl = source.ImageUrl,
-        Latitude = source.Latitude,
-        Longitude = source.Longitude,
-        RadiusMeters = source.RadiusMeters,
-        Priority = source.Priority,
-        Description = source.Description,
-        TtsScriptVi = source.TtsScriptVi,
-        TtsScriptEn = source.TtsScriptEn,
-        TtsScriptZh = source.TtsScriptZh,
-        TtsScriptJa = source.TtsScriptJa,
-        TtsScriptDe = source.TtsScriptDe,
-        AudioFileVi = string.Empty,
-        AudioFileEn = string.Empty,
-        AudioFileJa = string.Empty,
-        QrCode = source.QrCode,
-        IsActive = source.IsActive,
-        ApprovalStatus = PoiApprovalStatus.Approved,
-        SubmittedAt = DateTime.UtcNow,
-        ReviewedAt = DateTime.UtcNow
-    };
+        var poi = new Poi
+        {
+            AudioFileVi = string.Empty,
+            AudioFileEn = string.Empty,
+            AudioFileJa = string.Empty,
+            ApprovalStatus = PoiApprovalStatus.Approved,
+            SubmittedAt = DateTime.UtcNow,
+            ReviewedAt = DateTime.UtcNow
+        };
+
+        ApplySeedPoi(poi, source);
+        return poi;
+    }
+
+    private static void ApplySeedPoi(Poi target, SeedPoiData source)
+    {
+        target.Name = source.Name;
+        target.Address = source.Address;
+        target.PhoneNumber = string.IsNullOrWhiteSpace(source.PhoneNumber)
+            ? target.PhoneNumber
+            : source.PhoneNumber;
+        target.ImageUrl = source.ImageUrl;
+        target.Latitude = source.Latitude;
+        target.Longitude = source.Longitude;
+        target.RadiusMeters = source.RadiusMeters;
+        target.Priority = source.Priority;
+        target.Description = source.Description;
+        target.TtsScriptVi = source.TtsScriptVi;
+        target.TtsScriptEn = source.TtsScriptEn;
+        target.TtsScriptZh = source.TtsScriptZh;
+        target.TtsScriptJa = source.TtsScriptJa;
+        target.TtsScriptDe = source.TtsScriptDe;
+        target.QrCode = source.QrCode;
+        target.IsActive = source.IsActive;
+    }
+
+    private static void BackfillSeedPoiContent(Poi target, SeedPoiData source)
+    {
+        if (string.IsNullOrWhiteSpace(target.PhoneNumber))
+            target.PhoneNumber = source.PhoneNumber;
+
+        if (string.IsNullOrWhiteSpace(target.ImageUrl))
+            target.ImageUrl = source.ImageUrl;
+
+        if (Math.Abs(target.Latitude) < double.Epsilon && Math.Abs(target.Longitude) < double.Epsilon)
+        {
+            target.Latitude = source.Latitude;
+            target.Longitude = source.Longitude;
+        }
+
+        if (target.RadiusMeters <= 0)
+            target.RadiusMeters = source.RadiusMeters;
+
+        if (target.Priority <= 0)
+            target.Priority = source.Priority;
+
+        if (string.IsNullOrWhiteSpace(target.Description))
+            target.Description = source.Description;
+
+        if (string.IsNullOrWhiteSpace(target.TtsScriptVi))
+            target.TtsScriptVi = source.TtsScriptVi;
+
+        if (string.IsNullOrWhiteSpace(target.TtsScriptEn))
+            target.TtsScriptEn = source.TtsScriptEn;
+
+        if (string.IsNullOrWhiteSpace(target.TtsScriptZh))
+            target.TtsScriptZh = source.TtsScriptZh;
+
+        if (string.IsNullOrWhiteSpace(target.TtsScriptJa))
+            target.TtsScriptJa = source.TtsScriptJa;
+
+        if (string.IsNullOrWhiteSpace(target.TtsScriptDe))
+            target.TtsScriptDe = source.TtsScriptDe;
+
+        if (string.IsNullOrWhiteSpace(target.QrCode))
+            target.QrCode = source.QrCode;
+    }
+
+    private static string BuildIdentityKey(string? name, string? address)
+        => $"{NormalizeQrCode(name)}|{NormalizeQrCode(address)}";
 }

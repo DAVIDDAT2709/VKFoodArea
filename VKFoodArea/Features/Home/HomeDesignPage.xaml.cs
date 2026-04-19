@@ -182,6 +182,10 @@ public partial class HomeDesignPage : ContentPage
     private Mapsui.Map BuildMap(IEnumerable<Poi> pois)
     {
         _isOnlineMapMode = ShouldUseOnlineMap();
+        HomeMapModeLabel.Text = _isOnlineMapMode
+            ? "Bản đồ online"
+            : "Offline - Vĩnh Khánh";
+
         var poiList = pois.ToList();
         var map = new Mapsui.Map
         {
@@ -219,6 +223,9 @@ public partial class HomeDesignPage : ContentPage
         };
 
         map.Layers.Add(_poiLayer);
+        if (!_isOnlineMapMode)
+            map.Layers.Add(CreateOfflinePoiLabelLayer(poiList));
+
         map.Layers.Add(_currentLocationLayer);
 
         CenterOnMapContent(map, poiList);
@@ -285,7 +292,7 @@ public partial class HomeDesignPage : ContentPage
             .ToMPoint();
 
         var feature = new PointFeature(point);
-        feature["Name"] = "Vi tri hien tai";
+        feature["Name"] = "Vị trí hiện tại";
 
         feature.Styles.Add(new SymbolStyle
         {
@@ -293,6 +300,41 @@ public partial class HomeDesignPage : ContentPage
             SymbolScale = 0.18,
             Fill = new Mapsui.Styles.Brush(Mapsui.Styles.Color.Blue),
             Outline = new Pen(Mapsui.Styles.Color.White, 2)
+        });
+
+        return feature;
+    }
+
+    private static MemoryLayer CreateOfflinePoiLabelLayer(IReadOnlyList<Poi> pois)
+    {
+        return new MemoryLayer("Offline POI labels")
+        {
+            Features = pois
+                .Take(4)
+                .Select((poi, index) => CreateOfflinePoiLabelFeature(poi, index + 1))
+                .Cast<IFeature>()
+                .ToList()
+        };
+    }
+
+    private static PointFeature CreateOfflinePoiLabelFeature(Poi poi, int displayNumber)
+    {
+        var longitudeOffset = displayNumber % 2 == 0 ? -0.00012 : 0.00012;
+        var latitudeOffset = 0.00010 + (displayNumber % 3) * 0.00002;
+        var point = SphericalMercator
+            .FromLonLat(poi.Longitude + longitudeOffset, poi.Latitude + latitudeOffset)
+            .ToMPoint();
+
+        var feature = new PointFeature(point);
+        feature.Styles.Add(new LabelStyle
+        {
+            Text = $"{displayNumber}. {poi.Name}",
+            ForeColor = Mapsui.Styles.Color.FromString("#173330"),
+            BackColor = new Mapsui.Styles.Brush(Mapsui.Styles.Color.FromString("#FFFFFF")),
+            Halo = new Pen(Mapsui.Styles.Color.White, 2),
+            HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center,
+            VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center,
+            CollisionDetection = true
         });
 
         return feature;

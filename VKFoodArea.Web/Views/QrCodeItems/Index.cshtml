@@ -8,8 +8,10 @@
     var coveredTourCount = Model.CoveredTourCount;
     var configuredBaseUrl = (Configuration["PublicBaseUrl"] ?? string.Empty).Trim();
     var forwardedScheme = Context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
+    var forwardedHost = Context.Request.Headers["X-Forwarded-Host"].FirstOrDefault();
     var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
-    var requestBaseUrl = $"{scheme}://{Context.Request.Host}".TrimEnd('/');
+    var host = string.IsNullOrWhiteSpace(forwardedHost) ? Context.Request.Host.Value : forwardedHost;
+    var requestBaseUrl = $"{scheme}://{host}".TrimEnd('/');
     var baseUrl = (string.IsNullOrWhiteSpace(configuredBaseUrl) ? requestBaseUrl : configuredBaseUrl).TrimEnd('/');
 }
 
@@ -59,14 +61,7 @@
             {
                 <article class="inventory-card qr-card">
                     <div class="inventory-card__media">
-                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                        {
-                            <img src="@item.ImageUrl" alt="Mã QR @item.Title" />
-                        }
-                        else
-                        {
-                            <div class="inventory-card__placeholder">QR</div>
-                        }
+                        <img src="@($"/qr-image/{Uri.EscapeDataString(item.Code)}")" alt="Mã QR @item.Title" loading="lazy" />
                     </div>
 
                     <div class="inventory-card__body">
@@ -92,7 +87,9 @@
                             </div>
                             <div class="inventory-stat">
                                 <strong>Liên kết mở app</strong>
-                                <span class="mono">@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")</span>
+                                <a class="mono" href="@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")" target="_blank" rel="noopener">
+                                    @($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")
+                                </a>
                             </div>
                             <div class="inventory-stat">
                                 <strong>Đích đến</strong>

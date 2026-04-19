@@ -19,9 +19,11 @@ public static class AppDataInitializer
         await EnsureAppUsersEmailColumnAsync(db);
         await EnsureAppUsersSoundSettingsColumnsAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
+        await EnsurePoiMapUrlColumnAsync(db);
         await EnsureNarrationLogsUserColumnAsync(db);
         await SeedMissingEmailsAsync(db);
         await SeedMissingSoundSettingsAsync(db);
+        await SeedOrRefreshPoisAsync(db);
 
         if (!await db.AppUsers.AnyAsync())
         {
@@ -203,6 +205,18 @@ public static class AppDataInitializer
         }
     }
 
+    private static async Task EnsurePoiMapUrlColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (await HasColumnAsync(connection, "Pois", "MapUrl"))
+            return;
+
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE Pois ADD COLUMN MapUrl TEXT NOT NULL DEFAULT '';");
+    }
+
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
     {
         await using var command = connection.CreateCommand();
@@ -262,6 +276,93 @@ public static class AppDataInitializer
         if (hasChanges)
             await db.SaveChangesAsync();
     }
+
+    private static async Task SeedOrRefreshPoisAsync(AppDbContext db)
+    {
+        var existingPois = await db.Pois.ToListAsync();
+
+        if (existingPois.Count == 0)
+        {
+            db.Pois.AddRange(SeedData.Pois.Select(MapSeedPoi));
+            return;
+        }
+
+        var existingByQr = existingPois
+            .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
+            .GroupBy(x => NormalizeKey(x.QrCode))
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
+
+        var existingByIdentity = existingPois
+            .GroupBy(x => BuildIdentityKey(x.Name, x.Address))
+            .Where(x => !string.IsNullOrWhiteSpace(x.Key))
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
+
+        foreach (var seedPoi in SeedData.Pois)
+        {
+            var qrKey = NormalizeKey(seedPoi.QrCode);
+            var identityKey = BuildIdentityKey(seedPoi.Name, seedPoi.Address);
+            var existing = !string.IsNullOrWhiteSpace(qrKey) && existingByQr.TryGetValue(qrKey, out var byQr)
+                ? byQr
+                : !string.IsNullOrWhiteSpace(identityKey) && existingByIdentity.TryGetValue(identityKey, out var byIdentity)
+                    ? byIdentity
+                    : null;
+
+            if (existing is null)
+            {
+                var newPoi = MapSeedPoi(seedPoi);
+                db.Pois.Add(newPoi);
+
+                if (!string.IsNullOrWhiteSpace(qrKey))
+                    existingByQr[qrKey] = newPoi;
+
+                if (!string.IsNullOrWhiteSpace(identityKey))
+                    existingByIdentity[identityKey] = newPoi;
+
+                continue;
+            }
+
+            ApplySeedPoi(existing, seedPoi);
+        }
+    }
+
+    private static Poi MapSeedPoi(SeedPoiData source)
+    {
+        var poi = new Poi();
+        ApplySeedPoi(poi, source);
+        return poi;
+    }
+
+    private static void ApplySeedPoi(Poi target, SeedPoiData source)
+    {
+        target.Name = source.Name;
+        target.Address = source.Address;
+        target.PhoneNumber = string.IsNullOrWhiteSpace(source.PhoneNumber)
+            ? target.PhoneNumber
+            : source.PhoneNumber;
+        target.Latitude = source.Latitude;
+        target.Longitude = source.Longitude;
+        target.RadiusMeters = source.RadiusMeters;
+        target.Priority = source.Priority;
+        target.Description = source.Description;
+        target.TtsScriptVi = source.TtsScriptVi;
+        target.TtsScriptEn = source.TtsScriptEn;
+        target.TtsScriptZh = source.TtsScriptZh;
+        target.TtsScriptJa = source.TtsScriptJa;
+        target.TtsScriptDe = source.TtsScriptDe;
+        target.ImageUrl = source.ImageUrl;
+        target.QrCode = source.QrCode;
+        target.IsActive = source.IsActive;
+        target.MapUrl = CreateMapUrl(source.Latitude, source.Longitude);
+    }
+
+    private static string CreateMapUrl(double latitude, double longitude)
+        => $"https://maps.google.com/?q={latitude},{longitude}";
+
+    private static string BuildIdentityKey(string? name, string? address)
+        => $"{NormalizeKey(name)}|{NormalizeKey(address)}";
+
+    private static string NormalizeKey(string? value)
+        => (value ?? string.Empty).Trim().ToLowerInvariant();
 
     private static string HashPassword(string password)
     {

@@ -171,12 +171,12 @@ public static class FriendlyErrorMessages
 
         return context switch
         {
-            FriendlyErrorContext.Startup => "Chua ket noi du lieu web. Ung dung se mo voi du lieu dang co tren thiet bi.",
-            FriendlyErrorContext.QrScan => "Thiet bi nay chua ket noi nguon du lieu web cho ma QR nay.",
-            FriendlyErrorContext.History => "Chua ket noi lich su web. Ung dung se dung du lieu dang co tren thiet bi.",
-            FriendlyErrorContext.Preview => "Thiet bi nay chua ket noi nguon nghe thu truc tuyen.",
-            FriendlyErrorContext.TourCatalog => "Danh sach tour truc tuyen chua duoc ket noi tren thiet bi nay.",
-            _ => "Thiet bi nay chua ket noi du lieu truc tuyen."
+            FriendlyErrorContext.Startup => "Chưa kết nối dữ liệu web. Ứng dụng sẽ mở với dữ liệu đang có trên thiết bị.",
+            FriendlyErrorContext.QrScan => "Thiết bị này chưa kết nối nguồn dữ liệu web cho mã QR này.",
+            FriendlyErrorContext.History => "Chưa kết nối lịch sử web. Ứng dụng sẽ dùng dữ liệu đang có trên thiết bị.",
+            FriendlyErrorContext.Preview => "Thiết bị này chưa kết nối nguồn nghe thử trực tuyến.",
+            FriendlyErrorContext.TourCatalog => "Danh sách tour trực tuyến chưa được kết nối trên thiết bị này.",
+            _ => "Thiết bị này chưa kết nối dữ liệu trực tuyến."
         };
     }
 }

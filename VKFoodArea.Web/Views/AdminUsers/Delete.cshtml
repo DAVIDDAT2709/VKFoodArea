@@ -1,11 +1,11 @@
 @model VKFoodArea.Web.Models.AdminUser
 @{
-    ViewData["Title"] = "Xóa admin";
+    ViewData["Title"] = "Xóa tài khoản";
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Xóa tài khoản admin</h2>
+        <h2>Xóa tài khoản quản trị</h2>
     </div>
     <div class="page-actions">
         <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
@@ -37,7 +37,7 @@
         <h3>Xác nhận xóa</h3>
         <p>Thao tác này sẽ xóa tài khoản quản trị khỏi hệ thống.</p>
         <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="page-actions">
-            <button type="submit" class="btn btn-danger">Xóa admin</button>
+            <button type="submit" class="btn btn-danger">Xóa tài khoản</button>
             <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
         </form>
     </aside>

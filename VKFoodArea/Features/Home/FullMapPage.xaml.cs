@@ -8,9 +8,11 @@ using Mapsui.Tiling;
 using Mapsui.UI.Maui;
 using Mapsui.UI.Maui.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Networking;
 using System.ComponentModel;
+using System.Globalization;
 using VKFoodArea.Features.User;
 using VKFoodArea.Models;
 using VKFoodArea.Repositories;
@@ -37,6 +39,7 @@ public partial class FullMapPage : ContentPage
     private TourSession? _activeTourSession;
     private FoodItem? _suggestedFood;
     private Poi? _suggestedFoodPoi;
+    private Poi? _focusedMapPoi;
     private bool _isOnlineMapMode;
 
     private Location? _currentGpsLocation;
@@ -190,6 +193,7 @@ public partial class FullMapPage : ContentPage
         NavHistoryButton.Text = "Lịch sử";
         NavAccountButton.Text = "Tài khoản";
         MiniPlayerStopButton.Text = "Dừng";
+        OpenExternalMapButton.Text = "Mở Maps";
     }
     private void OnDeveloperHeaderTapped(object sender, TappedEventArgs e)
     {
@@ -345,6 +349,9 @@ public partial class FullMapPage : ContentPage
         };
 
         map.Layers.Add(_poiLayer);
+        if (!_isOnlineMapMode)
+            map.Layers.Add(CreateOfflinePoiLabelLayer(visiblePois, isTourMap));
+
         map.Layers.Add(currentLocationLayer);
 
         CenterMap(map);
@@ -440,17 +447,26 @@ public partial class FullMapPage : ContentPage
             return;
         }
 
+        var visiblePois = GetVisibleMapPois();
+
         if (_currentGpsLocation is null)
         {
-            InfoLabel.Text = "Chưa có vị trí hiện tại.";
+            var fallbackPoi = visiblePois
+                .OrderByDescending(x => x.Priority)
+                .ThenBy(x => x.Name)
+                .FirstOrDefault();
+
+            SetMapActionTarget(fallbackPoi);
+            InfoLabel.Text = fallbackPoi is null
+                ? "Chưa có vị trí hiện tại."
+                : $"Đang xem khu Vĩnh Khánh. Bật GPS để thấy quán gần nhất.";
             MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
             return;
         }
 
-        var visiblePois = GetVisibleMapPois();
-
         if (visiblePois.Count == 0)
         {
+            SetMapActionTarget(null);
             InfoLabel.Text = $"GPS: {_currentGpsLocation.Latitude:F6}, {_currentGpsLocation.Longitude:F6}";
             MapSubtitleLabel.Text = "Chưa có POI để hiển thị";
             return;
@@ -477,14 +493,17 @@ public partial class FullMapPage : ContentPage
 
         if (nearestPoi is null)
         {
+            SetMapActionTarget(null);
             InfoLabel.Text = $"GPS: {_currentGpsLocation.Latitude:F6}, {_currentGpsLocation.Longitude:F6}";
             MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
             return;
         }
 
+        SetMapActionTarget(nearestPoi, nearestDistanceMeters);
+
         if (nearestDistanceMeters > MapFollowDistanceMeters)
         {
-            InfoLabel.Text = "Đang xem các POI tại Vĩnh Khánh • GPS hiện tại ngoài khu vực trải nghiệm";
+            InfoLabel.Text = $"GPS đang ngoài khu Vĩnh Khánh. Mở Maps để đi tới {nearestPoi.Name}.";
             MapSubtitleLabel.Text = "Khu Vĩnh Khánh, Quận 4";
             return;
         }
@@ -511,6 +530,43 @@ public partial class FullMapPage : ContentPage
             SymbolScale = isNearest ? 0.74 : 0.62,
             Offset = new Offset(0, 20),
             RotateWithMap = false
+        });
+
+        return feature;
+    }
+
+    private static MemoryLayer CreateOfflinePoiLabelLayer(IReadOnlyList<Poi> pois, bool isTourMap)
+    {
+        var labelPois = (isTourMap ? pois : pois.Take(6))
+            .ToList();
+
+        return new MemoryLayer("Offline POI labels")
+        {
+            Features = labelPois
+                .Select((poi, index) => CreateOfflinePoiLabelFeature(poi, index + 1))
+                .Cast<IFeature>()
+                .ToList()
+        };
+    }
+
+    private static PointFeature CreateOfflinePoiLabelFeature(Poi poi, int displayNumber)
+    {
+        var longitudeOffset = displayNumber % 2 == 0 ? -0.00012 : 0.00012;
+        var latitudeOffset = 0.00010 + (displayNumber % 3) * 0.00002;
+        var point = SphericalMercator
+            .FromLonLat(poi.Longitude + longitudeOffset, poi.Latitude + latitudeOffset)
+            .ToMPoint();
+
+        var feature = new PointFeature(point);
+        feature.Styles.Add(new LabelStyle
+        {
+            Text = $"{displayNumber}. {poi.Name}",
+            ForeColor = Mapsui.Styles.Color.FromString("#173330"),
+            BackColor = new Mapsui.Styles.Brush(Mapsui.Styles.Color.FromString("#FFFFFF")),
+            Halo = new Pen(Mapsui.Styles.Color.White, 2),
+            HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center,
+            VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center,
+            CollisionDetection = true
         });
 
         return feature;
@@ -645,8 +701,71 @@ public partial class FullMapPage : ContentPage
         if (poi is null)
             return;
 
-        InfoLabel.Text = $"Đã chọn: {poi.Name}";
+        var distanceMeters = CalculateDistanceMeters(poi);
+        SetMapActionTarget(poi, distanceMeters);
+        InfoLabel.Text = distanceMeters.HasValue
+            ? $"Đã chọn: {poi.Name} • {distanceMeters.Value:F0} m"
+            : $"Đã chọn: {poi.Name}";
         await OpenPoiDetailAsync(poi);
+    }
+
+    private async void OnOpenExternalMapClicked(object sender, EventArgs e)
+    {
+        var poi = _focusedMapPoi
+                  ?? _activeTourSession?.CurrentStop?.Poi
+                  ?? GetVisibleMapPois()
+                      .OrderByDescending(x => x.Priority)
+                      .ThenBy(x => x.Name)
+                      .FirstOrDefault();
+
+        if (poi is null)
+        {
+            await DisplayAlertAsync("Bản đồ", "Chưa có điểm để mở bản đồ.", _text["Common.Ok"]);
+            return;
+        }
+
+        try
+        {
+            await Launcher.OpenAsync(BuildExternalMapUri(poi));
+        }
+        catch
+        {
+            await DisplayAlertAsync("Bản đồ", "Không mở được Google Maps lúc này.", _text["Common.Ok"]);
+        }
+    }
+
+    private static Uri BuildExternalMapUri(Poi poi)
+    {
+        if (!string.IsNullOrWhiteSpace(poi.MapUrl) &&
+            Uri.TryCreate(poi.MapUrl, UriKind.Absolute, out var existingUri))
+        {
+            return existingUri;
+        }
+
+        var latitude = poi.Latitude.ToString(CultureInfo.InvariantCulture);
+        var longitude = poi.Longitude.ToString(CultureInfo.InvariantCulture);
+        var query = Uri.EscapeDataString($"{latitude},{longitude}");
+        return new Uri($"https://www.google.com/maps/search/?api=1&query={query}");
+    }
+
+    private void SetMapActionTarget(Poi? poi, double? distanceMeters = null)
+    {
+        _focusedMapPoi = poi;
+        OpenExternalMapButton.IsVisible = poi is not null;
+        OpenExternalMapButton.Text = "Mở Maps";
+    }
+
+    private double? CalculateDistanceMeters(Poi poi)
+    {
+        if (_currentGpsLocation is null)
+            return null;
+
+        return Location.CalculateDistance(
+            _currentGpsLocation.Latitude,
+            _currentGpsLocation.Longitude,
+            poi.Latitude,
+            poi.Longitude,
+            DistanceUnits.Kilometers) * 1000;
     }
 
     private async Task OpenPoiDetailAsync(Poi poi)
@@ -722,9 +841,13 @@ public partial class FullMapPage : ContentPage
 
         if (session is null || currentStopPoi is null)
         {
+            SetMapActionTarget(null);
             InfoLabel.Text = "Tour đang sẵn sàng.";
             return;
         }
+
+        var distanceMeters = CalculateDistanceMeters(currentStopPoi);
+        SetMapActionTarget(currentStopPoi, distanceMeters);
 
         if (_currentGpsLocation is null)
         {
@@ -733,21 +856,17 @@ public partial class FullMapPage : ContentPage
             return;
         }
 
-        var distanceMeters = Location.CalculateDistance(
-            _currentGpsLocation.Latitude,
-            _currentGpsLocation.Longitude,
-            currentStopPoi.Latitude,
-            currentStopPoi.Longitude,
-            DistanceUnits.Kilometers) * 1000;
+        if (!distanceMeters.HasValue)
+            return;
 
-        if (distanceMeters > MapFollowDistanceMeters)
+        if (distanceMeters.Value > MapFollowDistanceMeters)
         {
             InfoLabel.Text = $"Tour: {currentStopPoi.Name} • GPS hiện tại ngoài khu tour";
             MapSubtitleLabel.Text = "Đang theo tour tại Vĩnh Khánh";
             return;
         }
 
-        InfoLabel.Text = $"Tour: {currentStopPoi.Name} • còn khoảng {distanceMeters:F0} m";
+        InfoLabel.Text = $"Tour: {currentStopPoi.Name} • còn khoảng {distanceMeters.Value:F0} m";
         MapSubtitleLabel.Text = "Đang theo tour";
     }
 
@@ -923,8 +1042,12 @@ public partial class FullMapPage : ContentPage
             return;
 
         MapModeLabel.Text = _isOnlineMapMode
-            ? "Online"
-            : "Offline Vĩnh Khánh";
+            ? "Bản đồ online"
+            : "Offline - Vĩnh Khánh";
+
+        MapModeDetailLabel.Text = _isOnlineMapMode
+            ? "Có nền bản đồ trực tuyến"
+            : "Sơ đồ khu, mở Maps để dẫn đường";
 
         MapModeDot.Fill = _isOnlineMapMode
             ? Microsoft.Maui.Graphics.Color.FromArgb("#1F9D74")

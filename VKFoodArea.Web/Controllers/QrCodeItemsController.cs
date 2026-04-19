@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using System.Net;
+using VKFoodArea.Web.Helpers;
 using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 using VKFoodArea.Web.ViewModels;
@@ -12,10 +13,14 @@ namespace VKFoodArea.Web.Controllers;
 public class QrCodeItemsController : Controller
 {
     private readonly IQrCodeItemService _qrCodeItemService;
+    private readonly IConfiguration _configuration;
 
-    public QrCodeItemsController(IQrCodeItemService qrCodeItemService)
+    public QrCodeItemsController(
+        IQrCodeItemService qrCodeItemService,
+        IConfiguration configuration)
     {
         _qrCodeItemService = qrCodeItemService;
+        _configuration = configuration;
     }
 
     public async Task<IActionResult> Index(int page = 1)
@@ -47,7 +52,6 @@ public class QrCodeItemsController : Controller
         var encodedSourceBaseUrl = Uri.EscapeDataString(requestBaseUrl);
         var customSchemeUrl = $"vkfoodarea://qr/{encodedCode}?source={encodedSourceBaseUrl}";
         var androidIntentUrl = $"intent://qr/{encodedCode}?source={encodedSourceBaseUrl}#Intent;scheme=vkfoodarea;package=com.companyname.vkfoodarea;end";
-        var apiUrl = $"/api/resolve-qr?code={encodedCode}";
 
         var html = $$"""
 <!DOCTYPE html>
@@ -55,16 +59,17 @@ public class QrCodeItemsController : Controller
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Mo VKFoodArea</title>
+    <title>Mở VKFoodArea</title>
     <style>
         :root {
             color-scheme: light;
-            --bg: #f4f9f6;
+            --bg: #f3f7f5;
             --card: #ffffff;
             --ink: #12352f;
             --muted: #5e746d;
-            --accent: #16a34a;
-            --accent-dark: #11793a;
+            --accent: #0f8f62;
+            --accent-soft: #e8f5ef;
+            --border: #d7e6df;
         }
 
         * { box-sizing: border-box; }
@@ -85,7 +90,8 @@ public class QrCodeItemsController : Controller
         main {
             width: min(100%, 520px);
             background: var(--card);
-            border-radius: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
             padding: 28px;
             box-shadow: 0 20px 50px rgba(14, 46, 38, 0.12);
         }
@@ -105,9 +111,18 @@ public class QrCodeItemsController : Controller
             display: inline-block;
             padding: 6px 10px;
             border-radius: 999px;
-            background: #edf8ef;
-            color: var(--accent-dark);
+            background: var(--accent-soft);
+            color: var(--accent);
             font-weight: 700;
+        }
+
+        .note {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: #f8fbf9;
+            border: 1px solid var(--border);
+            font-size: 14px;
         }
 
         .actions {
@@ -122,30 +137,34 @@ public class QrCodeItemsController : Controller
             align-items: center;
             min-height: 48px;
             padding: 0 16px;
-            border-radius: 14px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 700;
         }
 
         a.primary {
             color: #fff;
-            background: linear-gradient(135deg, #16a34a, #0f8b64);
+            background: var(--accent);
         }
 
         a.secondary {
             color: var(--ink);
             background: #eef5f1;
+            border: 1px solid var(--border);
         }
     </style>
 </head>
 <body>
     <main>
-        <h1>Dang mo VKFoodArea</h1>
-        <p>Neu dien thoai da cai app, lien ket nay se mo thang man hinh thuyet minh. Neu ban dang demo TTS, hay quet ma nay trong man hinh QR cua app hoac bam nut mo app ben duoi.</p>
-        <p>Ma QR: <span class="code">{{htmlCode}}</span></p>
+        <h1>Đang mở VKFoodArea</h1>
+        <p>Nếu điện thoại đã cài app, liên kết này sẽ mở thẳng đúng nội dung của mã QR. Nếu app chưa bật lên, hãy bấm nút bên dưới.</p>
+        <p>Mã QR: <span class="code">{{htmlCode}}</span></p>
+        <div class="note">
+            Cùng một mã này dùng được cho camera ngoài app và camera trong app. Nếu quét bằng camera trong app, hãy mở QR trên màn hình khác hoặc in ra để camera nhìn thấy.
+        </div>
         <div class="actions">
-            <a id="open-app-button" class="button primary" href="{{customSchemeUrl}}" data-android-intent="{{androidIntentUrl}}">Mo ung dung</a>
-            <a class="button secondary" href="{{apiUrl}}">Xem du lieu API</a>
+            <a id="open-app-button" class="button primary" href="{{customSchemeUrl}}" data-android-intent="{{androidIntentUrl}}">Mở ứng dụng</a>
+            <a class="button secondary" href="{{requestBaseUrl}}">Quay lại website</a>
         </div>
     </main>
     <script>
@@ -166,6 +185,27 @@ public class QrCodeItemsController : Controller
 """;
 
         return Content(html, "text/html; charset=utf-8");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/qr-image/{code}")]
+    public IActionResult Image(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return BadRequest("Missing QR code.");
+
+        var normalizedCode = code.Trim();
+        var targetUrl = $"{BuildPublicBaseUrl()}/qr/{Uri.EscapeDataString(normalizedCode)}";
+        var svg = QrSvgBuilder.BuildSvg(targetUrl);
+        return Content(svg, "image/svg+xml; charset=utf-8");
+    }
+
+    private string BuildPublicBaseUrl()
+    {
+        var configuredBaseUrl = (_configuration["PublicBaseUrl"] ?? string.Empty).Trim();
+        return string.IsNullOrWhiteSpace(configuredBaseUrl)
+            ? BuildRequestBaseUrl()
+            : configuredBaseUrl.TrimEnd('/');
     }
 
     private string BuildRequestBaseUrl()

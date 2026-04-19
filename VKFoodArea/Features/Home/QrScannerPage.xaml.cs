@@ -421,11 +421,11 @@ public partial class QrScannerPage : ContentPage
     {
         var supportText = _text.CurrentLanguage switch
         {
-            "en" => "Scan the code at each stop to open the place and start narration right away.",
-            "zh" => "扫描每个站点的二维码，立即打开地点并开始讲解。",
-            "ja" => "各スポットのQRコードを読み取ると、その場で案内を開いて再生できます。",
-            "de" => "Scannen Sie den Code am jeweiligen Stopp, um den Ort zu öffnen und die Audioführung sofort zu starten.",
-            _ => "Quét mã tại mỗi điểm dừng để mở quán và nghe thuyết minh ngay."
+            "en" => "Scan the code at each stop to open the place and start narration right away.\nIf the QR is showing on this same phone, open it on another screen or print it so the camera can see it.",
+            "zh" => "扫描每个站点的二维码，立即打开地点并开始讲解。\n如果二维码正显示在这台手机上，请换到另一块屏幕或打印出来让相机扫描。",
+            "ja" => "各スポットのQRコードを読み取ると、その場で案内を開いて再生できます。\n同じスマホの画面にQRを表示している場合は、別の画面に出すか印刷してカメラで読み取ってください。",
+            "de" => "Scannen Sie den Code am jeweiligen Stopp, um den Ort zu öffnen und die Audioführung sofort zu starten.\nWenn der QR-Code auf genau diesem Handy angezeigt wird, öffnen Sie ihn bitte auf einem anderen Bildschirm oder drucken Sie ihn aus.",
+            _ => "Quét mã tại mỗi điểm dừng để mở quán và nghe thuyết minh ngay.\nNếu QR đang nằm trên chính điện thoại này, hãy mở nó ở màn hình khác hoặc in ra để camera quét được."
         };
 
         if (!_apiBaseUrlService.CanUseDemoTools || !_showDemoOptions)

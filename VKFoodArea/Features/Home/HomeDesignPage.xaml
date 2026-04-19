@@ -154,6 +154,20 @@
                                  HorizontalOptions="Fill"
                                  VerticalOptions="Fill" />
 
+                    <Border Margin="10"
+                            BackgroundColor="#F8FCFA"
+                            Stroke="#D6E1DD"
+                            StrokeThickness="1"
+                            Padding="9,5"
+                            StrokeShape="RoundRectangle 8"
+                            HorizontalOptions="Start"
+                            VerticalOptions="Start">
+                        <Label x:Name="HomeMapModeLabel"
+                               FontSize="10"
+                               FontAttributes="Bold"
+                               TextColor="#244F49" />
+                    </Border>
+
                     <Grid Padding="10"
                           RowDefinitions="*,Auto"
                           ColumnDefinitions="*,Auto">

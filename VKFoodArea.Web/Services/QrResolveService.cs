@@ -32,11 +32,7 @@ public class QrResolveService : IQrResolveService
             .FirstOrDefaultAsync();
 
         if (qrItem is not null)
-        {
-            var resolvedFromQrItem = await ResolveQrItemTargetAsync(qrItem);
-            if (resolvedFromQrItem is not null)
-                return resolvedFromQrItem;
-        }
+            return await ResolveQrItemTargetAsync(qrItem);
 
         var poi = await BuildPoiQuery()
             .AsNoTracking()

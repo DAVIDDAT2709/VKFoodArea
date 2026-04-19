@@ -128,6 +128,15 @@
                         HeightRequest="56"
                         FontAttributes="Bold" />
             </Grid>
+
+            <Button x:Name="OpenMapButton"
+                    Clicked="OnOpenMapClicked"
+                    Text="Mở Google Maps"
+                    BackgroundColor="#EAF4F1"
+                    TextColor="#1F6F64"
+                    CornerRadius="8"
+                    HeightRequest="50"
+                    FontAttributes="Bold" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

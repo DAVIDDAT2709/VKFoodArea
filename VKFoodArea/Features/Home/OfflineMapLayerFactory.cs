@@ -209,24 +209,11 @@ public static class OfflineMapLayerFactory
     {
         var labels = new List<IFeature>
         {
-            CreateLabelFeature("Ph\u1ed1 \u1ea9m th\u1ef1c V\u0129nh Kh\u00e1nh", 106.70440, 10.76105, "#173330", "#FDF8E8"),
-            CreateLabelFeature("B\u1ebfn V\u00e2n \u0110\u1ed3n", 106.70465, 10.76282, "#467082", "#EAF6FB"),
-            CreateLabelFeature("Qu\u1eadn 4", 106.70235, 10.76018, "#5C706B", "#F5FAF7")
-        };
-
-        return new MemoryLayer("Offline map labels")
-        {
-            Features = labels
-        };
-    }
-
-    private static MemoryLayer CreateLabelLayer()
-    {
-        var labels = new List<IFeature>
-        {
-            CreateLabelFeature("Phố ẩm thực Vĩnh Khánh", 106.70440, 10.76105, "#173330", "#FDF8E8"),
+            CreateLabelFeature("Trục Vĩnh Khánh", 106.70440, 10.76105, "#173330", "#FDF8E8"),
             CreateLabelFeature("Bến Vân Đồn", 106.70465, 10.76282, "#467082", "#EAF6FB"),
-            CreateLabelFeature("Quận 4", 106.70235, 10.76018, "#5C706B", "#F5FAF7")
+            CreateLabelFeature("Đường Hoàng Diệu", 106.70220, 10.75972, "#5C706B", "#F5FAF7"),
+            CreateLabelFeature("Cụm quán ốc", 106.70282, 10.76142, "#176B61", "#EAF4F1"),
+            CreateLabelFeature("Khu ăn khuya", 106.70468, 10.76054, "#8A5A00", "#FFF6D8")
         };
 
         return new MemoryLayer("Offline map labels")

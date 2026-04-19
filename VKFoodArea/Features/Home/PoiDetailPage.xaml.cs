@@ -1,6 +1,9 @@
 ﻿using VKFoodArea.Models;
 using VKFoodArea.Services;
 
+using Microsoft.Maui.ApplicationModel;
+using System.Globalization;
+
 namespace VKFoodArea.Features.Home;
 
 public partial class PoiDetailPage : ContentPage
@@ -67,6 +70,32 @@ public partial class PoiDetailPage : ContentPage
         await _narrationService.StopAsync();
     }
 
+    private async void OnOpenMapClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await Launcher.OpenAsync(BuildExternalMapUri(Poi));
+        }
+        catch
+        {
+            await DisplayAlertAsync("Bản đồ", "Không mở được Google Maps lúc này.", _text["Common.Ok"]);
+        }
+    }
+
+    private static Uri BuildExternalMapUri(Poi poi)
+    {
+        if (!string.IsNullOrWhiteSpace(poi.MapUrl) &&
+            Uri.TryCreate(poi.MapUrl, UriKind.Absolute, out var existingUri))
+        {
+            return existingUri;
+        }
+
+        var latitude = poi.Latitude.ToString(CultureInfo.InvariantCulture);
+        var longitude = poi.Longitude.ToString(CultureInfo.InvariantCulture);
+        var query = Uri.EscapeDataString($"{latitude},{longitude}");
+        return new Uri($"https://www.google.com/maps/search/?api=1&query={query}");
+    }
+
     private void ApplyLocalizedText()
     {
         Title = Poi.Name;
@@ -77,5 +106,6 @@ public partial class PoiDetailPage : ContentPage
         DescriptionSectionLabel.Text = _text["PoiDetail.DescriptionSection"];
         PlayNarrationButton.Text = $"▶ {_text["PoiDetail.Play"]}";
         StopNarrationButton.Text = $"⏹ {_text["PoiDetail.Stop"]}";
+        OpenMapButton.Text = "Mở Google Maps";
     }
 }

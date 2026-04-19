@@ -123,17 +123,24 @@
                                                 StrokeShape="RoundRectangle 8"
                                                 HorizontalOptions="Start"
                                                 VerticalOptions="Start">
-                                                <HorizontalStackLayout Spacing="7">
-                                                        <Ellipse x:Name="MapModeDot"
-                                                                 WidthRequest="7"
-                                                                 HeightRequest="7"
-                                                                 Fill="#1F9D74"
-                                                                 VerticalOptions="Center"/>
-                                                        <Label x:Name="MapModeLabel"
-                                                               FontSize="11"
-                                                               FontAttributes="Bold"
-                                                               TextColor="#244F49"/>
-                                                </HorizontalStackLayout>
+                                                <VerticalStackLayout Spacing="2">
+                                                        <HorizontalStackLayout Spacing="7">
+                                                                <Ellipse x:Name="MapModeDot"
+                                                                         WidthRequest="7"
+                                                                         HeightRequest="7"
+                                                                         Fill="#1F9D74"
+                                                                         VerticalOptions="Center"/>
+                                                                <Label x:Name="MapModeLabel"
+                                                                       FontSize="11"
+                                                                       FontAttributes="Bold"
+                                                                       TextColor="#244F49"/>
+                                                        </HorizontalStackLayout>
+                                                        <Label x:Name="MapModeDetailLabel"
+                                                               FontSize="10"
+                                                               TextColor="#617A74"
+                                                               MaxLines="1"
+                                                               LineBreakMode="TailTruncation"/>
+                                                </VerticalStackLayout>
                                         </Border>
 
                                         <Border Margin="12,58,12,0"
@@ -257,7 +264,7 @@
                                 StrokeThickness="1"
                                 Padding="12,10"
                                 StrokeShape="RoundRectangle 8">
-                                <Grid ColumnDefinitions="Auto,*"
+                                <Grid ColumnDefinitions="Auto,*,Auto"
                                       ColumnSpacing="9">
                                         <Ellipse WidthRequest="9"
                                                  HeightRequest="9"
@@ -269,6 +276,19 @@
                                                TextColor="#35534D"
                                                LineBreakMode="TailTruncation"
                                                MaxLines="2"/>
+                                        <Button x:Name="OpenExternalMapButton"
+                                                Grid.Column="2"
+                                                Text="Mở Maps"
+                                                Clicked="OnOpenExternalMapClicked"
+                                                IsVisible="False"
+                                                HeightRequest="32"
+                                                Padding="12,0"
+                                                CornerRadius="8"
+                                                BackgroundColor="#EAF4F1"
+                                                TextColor="#1F6F64"
+                                                FontSize="11"
+                                                FontAttributes="Bold"
+                                                VerticalOptions="Center"/>
                                 </Grid>
                         </Border>
 

@@ -279,6 +279,7 @@ public class PoiService : IPoiService
             .AsNoTracking()
             .Where(x =>
                 (!currentPoiId.HasValue || x.Id != currentPoiId.Value) &&
+                x.ApprovalStatus != PoiApprovalStatus.Rejected &&
                 x.Latitude >= minLatitude &&
                 x.Latitude <= maxLatitude &&
                 x.Longitude >= minLongitude &&
@@ -286,15 +287,14 @@ public class PoiService : IPoiService
             .Select(x => new
             {
                 x.Id,
-                x.ApprovalStatus
+                x.Name
             })
             .ToListAsync();
 
-        var hasDuplicate = candidatePois.Any(x =>
-            PoiApprovalStatus.Normalize(x.ApprovalStatus) != PoiApprovalStatus.Rejected);
+        var duplicatePoi = candidatePois.FirstOrDefault();
 
-        return hasDuplicate
-            ? "Tọa độ này đã được dùng cho một POI khác."
+        return duplicatePoi is not null
+            ? $"Tọa độ này đang được dùng bởi \"{duplicatePoi.Name}\". Bạn chỉ có thể dùng lại khi POI đó đã bị xóa hoặc bị từ chối."
             : null;
     }
 

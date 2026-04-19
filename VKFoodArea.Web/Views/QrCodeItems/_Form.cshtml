@@ -18,17 +18,20 @@
             <input asp-for="Title" class="form-control" placeholder="Tên hiển thị" />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
-        <div class="col-md-6">
-            <label asp-for="ImageFile" class="form-label"></label>
-            <input asp-for="ImageFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-            <span asp-validation-for="ImageFile" class="text-danger"></span>
+        <div class="col-12">
+            <div class="border rounded-3 bg-light p-3">
+                <div class="fw-semibold mb-1">Mã QR được tạo tự động</div>
+                <div class="text-muted small">
+                    Nội dung quét luôn bám theo liên kết mở app của mã này. Không còn tình trạng ảnh QR và mã lưu trong hệ thống bị lệch nhau.
+                </div>
+            </div>
         </div>
-        @if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
+        @if (!string.IsNullOrWhiteSpace(Model.Code))
         {
             <div class="col-md-6">
-                <label class="form-label">Ảnh hiện tại</label>
+                <label class="form-label">QR hiện tại</label>
                 <div class="qr-preview">
-                    <img src="@Model.CurrentImageUrl" alt="QR @Model.Title" />
+                    <img src="@($"/qr-image/{Uri.EscapeDataString(Model.Code)}")" alt="QR @Model.Title" />
                 </div>
             </div>
         }
@@ -68,7 +71,16 @@
         function syncTargetPanels() {
             const current = (select?.value || "poi").toLowerCase();
             panels.forEach((panel) => {
-                panel.style.display = panel.getAttribute("data-target-panel") === current ? "" : "none";
+                const isVisible = panel.getAttribute("data-target-panel") === current;
+                panel.style.display = isVisible ? "" : "none";
+
+                panel.querySelectorAll("select, input").forEach((field) => {
+                    field.disabled = !isVisible;
+
+                    if (!isVisible && field.tagName === "SELECT") {
+                        field.value = "";
+                    }
+                });
             });
         }
 

@@ -10,13 +10,13 @@
         <h2>Quản trị viên</h2>
     </div>
     <div class="page-actions">
-        <a asp-action="Create" class="btn btn-primary">Thêm admin</a>
+        <a asp-action="Create" class="btn btn-primary">Thêm tài khoản</a>
     </div>
 </section>
 
 <section class="metrics-grid page-section">
     <article class="metric-card metric-card--blue">
-        <span class="metric-card__label">Tổng admin</span>
+        <span class="metric-card__label">Tổng tài khoản</span>
         <strong class="metric-card__value">@Model.TotalCount</strong>
     </article>
     <article class="metric-card metric-card--green">
@@ -33,7 +33,7 @@
     @if (!users.Any())
     {
         <div class="empty-state">
-            <p>Chưa có tài khoản admin.</p>
+            <p>Chưa có tài khoản quản trị.</p>
         </div>
     }
     else

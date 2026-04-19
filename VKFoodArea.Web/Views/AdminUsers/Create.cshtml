@@ -1,22 +1,22 @@
 @model VKFoodArea.Web.ViewModels.AdminUserFormViewModel
 @{
-    ViewData["Title"] = "Them admin";
+    ViewData["Title"] = "Thêm tài khoản";
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Them tai khoan CMS</h2>
+        <h2>Thêm tài khoản quản trị</h2>
     </div>
     <div class="page-actions">
-        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
     </div>
 </section>
 
 <form asp-action="Create" method="post">
     <partial name="_Form" model="Model" />
     <div class="page-actions page-section">
-        <button type="submit" class="btn btn-primary">Luu admin</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Huy</a>
+        <button type="submit" class="btn btn-primary">Lưu tài khoản</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
     </div>
 </form>
 
