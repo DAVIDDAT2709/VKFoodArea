@@ -17,13 +17,14 @@ public interface IPoiService
     Task<int> CreateAsync(PoiFormViewModel vm);
     Task<bool> UpdateAsync(int id, PoiFormViewModel vm);
     Task<bool> DeleteAsync(int id);
-    Task<bool> ApproveAsync(int id);
+    Task<(bool Success, string? Error)> ApproveAsync(int id);
     Task<bool> RejectAsync(int id, string? reviewNote);
     Task<bool> ResubmitAsync(int id);
 
     Task<List<PoiDto>> GetActiveForApiAsync();
     Task<PoiDto?> GetByIdForApiAsync(int id);
 
+    Task<string?> ValidateIdentityAsync(int? currentPoiId, string? name, string? address);
     Task<string?> ValidateDefaultQrCodeAsync(int? currentPoiId, string? qrCode);
     Task<string?> ValidateCoordinatesAsync(int? currentPoiId, double? latitude, double? longitude);
     string? ValidateImageFile(IFormFile? imageFile);

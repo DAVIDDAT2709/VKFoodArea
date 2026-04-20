@@ -137,6 +137,7 @@ public class TourService : ITourService
             .AsNoTracking()
             .Where(x =>
                 x.IsActive &&
+                x.Stops.Any() &&
                 x.Stops.All(stop =>
                     stop.Poi != null &&
                     stop.Poi.IsActive &&
@@ -154,6 +155,7 @@ public class TourService : ITourService
             .FirstOrDefaultAsync(x =>
                 x.Id == id &&
                 x.IsActive &&
+                x.Stops.Any() &&
                 x.Stops.All(stop =>
                     stop.Poi != null &&
                     stop.Poi.IsActive &&

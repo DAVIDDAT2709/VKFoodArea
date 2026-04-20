@@ -258,6 +258,7 @@ public class QrCodeItemService : IQrCodeItemService
                 {
                     x.Id,
                     IsTargetActive = x.IsActive &&
+                        x.Stops.Any() &&
                         x.Stops.All(stop =>
                             stop.Poi != null &&
                             stop.Poi.IsActive &&
@@ -288,7 +289,7 @@ public class QrCodeItemService : IQrCodeItemService
     {
         return await _context.Tours
             .AsNoTracking()
-            .Where(x => x.Stops.All(stop =>
+            .Where(x => x.Stops.Any() && x.Stops.All(stop =>
                 stop.Poi != null &&
                 stop.Poi.IsActive &&
                 stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved))
@@ -336,7 +337,12 @@ public class QrCodeItemService : IQrCodeItemService
             .Where(x => distinctIds.Contains(x.Id))
             .ToDictionaryAsync(
                 x => x.Id,
-                x => (x.Name, x.IsActive));
+                x => (x.Name, x.IsActive &&
+                    x.Stops.Any() &&
+                    x.Stops.All(stop =>
+                        stop.Poi != null &&
+                        stop.Poi.IsActive &&
+                        stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved)));
     }
 
     private static string ResolveTargetName(

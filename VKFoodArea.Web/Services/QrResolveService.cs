@@ -66,6 +66,7 @@ public class QrResolveService : IQrResolveService
                 .FirstOrDefaultAsync(x =>
                     x.Id == qrItem.TargetId &&
                     x.IsActive &&
+                    x.Stops.Any() &&
                     x.Stops.All(stop =>
                         stop.Poi != null &&
                         stop.Poi.IsActive &&

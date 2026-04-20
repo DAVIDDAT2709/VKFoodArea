@@ -199,19 +199,69 @@ public class PoiService : IPoiService
         if (poi is null)
             return false;
 
+        var affectedTourIds = await _context.TourStops
+            .AsNoTracking()
+            .Where(x => x.PoiId == id)
+            .Select(x => x.TourId)
+            .Distinct()
+            .ToListAsync();
+
+        var linkedQrItems = await _context.QrCodeItems
+            .Where(x =>
+                x.TargetType.ToLower() == QrTargetTypes.Poi &&
+                x.TargetId == id)
+            .ToListAsync();
+
+        if (linkedQrItems.Count > 0)
+            _context.QrCodeItems.RemoveRange(linkedQrItems);
+
         _context.Pois.Remove(poi);
         await _context.SaveChangesAsync();
+
+        if (affectedTourIds.Count == 0)
+            return true;
+
+        var affectedTours = await _context.Tours
+            .Include(x => x.Stops)
+            .ThenInclude(x => x.Poi)
+            .Where(x => affectedTourIds.Contains(x.Id))
+            .ToListAsync();
+
+        var hasTourChanges = false;
+
+        foreach (var tour in affectedTours)
+        {
+            var canRemainActive = tour.Stops.Count > 0 &&
+                                  tour.Stops.All(stop =>
+                                      stop.Poi is not null &&
+                                      stop.Poi.IsActive &&
+                                      PoiApprovalStatus.IsApproved(stop.Poi.ApprovalStatus));
+
+            if (tour.IsActive && !canRemainActive)
+            {
+                tour.IsActive = false;
+                hasTourChanges = true;
+            }
+        }
+
+        if (hasTourChanges)
+            await _context.SaveChangesAsync();
+
         return true;
     }
 
-    public async Task<bool> ApproveAsync(int id)
+    public async Task<(bool Success, string? Error)> ApproveAsync(int id)
     {
         if (!_currentAdminService.IsAdmin)
-            return false;
+            return (false, null);
 
         var poi = await _context.Pois.FirstOrDefaultAsync(x => x.Id == id);
         if (poi is null)
-            return false;
+            return (false, null);
+
+        var validationError = await BuildApprovalValidationErrorAsync(poi);
+        if (!string.IsNullOrWhiteSpace(validationError))
+            return (false, validationError);
 
         poi.ApprovalStatus = PoiApprovalStatus.Approved;
         poi.IsActive = true;
@@ -220,7 +270,7 @@ public class PoiService : IPoiService
         poi.ReviewNote = string.Empty;
 
         await _context.SaveChangesAsync();
-        return true;
+        return (true, null);
     }
 
     public async Task<bool> RejectAsync(int id, string? reviewNote)
@@ -293,8 +343,40 @@ public class PoiService : IPoiService
         return null;
     }
 
+    public async Task<string?> ValidateIdentityAsync(int? currentPoiId, string? name, string? address)
+    {
+        return await ValidateIdentityCoreAsync(currentPoiId, name, address);
+
+#if false
+        var identityKey = PoiIdentityHelper.BuildIdentityKey(name, address);
+        if (string.IsNullOrWhiteSpace(identityKey.Replace("|", string.Empty, StringComparison.Ordinal)))
+            return null;
+
+        var candidatePois = await _context.Pois
+            .AsNoTracking()
+            .Where(x => !currentPoiId.HasValue || x.Id != currentPoiId.Value)
+            .Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.Address
+            })
+            .ToListAsync();
+
+        var duplicatePoi = candidatePois.FirstOrDefault(x =>
+            PoiIdentityHelper.BuildIdentityKey(x.Name, x.Address) == identityKey);
+
+        return duplicatePoi is not null
+            ? $"Quán \"{duplicatePoi.Name}\" tại địa chỉ này đã tồn tại trong hệ thống. Bạn chỉ có thể đăng ký lại sau khi Admin xóa quán hiện có."
+            : null;
+#endif
+    }
+
     public async Task<string?> ValidateCoordinatesAsync(int? currentPoiId, double? latitude, double? longitude)
     {
+        return await ValidateCoordinatesCoreAsync(currentPoiId, latitude, longitude);
+
+#if false
         if (!latitude.HasValue || !longitude.HasValue)
             return null;
 
@@ -325,6 +407,7 @@ public class PoiService : IPoiService
         return duplicatePoi is not null
             ? $"Tọa độ này đang được dùng bởi \"{duplicatePoi.Name}\". Bạn chỉ có thể dùng lại khi POI đó đã bị xóa hoặc bị từ chối."
             : null;
+#endif
     }
 
     public string? ValidateImageFile(IFormFile? imageFile)
@@ -711,42 +794,106 @@ public class PoiService : IPoiService
     }
 
     private static string NormalizeSearchText(string? value)
+        => PoiIdentityHelper.NormalizeIdentityText(value);
+
+    private async Task<string?> ValidateCoordinatesCoreAsync(int? currentPoiId, double? latitude, double? longitude)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return string.Empty;
+        if (!latitude.HasValue || !longitude.HasValue)
+            return null;
 
-        var builder = new StringBuilder(value.Length);
-        var previousWasSpace = false;
+        const double coordinateTolerance = 0.0000005;
+        var coordinateKey = PoiIdentityHelper.BuildCoordinateKey(latitude.Value, longitude.Value);
+        var minLatitude = latitude.Value - coordinateTolerance;
+        var maxLatitude = latitude.Value + coordinateTolerance;
+        var minLongitude = longitude.Value - coordinateTolerance;
+        var maxLongitude = longitude.Value + coordinateTolerance;
 
-        foreach (var character in value
-                     .Trim()
-                     .ToLowerInvariant()
-                     .Normalize(NormalizationForm.FormD))
+        var candidatePois = await _context.Pois
+            .AsNoTracking()
+            .Where(x =>
+                (!currentPoiId.HasValue || x.Id != currentPoiId.Value) &&
+                x.Latitude >= minLatitude &&
+                x.Latitude <= maxLatitude &&
+                x.Longitude >= minLongitude &&
+                x.Longitude <= maxLongitude)
+            .Select(x => new
+            {
+                x.Name,
+                x.Latitude,
+                x.Longitude
+            })
+            .ToListAsync();
+
+        var duplicatePoi = candidatePois.FirstOrDefault(x =>
+            PoiIdentityHelper.BuildCoordinateKey(x.Latitude, x.Longitude) == coordinateKey);
+
+        return duplicatePoi is not null
+            ? $"Tọa độ này đang được dùng bởi \"{duplicatePoi.Name}\". Bạn chỉ có thể dùng lại sau khi Admin xóa POI đó."
+            : null;
+    }
+
+    private async Task<string?> ValidateIdentityCoreAsync(int? currentPoiId, string? name, string? address)
+    {
+        var normalizedName = PoiIdentityHelper.NormalizeIdentityText(name);
+        var normalizedAddress = PoiIdentityHelper.NormalizeIdentityText(address);
+        var identityKey = PoiIdentityHelper.BuildIdentityKey(name, address);
+
+        if (string.IsNullOrWhiteSpace(normalizedName) &&
+            string.IsNullOrWhiteSpace(normalizedAddress))
         {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
-                continue;
-
-            var normalizedCharacter = character switch
-            {
-                '\u0111' => 'd',
-                '\u0110' => 'd',
-                _ => character
-            };
-
-            if (char.IsWhiteSpace(normalizedCharacter))
-            {
-                if (previousWasSpace)
-                    continue;
-
-                builder.Append(' ');
-                previousWasSpace = true;
-                continue;
-            }
-
-            builder.Append(normalizedCharacter);
-            previousWasSpace = false;
+            return null;
         }
 
-        return builder.ToString().Trim();
+        var candidatePois = await _context.Pois
+            .AsNoTracking()
+            .Where(x => !currentPoiId.HasValue || x.Id != currentPoiId.Value)
+            .Select(x => new
+            {
+                x.Name,
+                x.Address
+            })
+            .ToListAsync();
+
+        var duplicateByName = candidatePois.FirstOrDefault(x =>
+            !string.IsNullOrWhiteSpace(normalizedName) &&
+            PoiIdentityHelper.NormalizeIdentityText(x.Name) == normalizedName);
+
+        if (duplicateByName is not null)
+            return $"Tên quán \"{duplicateByName.Name}\" đã tồn tại trong hệ thống. Bạn chỉ có thể đăng ký lại sau khi Admin xóa quán hiện có.";
+
+        var duplicateByAddress = candidatePois.FirstOrDefault(x =>
+            !string.IsNullOrWhiteSpace(normalizedAddress) &&
+            PoiIdentityHelper.NormalizeIdentityText(x.Address) == normalizedAddress);
+
+        if (duplicateByAddress is not null)
+            return $"Địa chỉ này đã được dùng bởi \"{duplicateByAddress.Name}\". Bạn chỉ có thể đăng ký lại sau khi Admin xóa quán hiện có.";
+
+        var duplicateByIdentity = candidatePois.FirstOrDefault(x =>
+            PoiIdentityHelper.BuildIdentityKey(x.Name, x.Address) == identityKey);
+
+        return duplicateByIdentity is not null
+            ? $"Quán \"{duplicateByIdentity.Name}\" tại địa chỉ này đã tồn tại trong hệ thống. Bạn chỉ có thể đăng ký lại sau khi Admin xóa quán hiện có."
+            : null;
+    }
+
+    private async Task<string?> BuildApprovalValidationErrorAsync(Poi poi)
+    {
+        var errors = new List<string>();
+
+        var identityError = await ValidateIdentityAsync(poi.Id, poi.Name, poi.Address);
+        if (!string.IsNullOrWhiteSpace(identityError))
+            errors.Add(identityError);
+
+        var coordinateError = await ValidateCoordinatesCoreAsync(poi.Id, poi.Latitude, poi.Longitude);
+        if (!string.IsNullOrWhiteSpace(coordinateError))
+            errors.Add(coordinateError);
+
+        var qrCodeError = await ValidateDefaultQrCodeAsync(poi.Id, poi.QrCode);
+        if (!string.IsNullOrWhiteSpace(qrCodeError))
+            errors.Add(qrCodeError);
+
+        return errors.Count == 0
+            ? null
+            : string.Join(" ", errors.Distinct(StringComparer.Ordinal));
     }
 }

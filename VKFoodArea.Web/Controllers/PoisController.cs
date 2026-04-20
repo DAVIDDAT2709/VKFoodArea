@@ -36,7 +36,7 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
 
-        await AddCoordinateValidationErrorsAsync(null, vm);
+        await AddPoiBusinessValidationErrorsAsync(null, vm);
         AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
@@ -74,7 +74,7 @@ public class PoisController : Controller
         if (!string.IsNullOrWhiteSpace(imageError))
             ModelState.AddModelError(nameof(vm.ImageFile), imageError);
 
-        await AddCoordinateValidationErrorsAsync(id, vm);
+        await AddPoiBusinessValidationErrorsAsync(id, vm);
         AddAudioValidationErrors(vm);
 
         if (!ModelState.IsValid)
@@ -116,9 +116,15 @@ public class PoisController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Approve(int id)
     {
-        var updated = await _poiService.ApproveAsync(id);
-        if (!updated)
-            return NotFound();
+        var result = await _poiService.ApproveAsync(id);
+        if (!result.Success)
+        {
+            if (string.IsNullOrWhiteSpace(result.Error))
+                return NotFound();
+
+            TempData["ErrorMessage"] = result.Error;
+            return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
+        }
 
         TempData["SuccessMessage"] = "Điểm POI đã được phê duyệt.";
         return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
@@ -162,14 +168,25 @@ public class PoisController : Controller
         AddAudioValidationError(nameof(vm.AudioFileJaUpload), vm.AudioFileJaUpload);
     }
 
-    private async Task AddCoordinateValidationErrorsAsync(int? currentPoiId, PoiFormViewModel vm)
+    private async Task AddPoiBusinessValidationErrorsAsync(int? currentPoiId, PoiFormViewModel vm)
     {
-        var coordinateError = await _poiService.ValidateCoordinatesAsync(currentPoiId, vm.Latitude, vm.Longitude);
-        if (string.IsNullOrWhiteSpace(coordinateError))
-            return;
+        var identityError = await _poiService.ValidateIdentityAsync(currentPoiId, vm.Name, vm.Address);
+        if (!string.IsNullOrWhiteSpace(identityError))
+        {
+            ModelState.AddModelError(nameof(vm.Name), identityError);
+            ModelState.AddModelError(nameof(vm.Address), identityError);
+        }
 
-        ModelState.AddModelError(nameof(vm.Latitude), coordinateError);
-        ModelState.AddModelError(nameof(vm.Longitude), coordinateError);
+        var coordinateError = await _poiService.ValidateCoordinatesAsync(currentPoiId, vm.Latitude, vm.Longitude);
+        if (!string.IsNullOrWhiteSpace(coordinateError))
+        {
+            ModelState.AddModelError(nameof(vm.Latitude), coordinateError);
+            ModelState.AddModelError(nameof(vm.Longitude), coordinateError);
+        }
+
+        var qrCodeError = await _poiService.ValidateDefaultQrCodeAsync(currentPoiId, vm.QrCode);
+        if (!string.IsNullOrWhiteSpace(qrCodeError))
+            ModelState.AddModelError(nameof(vm.QrCode), qrCodeError);
     }
 
     private void AddAudioValidationError(string fieldName, IFormFile? audioFile)

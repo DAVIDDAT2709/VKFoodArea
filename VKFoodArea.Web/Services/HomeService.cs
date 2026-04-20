@@ -192,7 +192,15 @@ public class HomeService : IHomeService
 
     private async Task<int> CountActiveToursAsync(IReadOnlyCollection<int>? ownerPoiIds)
     {
-        var query = _context.Tours.AsNoTracking().Where(x => x.IsActive);
+        var query = _context.Tours
+            .AsNoTracking()
+            .Where(x =>
+                x.IsActive &&
+                x.Stops.Any() &&
+                x.Stops.All(stop =>
+                    stop.Poi != null &&
+                    stop.Poi.IsActive &&
+                    stop.Poi.ApprovalStatus == PoiApprovalStatus.Approved));
         if (ownerPoiIds is null)
             return await query.CountAsync();
 

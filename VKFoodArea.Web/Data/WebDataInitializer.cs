@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 using VKFoodArea.Data;
+using VKFoodArea.Web.Helpers;
 using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 
@@ -41,6 +42,7 @@ public static class WebDataInitializer
         }
 
         await RefreshSeedPoiContentAsync(db);
+        await EnsurePoiUniquenessIndexesAsync(db);
         await EnsurePoiImageUrlsAsync(db, environment);
         await SyncPoiContentTablesAsync(db);
         await SeedDemoPathAsync(db);
@@ -228,6 +230,81 @@ public static class WebDataInitializer
             SET ApprovalStatus = 'Approved'
             WHERE ApprovalStatus IS NULL OR trim(ApprovalStatus) = '';
             """);
+    }
+
+    private static async Task EnsurePoiUniquenessIndexesAsync(AppDbContext db)
+    {
+        var pois = await db.Pois
+            .AsNoTracking()
+            .Select(x => new
+            {
+                x.Name,
+                x.Address,
+                x.Latitude,
+                x.Longitude,
+                x.QrCode
+            })
+            .ToListAsync();
+
+        var hasIdentityDuplicates = pois
+            .GroupBy(x => PoiIdentityHelper.BuildIdentityKey(x.Name, x.Address))
+            .Any(x =>
+                !string.IsNullOrWhiteSpace(x.Key.Replace("|", string.Empty, StringComparison.Ordinal)) &&
+                x.Count() > 1);
+
+        var hasNameDuplicates = pois
+            .GroupBy(x => PoiIdentityHelper.NormalizeIdentityText(x.Name))
+            .Any(x =>
+                !string.IsNullOrWhiteSpace(x.Key) &&
+                x.Count() > 1);
+
+        if (!hasNameDuplicates)
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS UX_Pois_Name
+                ON Pois (lower(trim(Name)))
+                WHERE trim(Name) <> '';
+                """);
+        }
+
+        if (!hasIdentityDuplicates)
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS UX_Pois_NameAddress
+                ON Pois (lower(trim(Name)), lower(trim(Address)))
+                WHERE trim(Name) <> '' AND trim(Address) <> '';
+                """);
+        }
+
+        var hasCoordinateDuplicates = pois
+            .GroupBy(x => PoiIdentityHelper.BuildCoordinateKey(x.Latitude, x.Longitude))
+            .Any(x => x.Count() > 1);
+
+        if (!hasCoordinateDuplicates)
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS UX_Pois_Coordinates
+                ON Pois (printf('%.6f', Latitude), printf('%.6f', Longitude));
+                """);
+        }
+
+        var hasQrDuplicates = pois
+            .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
+            .GroupBy(x => NormalizeQrCode(x.QrCode))
+            .Any(x => x.Count() > 1);
+
+        if (!hasQrDuplicates)
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS UX_Pois_QrCode
+                ON Pois (lower(trim(QrCode)))
+                WHERE trim(QrCode) <> '';
+                """);
+        }
     }
 
     private static async Task EnsureQrCodeImageColumnAsync(AppDbContext db)
@@ -725,5 +802,5 @@ public static class WebDataInitializer
     }
 
     private static string BuildIdentityKey(string? name, string? address)
-        => $"{NormalizeQrCode(name)}|{NormalizeQrCode(address)}";
+        => PoiIdentityHelper.BuildIdentityKey(name, address);
 }
