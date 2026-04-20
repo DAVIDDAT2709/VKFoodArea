@@ -120,21 +120,39 @@ public class PoisController : Controller
         if (!updated)
             return NotFound();
 
-        TempData["SuccessMessage"] = "Điểm POI mới đã được phê duyệt.";
+        TempData["SuccessMessage"] = "Điểm POI đã được phê duyệt.";
         return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
     }
 
     [HttpPost]
     [Authorize(Roles = AdminRoleNames.AdminOnly)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Reject(int id)
+    public async Task<IActionResult> Reject(int id, string? reviewNote)
     {
-        var updated = await _poiService.RejectAsync(id);
+        if (string.IsNullOrWhiteSpace(reviewNote))
+        {
+            TempData["ErrorMessage"] = "Vui lòng nhập lý do từ chối trước khi gửi.";
+            return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
+        }
+
+        var updated = await _poiService.RejectAsync(id, reviewNote);
         if (!updated)
             return NotFound();
 
-        TempData["SuccessMessage"] = "Điểm POI mới đã bị từ chối.";
+        TempData["SuccessMessage"] = "POI đã bị từ chối và đã lưu lý do từ chối.";
         return RedirectToAction(nameof(Index), new { approvalStatus = PoiApprovalStatus.Pending });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Resubmit(int id)
+    {
+        var updated = await _poiService.ResubmitAsync(id);
+        if (!updated)
+            return NotFound();
+
+        TempData["SuccessMessage"] = "POI đã được gửi lại để admin duyệt.";
+        return RedirectToAction(nameof(Edit), new { id });
     }
 
     private void AddAudioValidationErrors(PoiFormViewModel vm)

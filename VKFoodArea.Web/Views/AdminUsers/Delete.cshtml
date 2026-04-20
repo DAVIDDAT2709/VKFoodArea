@@ -1,44 +1,45 @@
 @model VKFoodArea.Web.Models.AdminUser
+@using VKFoodArea.Web.Models
 @{
     ViewData["Title"] = "Xóa tài khoản";
 }
 
 <section class="page-header page-section">
     <div>
-        <h2>Xóa tài khoản quản trị</h2>
+        <h2>Xóa tài khoản hệ thống</h2>
     </div>
     <div class="page-actions">
         <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
     </div>
 </section>
 
-<section class="delete-grid page-section">
-    <article class="card-surface">
-        <div class="section-heading">
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <div>
             <h2>@Model.Username</h2>
         </div>
-        <div class="summary-list">
-            <div class="summary-row">
-                <span>Tên hiển thị</span>
-                <strong>@Model.FullName</strong>
-            </div>
-            <div class="summary-row">
-                <span>Quyền</span>
-                <strong>@Model.Role</strong>
-            </div>
-            <div class="summary-row">
-                <span>Trạng thái</span>
-                <strong>@(Model.IsActive ? "Đang hoạt động" : "Đang khóa")</strong>
-            </div>
-        </div>
-    </article>
+    </div>
 
-    <aside class="warning-panel">
-        <h3>Xác nhận xóa</h3>
-        <p>Thao tác này sẽ xóa tài khoản quản trị khỏi hệ thống.</p>
-        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="page-actions">
+    <div class="summary-list">
+        <div class="summary-row">
+            <span>Họ tên</span>
+            <strong>@Model.FullName</strong>
+        </div>
+        <div class="summary-row">
+            <span>Vai trò</span>
+            <strong>@AdminRoleNames.DisplayName(Model.Role)</strong>
+        </div>
+        <div class="summary-row">
+            <span>Trạng thái</span>
+            <strong>@(Model.IsActive ? "Đang hoạt động" : "Đang khóa")</strong>
+        </div>
+    </div>
+
+    <div class="page-actions mt-4">
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-danger">Xóa tài khoản</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
         </form>
-    </aside>
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+    </div>
 </section>

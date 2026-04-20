@@ -13,6 +13,7 @@
 }
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,6 +22,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VKFoodArea.Web.styles.css" asp-append-version="true" />
 </head>
+
 <body>
     <a class="skip-link" href="#main-content">Đến nội dung chính</a>
 
@@ -47,33 +49,33 @@
 
                 @if (isAdmin)
                 {
-                <a class="@NavClass("Tours")" asp-controller="Tours" asp-action="Index">
-                    <span class="app-nav__icon">TR</span>
-                    <span class="app-nav__content">
-                        <span class="app-nav__title">Tour</span>
-                    </span>
-                </a>
+                    <a class="@NavClass("Tours")" asp-controller="Tours" asp-action="Index">
+                        <span class="app-nav__icon">TR</span>
+                        <span class="app-nav__content">
+                            <span class="app-nav__title">Tour</span>
+                        </span>
+                    </a>
 
-                <a class="@NavClass("Map")" asp-controller="Map" asp-action="Index">
-                    <span class="app-nav__icon">MP</span>
-                    <span class="app-nav__content">
-                        <span class="app-nav__title">Bản đồ Analytics</span>
-                    </span>
-                </a>
+                    <a class="@NavClass("Map")" asp-controller="Map" asp-action="Index">
+                        <span class="app-nav__icon">MP</span>
+                        <span class="app-nav__content">
+                            <span class="app-nav__title">Bản đồ Analytics</span>
+                        </span>
+                    </a>
 
-                <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">
-                    <span class="app-nav__icon">QR</span>
-                    <span class="app-nav__content">
-                        <span class="app-nav__title">Mã QR</span>
-                    </span>
-                </a>
+                    <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">
+                        <span class="app-nav__icon">QR</span>
+                        <span class="app-nav__content">
+                            <span class="app-nav__title">Mã QR</span>
+                        </span>
+                    </a>
 
-                <a class="@NavClass("AdminUsers")" asp-controller="AdminUsers" asp-action="Index">
-                    <span class="app-nav__icon">AD</span>
-                    <span class="app-nav__content">
-                        <span class="app-nav__title">Quản trị viên</span>
-                    </span>
-                </a>
+                    <a class="@NavClass("AdminUsers")" asp-controller="AdminUsers" asp-action="Index">
+                        <span class="app-nav__icon">AD</span>
+                        <span class="app-nav__content">
+                            <span class="app-nav__title">Tài khoản hệ thống</span>
+                        </span>
+                    </a>
                 }
 
                 <a class="@NavClass("NarrationHistories")" asp-controller="NarrationHistories" asp-action="Index">
@@ -146,4 +148,5 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

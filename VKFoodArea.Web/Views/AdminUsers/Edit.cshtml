@@ -5,7 +5,7 @@
 
 <section class="page-header page-section">
     <div>
-        <h2>Cập nhật tài khoản quản trị</h2>
+        <h2>Cập nhật tài khoản hệ thống</h2>
     </div>
     <div class="page-actions">
         <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
@@ -14,6 +14,7 @@
 
 <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
     <partial name="_Form" model="Model" />
+
     <div class="page-actions page-section">
         <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>

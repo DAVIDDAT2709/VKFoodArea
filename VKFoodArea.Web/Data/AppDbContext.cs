@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
     public DbSet<Tour> Tours => Set<Tour>();
     public DbSet<TourStop> TourStops => Set<TourStop>();
     public DbSet<AppDeviceSession> AppDeviceSessions => Set<AppDeviceSession>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -130,5 +132,28 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<AppDeviceSession>()
             .HasIndex(x => x.UserKey);
+
+        modelBuilder.Entity<AuditLog>()
+            .Property(x => x.ActorUsername)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<AuditLog>()
+            .Property(x => x.Action)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<AuditLog>()
+            .Property(x => x.EntityType)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<AuditLog>()
+            .Property(x => x.EntityKey)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<AuditLog>()
+            .Property(x => x.Note)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasIndex(x => x.CreatedAt);
     }
 }

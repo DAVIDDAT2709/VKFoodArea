@@ -7,6 +7,16 @@
     <div>
         <h2>Cập nhật POI</h2>
     </div>
+    <div class="page-actions">
+        @if (Model.CanResubmit)
+        {
+            <form asp-action="Resubmit" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-warning">Gửi lại duyệt</button>
+            </form>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+    </div>
 </section>
 
 <form asp-action="Edit" method="post" enctype="multipart/form-data" class="stack-gap page-section">

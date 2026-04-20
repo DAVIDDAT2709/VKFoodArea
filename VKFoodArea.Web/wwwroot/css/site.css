@@ -303,7 +303,18 @@ a {
 .table-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.65rem;
+}
+
+.table-actions>form {
+  margin: 0;
+  display: flex;
+}
+
+.table-actions .btn {
+  white-space: nowrap;
+  min-height: 36px;
 }
 
 .logout-form {
@@ -1745,4 +1756,117 @@ textarea:focus {
   .table-actions {
     justify-content: flex-start;
   }
+
+  @media (max-width: 960px) {
+    .data-table .table-actions {
+      justify-content: flex-start;
+      gap: 0.5rem;
+    }
+
+    .data-table .table-actions>* {
+      flex: 1 1 calc(50% - 0.5rem);
+      min-width: 140px;
+    }
+
+    .data-table .table-actions>form {
+      width: auto;
+    }
+
+    .data-table .table-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .data-table .table-actions {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .data-table .table-actions>*,
+    .data-table .table-actions>form {
+      width: 100%;
+      flex: 1 1 100%;
+    }
+
+    .data-table .table-actions .btn {
+      width: 100%;
+    }
+  }
+
+  .reject-panel {
+    position: relative;
+    min-width: 240px;
+  }
+
+  .reject-panel[open] {
+    flex: 1 1 100%;
+  }
+
+  .reject-panel__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0.42rem 0.8rem;
+    border: 1px solid #efb0b8;
+    border-radius: 999px;
+    background: #fff;
+    color: #b42318;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .reject-panel__toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .reject-panel__body {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: 0.65rem;
+    padding: 0.9rem;
+    border: 1px solid #f3d3d8;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(180deg, #fff8f8 0%, #ffffff 100%);
+  }
+
+  .reject-panel__hint {
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .reject-panel__form {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .reject-panel__form textarea {
+    resize: vertical;
+    min-height: 86px;
+  }
+
+  .reject-panel__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 680px) {
+    .reject-panel {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .reject-panel__toggle,
+    .reject-panel__actions .btn {
+      width: 100%;
+    }
+  }
+
 }

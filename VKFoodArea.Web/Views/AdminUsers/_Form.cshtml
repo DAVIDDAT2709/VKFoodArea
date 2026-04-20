@@ -5,42 +5,108 @@
 
 <section class="card-surface page-section">
     <div class="section-heading">
-        <h2>Thông tin tài khoản</h2>
+        <div>
+            <h2>@(Model.IsEdit ? "Cập nhật tài khoản" : "Tạo tài khoản mới")</h2>
+        </div>
     </div>
 
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label asp-for="Username" class="form-label"></label>
-            <input asp-for="Username" class="form-control" autocomplete="username" />
-            <span asp-validation-for="Username" class="text-danger"></span>
-        </div>
-        <div class="col-md-6">
-            <label asp-for="FullName" class="form-label"></label>
-            <input asp-for="FullName" class="form-control" autocomplete="name" />
-            <span asp-validation-for="FullName" class="text-danger"></span>
-        </div>
-        <div class="col-md-6">
-            <label asp-for="Role" class="form-label"></label>
-            <select asp-for="Role" class="form-select">
-                <option value="Admin">Admin</option>
-                <option value="RestaurantOwner">Chủ nhà hàng</option>
-            </select>
-            <span asp-validation-for="Role" class="text-danger"></span>
-        </div>
-        <div class="col-md-6">
-            <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control" autocomplete="new-password" />
-            <span asp-validation-for="Password" class="text-danger"></span>
-            @if (Model.IsEdit)
-            {
-                <div class="form-text">Để trống nếu không đổi mật khẩu.</div>
-            }
-        </div>
-        <div class="col-12">
-            <div class="form-check form-switch field-switch">
-                <input asp-for="IsActive" class="form-check-input" />
-                <label asp-for="IsActive" class="form-check-label"></label>
+    <div class="row g-4">
+        <div class="@(Model.ShowAdminInfo ? "col-lg-8" : "col-12")">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" autocomplete="username"
+                           placeholder="Ví dụ: admin01" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" autocomplete="name"
+                           placeholder="Nhập họ tên hiển thị" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Role" class="form-label"></label>
+                    <select asp-for="Role" class="form-select">
+                        <option value="Admin">Admin</option>
+                        <option value="RestaurantOwner">Chủ nhà hàng</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password"
+                           placeholder="@(Model.IsEdit ? "Để trống nếu không đổi" : "Tối thiểu 6 ký tự")" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <div class="summary-row">
+                        <div>
+                            <strong>Cho phép đăng nhập</strong>
+                        </div>
+                        <div class="form-check form-switch field-switch m-0">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        @if (Model.ShowAdminInfo)
+        {
+            <div class="col-lg-4">
+                <section class="card-surface h-100">
+                    <div class="section-heading mb-3">
+                        <div>
+                            <h2>Thông tin tài khoản</h2>
+                        </div>
+                    </div>
+
+                    <div class="summary-list">
+                        <div class="summary-row">
+                            <span>Ngày tạo</span>
+                            <strong>
+                                @(Model.CreatedAt.HasValue
+                                    ? WebDisplayTime.Format(Model.CreatedAt.Value, "dd/MM/yyyy HH:mm")
+                                    : "-")
+                            </strong>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Đăng nhập gần nhất</span>
+                            <strong>
+                                @(Model.LastLoginAt.HasValue
+                                    ? WebDisplayTime.Format(Model.LastLoginAt.Value, "dd/MM/yyyy HH:mm")
+                                    : "Chưa đăng nhập")
+                            </strong>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>POI sở hữu</span>
+                            <strong>@Model.OwnedPoiCount</strong>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Trạng thái truy cập</span>
+                            <strong>@(Model.IsActive ? "Được phép đăng nhập" : "Đang bị khóa đăng nhập")</strong>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Phạm vi quyền</span>
+                            <strong>
+                                @(Model.Role == "RestaurantOwner"
+                                    ? "Quản lý POI của cửa hàng"
+                                    : "Quản trị toàn hệ thống")
+                            </strong>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        }
     </div>
 </section>

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using VKFoodArea.Web.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -90,7 +91,7 @@ public class PoiFormViewModel
     [Display(Name = "Đang hoạt động")]
     public bool IsActive { get; set; } = true;
 
-    public string ApprovalStatus { get; set; } = "Approved";
+    public string ApprovalStatus { get; set; } = PoiApprovalStatus.Approved;
     public bool CanEditActiveState { get; set; } = true;
 
     [Display(Name = "Chủ nhà hàng")]
@@ -98,4 +99,13 @@ public class PoiFormViewModel
 
     public bool CanAssignOwner { get; set; }
     public List<SelectListItem> OwnerOptions { get; set; } = new();
+
+    public DateTime? SubmittedAt { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+
+    [Display(Name = "Lý do từ chối")]
+    [StringLength(500)]
+    public string? ReviewNote { get; set; }
+
+    public bool CanResubmit { get; set; }
 }

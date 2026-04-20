@@ -92,10 +92,6 @@ public class PoiService : IPoiService
             .ThenBy(x => x.Name)
             .ToListAsync();
 
-        accessiblePois = accessiblePois
-            .Where(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) != PoiApprovalStatus.Rejected)
-            .ToList();
-
         var filteredPois = accessiblePois;
 
         if (!string.IsNullOrWhiteSpace(normalizedApprovalStatus))
@@ -126,7 +122,7 @@ public class PoiService : IPoiService
             TotalCount = accessiblePois.Count,
             ActiveCount = accessiblePois.Count(x => x.IsActive && PoiApprovalStatus.IsApproved(x.ApprovalStatus)),
             PendingCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Pending),
-            RejectedCount = 0,
+            RejectedCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Rejected),
             ApprovedCount = accessiblePois.Count(x => PoiApprovalStatus.Normalize(x.ApprovalStatus) == PoiApprovalStatus.Approved)
         };
     }
@@ -227,7 +223,7 @@ public class PoiService : IPoiService
         return true;
     }
 
-    public async Task<bool> RejectAsync(int id)
+    public async Task<bool> RejectAsync(int id, string? reviewNote)
     {
         if (!_currentAdminService.IsAdmin)
             return false;
@@ -236,7 +232,34 @@ public class PoiService : IPoiService
         if (poi is null)
             return false;
 
-        _context.Pois.Remove(poi);
+        poi.ApprovalStatus = PoiApprovalStatus.Rejected;
+        poi.IsActive = false;
+        poi.ReviewedAt = DateTime.UtcNow;
+        poi.ReviewedByAdminUserId = _currentAdminService.UserId;
+        poi.ReviewNote = (reviewNote ?? string.Empty).Trim();
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> ResubmitAsync(int id)
+    {
+        var poi = await ApplyAccessFilter(_context.Pois)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (poi is null)
+            return false;
+
+        if (PoiApprovalStatus.Normalize(poi.ApprovalStatus) != PoiApprovalStatus.Rejected)
+            return false;
+
+        poi.ApprovalStatus = PoiApprovalStatus.Pending;
+        poi.IsActive = false;
+        poi.SubmittedAt = DateTime.UtcNow;
+        poi.ReviewedAt = null;
+        poi.ReviewedByAdminUserId = null;
+        poi.ReviewNote = string.Empty;
+
         await _context.SaveChangesAsync();
         return true;
     }
@@ -375,7 +398,10 @@ public class PoiService : IPoiService
         QrCode = poi.QrCode,
         IsActive = poi.IsActive,
         ApprovalStatus = PoiApprovalStatus.Normalize(poi.ApprovalStatus),
-        OwnerAdminUserId = poi.OwnerAdminUserId
+        OwnerAdminUserId = poi.OwnerAdminUserId,
+        SubmittedAt = poi.SubmittedAt,
+        ReviewedAt = poi.ReviewedAt,
+        ReviewNote = poi.ReviewNote
     };
 
     private static Poi MapToEntity(PoiFormViewModel vm, Poi poi)
@@ -409,6 +435,10 @@ public class PoiService : IPoiService
 
         if (!_currentAdminService.IsAdmin)
             vm.IsActive = false;
+
+        vm.CanResubmit =
+            !_currentAdminService.IsAdmin &&
+            PoiApprovalStatus.Normalize(vm.ApprovalStatus) == PoiApprovalStatus.Rejected;
     }
 
     private void ApplyOwner(PoiFormViewModel vm, Poi poi, bool isNew)
@@ -655,7 +685,8 @@ public class PoiService : IPoiService
     {
         var normalized = (status ?? string.Empty).Trim();
         return normalized.Equals(PoiApprovalStatus.Pending, StringComparison.OrdinalIgnoreCase) ||
-               normalized.Equals(PoiApprovalStatus.Approved, StringComparison.OrdinalIgnoreCase)
+               normalized.Equals(PoiApprovalStatus.Approved, StringComparison.OrdinalIgnoreCase) ||
+               normalized.Equals(PoiApprovalStatus.Rejected, StringComparison.OrdinalIgnoreCase)
             ? PoiApprovalStatus.Normalize(normalized)
             : string.Empty;
     }

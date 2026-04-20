@@ -18,7 +18,8 @@ public interface IPoiService
     Task<bool> UpdateAsync(int id, PoiFormViewModel vm);
     Task<bool> DeleteAsync(int id);
     Task<bool> ApproveAsync(int id);
-    Task<bool> RejectAsync(int id);
+    Task<bool> RejectAsync(int id, string? reviewNote);
+    Task<bool> ResubmitAsync(int id);
 
     Task<List<PoiDto>> GetActiveForApiAsync();
     Task<PoiDto?> GetByIdForApiAsync(int id);
