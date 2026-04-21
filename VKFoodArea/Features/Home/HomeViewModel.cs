@@ -682,17 +682,17 @@ public class HomeViewModel : INotifyPropertyChanged
                 DistanceUnits.Kilometers))
             .ToList();
 
-        var currentStopPoiId = activeTourSession?.CurrentStop?.PoiId
-                               ?? activeTourSession?.CurrentStop?.Poi?.Id;
-
-        if (!currentStopPoiId.HasValue || currentStopPoiId.Value <= 0)
+        var currentStopPoi = PoiReferenceMatcher.FindMatch(
+            orderedPois,
+            activeTourSession?.CurrentStop?.Poi,
+            activeTourSession?.CurrentStop?.PoiId);
+        if (currentStopPoi is null)
             return orderedPois;
 
-        var currentStopIndex = orderedPois.FindIndex(x => x.Id == currentStopPoiId.Value);
+        var currentStopIndex = orderedPois.FindIndex(x => x.Id == currentStopPoi.Id);
         if (currentStopIndex <= 0)
             return orderedPois;
 
-        var currentStopPoi = orderedPois[currentStopIndex];
         orderedPois.RemoveAt(currentStopIndex);
         orderedPois.Insert(0, currentStopPoi);
         return orderedPois;
@@ -700,17 +700,15 @@ public class HomeViewModel : INotifyPropertyChanged
 
     private static Poi? FindPriorityPoi(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
     {
-        var currentStopPoiId = activeTourSession?.CurrentStop?.PoiId
-                               ?? activeTourSession?.CurrentStop?.Poi?.Id;
+        var poiList = pois as IList<Poi> ?? pois.ToList();
+        var currentStopPoi = PoiReferenceMatcher.FindMatch(
+            poiList,
+            activeTourSession?.CurrentStop?.Poi,
+            activeTourSession?.CurrentStop?.PoiId);
+        if (currentStopPoi is not null)
+            return currentStopPoi;
 
-        if (currentStopPoiId.HasValue && currentStopPoiId.Value > 0)
-        {
-            var currentStopPoi = pois.FirstOrDefault(x => x.Id == currentStopPoiId.Value);
-            if (currentStopPoi is not null)
-                return currentStopPoi;
-        }
-
-        return pois
+        return poiList
             .Select(p => new
             {
                 Poi = p,

@@ -107,6 +107,12 @@ public class NarrationService
         if (poi is null || !poi.IsActive)
             return;
 
+        var playablePoi = await EnsureLocalPoiAsync(poi, ct);
+        if (playablePoi is null || !playablePoi.IsActive)
+            return;
+
+        poi = playablePoi;
+
         if (ShouldQueuePlayback(triggerSource))
         {
             await _autoPlaybackQueueLock.WaitAsync(ct);
@@ -123,6 +129,186 @@ public class NarrationService
         }
 
         await PlayPoiInternalAsync(poi, triggerSource, overrideLanguage, overrideMode, tourId, tourName, ct);
+    }
+
+    private async Task<Poi?> EnsureLocalPoiAsync(Poi poi, CancellationToken ct)
+    {
+        var localPoi = await FindMatchingLocalPoiAsync(poi, ct);
+        var hasChanges = false;
+
+        if (localPoi is null)
+        {
+            localPoi = new Poi();
+            _db.Pois.Add(localPoi);
+            hasChanges = true;
+        }
+
+        hasChanges = ApplyPoiSnapshot(localPoi, poi) || hasChanges;
+
+        if (hasChanges)
+            await _db.SaveChangesAsync(ct);
+
+        return localPoi;
+    }
+
+    private async Task<Poi?> FindMatchingLocalPoiAsync(Poi poi, CancellationToken ct)
+    {
+        var normalizedQr = PoiReferenceMatcher.NormalizeQrCode(poi.QrCode);
+        if (!string.IsNullOrWhiteSpace(normalizedQr))
+        {
+            var byQr = await _db.Pois.FirstOrDefaultAsync(
+                x => !string.IsNullOrWhiteSpace(x.QrCode) &&
+                     x.QrCode.ToLower() == normalizedQr,
+                ct);
+
+            if (byQr is not null)
+                return byQr;
+        }
+
+        var normalizedName = (poi.Name ?? string.Empty).Trim().ToLowerInvariant();
+        var normalizedAddress = (poi.Address ?? string.Empty).Trim().ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(normalizedName) ||
+            !string.IsNullOrWhiteSpace(normalizedAddress))
+        {
+            var byIdentity = await _db.Pois.FirstOrDefaultAsync(
+                x => x.Name.Trim().ToLower() == normalizedName &&
+                     x.Address.Trim().ToLower() == normalizedAddress,
+                ct);
+
+            if (byIdentity is not null)
+                return byIdentity;
+        }
+
+        return poi.Id > 0
+            ? await _db.Pois.FirstOrDefaultAsync(x => x.Id == poi.Id, ct)
+            : null;
+    }
+
+    private static bool ApplyPoiSnapshot(Poi target, Poi source)
+    {
+        var hasChanges = false;
+
+        if (!string.Equals(target.Name, source.Name, StringComparison.Ordinal))
+        {
+            target.Name = source.Name;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.Address, source.Address, StringComparison.Ordinal))
+        {
+            target.Address = source.Address;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.PhoneNumber, source.PhoneNumber, StringComparison.Ordinal))
+        {
+            target.PhoneNumber = source.PhoneNumber;
+            hasChanges = true;
+        }
+
+        if (target.Latitude != source.Latitude)
+        {
+            target.Latitude = source.Latitude;
+            hasChanges = true;
+        }
+
+        if (target.Longitude != source.Longitude)
+        {
+            target.Longitude = source.Longitude;
+            hasChanges = true;
+        }
+
+        if (target.RadiusMeters != source.RadiusMeters)
+        {
+            target.RadiusMeters = source.RadiusMeters;
+            hasChanges = true;
+        }
+
+        if (target.Priority != source.Priority)
+        {
+            target.Priority = source.Priority;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.Description, source.Description, StringComparison.Ordinal))
+        {
+            target.Description = source.Description;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.TtsScriptVi, source.TtsScriptVi, StringComparison.Ordinal))
+        {
+            target.TtsScriptVi = source.TtsScriptVi;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.TtsScriptEn, source.TtsScriptEn, StringComparison.Ordinal))
+        {
+            target.TtsScriptEn = source.TtsScriptEn;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.TtsScriptZh, source.TtsScriptZh, StringComparison.Ordinal))
+        {
+            target.TtsScriptZh = source.TtsScriptZh;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.TtsScriptJa, source.TtsScriptJa, StringComparison.Ordinal))
+        {
+            target.TtsScriptJa = source.TtsScriptJa;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.TtsScriptDe, source.TtsScriptDe, StringComparison.Ordinal))
+        {
+            target.TtsScriptDe = source.TtsScriptDe;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.AudioFileVi, source.AudioFileVi, StringComparison.Ordinal))
+        {
+            target.AudioFileVi = source.AudioFileVi;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.AudioFileEn, source.AudioFileEn, StringComparison.Ordinal))
+        {
+            target.AudioFileEn = source.AudioFileEn;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.AudioFileJa, source.AudioFileJa, StringComparison.Ordinal))
+        {
+            target.AudioFileJa = source.AudioFileJa;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.MapUrl, source.MapUrl, StringComparison.Ordinal))
+        {
+            target.MapUrl = source.MapUrl;
+            hasChanges = true;
+        }
+
+        if (target.IsActive != source.IsActive)
+        {
+            target.IsActive = source.IsActive;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.ImageUrl, source.ImageUrl, StringComparison.Ordinal))
+        {
+            target.ImageUrl = source.ImageUrl;
+            hasChanges = true;
+        }
+
+        if (!string.Equals(target.QrCode, source.QrCode, StringComparison.Ordinal))
+        {
+            target.QrCode = source.QrCode;
+            hasChanges = true;
+        }
+
+        return hasChanges;
     }
 
     private async Task PlayPoiInternalAsync(

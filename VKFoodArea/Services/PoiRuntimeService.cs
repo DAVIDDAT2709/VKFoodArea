@@ -292,7 +292,8 @@ public class PoiRuntimeService : IDisposable
             if (activeTourSession?.CurrentStop is { PoiId: > 0 } currentStop)
             {
                 hasPendingTourStop = true;
-                var stopPoi = pois.FirstOrDefault(x => x.Id == currentStop.PoiId) ?? currentStop.Poi;
+                var stopPoi = PoiReferenceMatcher.FindMatch(pois, currentStop.Poi, currentStop.PoiId)
+                              ?? currentStop.Poi;
                 if (stopPoi is not null)
                 {
                     var distanceToStopMeters = Location.CalculateDistance(
@@ -358,7 +359,7 @@ public class PoiRuntimeService : IDisposable
             return;
 
         await _narrationService.PlayPoiAsync(
-            poi.Id,
+            poi,
             shouldAdvanceTour ? "tour" : "auto",
             tourId: tourIdForHistory,
             tourName: tourNameForHistory,
@@ -448,13 +449,19 @@ public class PoiRuntimeService : IDisposable
 
     private static Poi? FindPriorityPoi(Location location, IEnumerable<Poi> pois, TourSession? activeTourSession)
     {
-        var currentStopPoi = activeTourSession?.CurrentStop?.Poi;
-        if (currentStopPoi?.Id > 0)
-        {
-            return pois.FirstOrDefault(x => x.Id == currentStopPoi.Id) ?? currentStopPoi;
-        }
+        var poiList = pois as IList<Poi> ?? pois.ToList();
+        var resolvedCurrentStop = PoiReferenceMatcher.FindMatch(
+            poiList,
+            activeTourSession?.CurrentStop?.Poi,
+            activeTourSession?.CurrentStop?.PoiId);
+        if (resolvedCurrentStop is not null)
+            return resolvedCurrentStop;
 
-        return pois
+        var currentStopPoi = activeTourSession?.CurrentStop?.Poi;
+        if (currentStopPoi is not null)
+            return currentStopPoi;
+
+        return poiList
             .Select(poi => new
             {
                 Poi = poi,

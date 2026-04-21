@@ -112,17 +112,23 @@ public partial class QrScannerPage : ContentPage
             var localPoi = await _poiRepository.GetByQrCodeAsync(value);
             QrResolveResult? resolved = null;
             Exception? resolveException = null;
+            var remoteResolutionSucceeded = false;
 
-            try
+            if (_apiBaseUrlService.HasConfiguredBaseUrl)
             {
-                resolved = await _qrLookupService.ResolveAsync(value);
-            }
-            catch (Exception ex)
-            {
-                resolveException = ex;
+                try
+                {
+                    resolved = await _qrLookupService.ResolveAsync(value);
+                    remoteResolutionSucceeded = true;
+                }
+                catch (Exception ex)
+                {
+                    resolveException = ex;
+                }
             }
 
-            resolved ??= BuildLocalPoiFallback(value, localPoi);
+            if (resolved is null && !remoteResolutionSucceeded)
+                resolved = BuildLocalPoiFallback(value, localPoi);
 
             if (resolved is null)
             {

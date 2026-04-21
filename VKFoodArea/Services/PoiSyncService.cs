@@ -58,17 +58,18 @@ public class PoiSyncService
             var localPois = await _db.Pois.ToListAsync(ct);
             var localByQr = localPois
                 .Where(x => !string.IsNullOrWhiteSpace(x.QrCode))
-                .GroupBy(x => NormalizeQrCode(x.QrCode))
+                .GroupBy(x => PoiReferenceMatcher.NormalizeQrCode(x.QrCode))
                 .ToDictionary(x => x.Key, x => x.First());
             var localByIdentity = localPois
                 .Select(x => new
                 {
                     Poi = x,
-                    Key = BuildIdentityKey(x.Name, x.Address)
+                    Key = PoiReferenceMatcher.BuildIdentityKey(x.Name, x.Address)
                 })
                 .Where(x => !string.IsNullOrWhiteSpace(x.Key))
                 .GroupBy(x => x.Key, StringComparer.Ordinal)
                 .ToDictionary(x => x.Key, x => x.First().Poi, StringComparer.Ordinal);
+            var syncedLocalPoiIds = new HashSet<int>();
             await using var transaction = await _db.Database.BeginTransactionAsync(ct);
 
             foreach (var dto in remotePois)
@@ -81,14 +82,23 @@ public class PoiSyncService
                 }
 
                 ApplyRemotePoi(local, dto);
+                syncedLocalPoiIds.Add(local.Id);
 
-                var normalizedQr = NormalizeQrCode(local.QrCode);
+                var normalizedQr = PoiReferenceMatcher.NormalizeQrCode(local.QrCode);
                 if (!string.IsNullOrWhiteSpace(normalizedQr))
                     localByQr[normalizedQr] = local;
 
-                var identityKey = BuildIdentityKey(local.Name, local.Address);
+                var identityKey = PoiReferenceMatcher.BuildIdentityKey(local.Name, local.Address);
                 if (!string.IsNullOrWhiteSpace(identityKey))
                     localByIdentity[identityKey] = local;
+            }
+
+            foreach (var localPoi in localPois)
+            {
+                if (syncedLocalPoiIds.Contains(localPoi.Id))
+                    continue;
+
+                localPoi.IsActive = false;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -112,22 +122,19 @@ public class PoiSyncService
         }
     }
 
-    private static string NormalizeQrCode(string? qrCode)
-        => (qrCode ?? string.Empty).Trim().ToLowerInvariant();
-
     private static Poi? FindExistingPoi(
         RemotePoiDto dto,
         IReadOnlyDictionary<string, Poi> localByQr,
         IReadOnlyDictionary<string, Poi> localByIdentity)
     {
-        var normalizedQr = NormalizeQrCode(dto.QrCode);
+        var normalizedQr = PoiReferenceMatcher.NormalizeQrCode(dto.QrCode);
         if (!string.IsNullOrWhiteSpace(normalizedQr) &&
             localByQr.TryGetValue(normalizedQr, out var byQr))
         {
             return byQr;
         }
 
-        var identityKey = BuildIdentityKey(dto.Name, dto.Address);
+        var identityKey = PoiReferenceMatcher.BuildIdentityKey(dto.Name, dto.Address);
         if (!string.IsNullOrWhiteSpace(identityKey) &&
             localByIdentity.TryGetValue(identityKey, out var byIdentity))
         {
@@ -159,20 +166,6 @@ public class PoiSyncService
         local.QrCode = dto.QrCode;
         local.IsActive = dto.IsActive;
         local.MapUrl = CreateMapUrl(dto.Latitude, dto.Longitude);
-    }
-
-    private static string BuildIdentityKey(string? name, string? address)
-    {
-        var normalizedName = (name ?? string.Empty).Trim().ToLowerInvariant();
-        var normalizedAddress = (address ?? string.Empty).Trim().ToLowerInvariant();
-
-        if (string.IsNullOrWhiteSpace(normalizedName) &&
-            string.IsNullOrWhiteSpace(normalizedAddress))
-        {
-            return string.Empty;
-        }
-
-        return $"{normalizedName}|{normalizedAddress}";
     }
 
     private static string CreateMapUrl(double latitude, double longitude)

@@ -119,17 +119,23 @@ public class AppLinkService
 
         var localPoi = await _poiRepository.GetByQrCodeAsync(code);
         QrResolveResult? resolved = null;
+        var remoteResolutionSucceeded = false;
 
-        try
+        if (_apiBaseUrlService.HasConfiguredBaseUrl)
         {
-            resolved = await _qrLookupService.ResolveAsync(code, ct);
-        }
-        catch when (localPoi is not null)
-        {
-            resolved = null;
+            try
+            {
+                resolved = await _qrLookupService.ResolveAsync(code, ct);
+                remoteResolutionSucceeded = true;
+            }
+            catch when (localPoi is not null)
+            {
+                resolved = null;
+            }
         }
 
-        resolved ??= BuildLocalPoiFallback(code, localPoi);
+        if (resolved is null && !remoteResolutionSucceeded)
+            resolved = BuildLocalPoiFallback(code, localPoi);
         if (resolved is null)
             throw new AppLinkTargetNotFoundException();
 
