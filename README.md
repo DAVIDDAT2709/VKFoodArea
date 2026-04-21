@@ -41,6 +41,21 @@ VKFoodArea không chỉ là một ứng dụng hiển thị danh sách quán ăn
 
 ```mermaid
 flowchart LR
+    U[Người dùng / Khách du lịch] --> A[Ứng dụng Android - .NET MAUI]
+    A <--> W[Web quản trị + API - ASP.NET Core MVC]
+    W <--> D[(SQLite Database)]
+    M[Admin / Chủ cửa hàng] --> W
+```
+
+### Tổng quan kiến trúc
+Hệ thống VKFoodArea được xây dựng theo mô hình gồm 3 thành phần chính:
+
+- **Ứng dụng mobile Android**: phục vụ người dùng cuối, hỗ trợ xem POI, bản đồ, nghe TTS, quét QR và tham gia tour.
+- **Website quản trị tích hợp API**: phục vụ quản lý dữ liệu, quản lý nội dung và cung cấp API cho mobile app.
+- **Cơ sở dữ liệu SQLite**: lưu trữ dữ liệu địa điểm, lịch sử nghe, tour, QR và dữ liệu vận hành hệ thống.
+
+---
+
 ## 👥 4. Thành viên nhóm
 
 <table>
@@ -71,7 +86,6 @@ flowchart LR
 - **Backend + UI + tài liệu PRD** giúp hệ thống có tính hoàn chỉnh cả về kỹ thuật lẫn trình bày học thuật.
 
 Sự phân công này tạo nên một đồ án vừa có **tính triển khai thực tế**, vừa có **chất lượng báo cáo và trình bày**.
-    U[Người dùng / Khách du lịch] --> A[Ứng dụng Android - .NET MAUI]
     A <--> W[Web quản trị + API - ASP.NET Core MVC]
     W <--> D[(SQLite Database)]
     M[Admin / Chủ cửa hàng] --> W
