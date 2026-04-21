@@ -50,12 +50,6 @@ Hệ thống gồm:
 - **Ứng dụng di động Android** viết bằng **.NET MAUI** để hỗ trợ người dùng tra cứu điểm ăn uống, nghe thuyết minh TTS, quét QR và trải nghiệm tour.
 - **Web quản trị tích hợp API** viết bằng **ASP.NET Core MVC** để quản lý nội dung, quản lý POI, tour, mã QR, lịch sử nghe và dữ liệu phục vụ demo.
 
-README này được thiết kế theo hướng:
-- **gọn gàng**
-- **chuyên nghiệp**
-- **dễ trình bày với giảng viên**
-- **vẫn có điểm nhấn thị giác rõ ràng**
-
 ---
 
 ## 🎯 2. Mục tiêu dự án
