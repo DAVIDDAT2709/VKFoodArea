@@ -331,11 +331,20 @@ public class PoiService : IPoiService
         if (duplicatedInPois)
             return "Mã QR mặc định bị trùng với một POI khác.";
 
-        var duplicatedInQrItems = await _context.QrCodeItems
+        var duplicatedInQrItemsQuery = _context.QrCodeItems
             .AsNoTracking()
-            .AnyAsync(x =>
+            .Where(x =>
                 !string.IsNullOrWhiteSpace(x.Code) &&
                 x.Code.ToLower() == normalized);
+
+        if (currentPoiId.HasValue)
+        {
+            duplicatedInQrItemsQuery = duplicatedInQrItemsQuery.Where(x =>
+                (x.TargetType ?? string.Empty).Trim().ToLower() != QrTargetTypes.Poi ||
+                x.TargetId != currentPoiId.Value);
+        }
+
+        var duplicatedInQrItems = await duplicatedInQrItemsQuery.AnyAsync();
 
         if (duplicatedInQrItems)
             return "Mã QR mặc định bị trùng với một QR Code đã tạo trong module QR.";
