@@ -51,14 +51,11 @@
         </div>
         <div>
             <label class="form-label" for="approvalStatus">Trạng thái duyệt</label>
-            <select id="approvalStatus" name="approvalStatus" class="form-select">
+            <select asp-for="ApprovalStatus" id="approvalStatus" name="approvalStatus" class="form-select">
                 <option value="">Tất cả</option>
-                <option value="@PoiApprovalStatus.Pending"
-                        selected="@(Model.ApprovalStatus == PoiApprovalStatus.Pending)">Chờ duyệt</option>
-                <option value="@PoiApprovalStatus.Approved"
-                        selected="@(Model.ApprovalStatus == PoiApprovalStatus.Approved)">Đã duyệt</option>
-                <option value="@PoiApprovalStatus.Rejected"
-                        selected="@(Model.ApprovalStatus == PoiApprovalStatus.Rejected)">Bị từ chối</option>
+                <option value="@PoiApprovalStatus.Pending">Chờ duyệt</option>
+                <option value="@PoiApprovalStatus.Approved">Đã duyệt</option>
+                <option value="@PoiApprovalStatus.Rejected">Bị từ chối</option>
             </select>
         </div>
         <div class="search-actions">

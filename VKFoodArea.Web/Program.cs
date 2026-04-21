@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using VKFoodArea.Web.Data;
@@ -6,6 +7,10 @@ using VKFoodArea.Web.Models;
 using VKFoodArea.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
@@ -28,10 +33,16 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireRole(AdminRoleNames.Admin, AdminRoleNames.RestaurantOwner));
 });
 
+var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                              ?? "Data Source=vkfoodarea_web.db";
+var sqliteConnectionString = ResolveSqliteConnectionString(
+    builder.Environment.ContentRootPath,
+    defaultConnectionString);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options
         .UseSqlite(
-            "Data Source=vkfoodarea_web.db",
+            sqliteConnectionString,
             sqlite => sqlite.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
         .ConfigureWarnings(warnings =>
         {
@@ -89,3 +100,16 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+
+static string ResolveSqliteConnectionString(string contentRootPath, string connectionString)
+{
+    var sqliteBuilder = new SqliteConnectionStringBuilder(connectionString);
+    var dataSource = string.IsNullOrWhiteSpace(sqliteBuilder.DataSource)
+        ? "vkfoodarea_web.db"
+        : sqliteBuilder.DataSource;
+
+    if (!Path.IsPathRooted(dataSource))
+        sqliteBuilder.DataSource = Path.GetFullPath(Path.Combine(contentRootPath, dataSource));
+
+    return sqliteBuilder.ToString();
+}

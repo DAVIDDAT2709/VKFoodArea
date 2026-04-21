@@ -587,7 +587,9 @@ public class PoiService : IPoiService
 
         var owners = await _context.AdminUsers
             .AsNoTracking()
-            .Where(x => x.IsActive && x.Role == AdminRoleNames.RestaurantOwner)
+            .Where(x =>
+                (x.IsActive && x.Role == AdminRoleNames.RestaurantOwner) ||
+                (vm.OwnerAdminUserId.HasValue && x.Id == vm.OwnerAdminUserId.Value))
             .OrderBy(x => x.FullName)
             .ThenBy(x => x.Username)
             .ToListAsync();
@@ -595,10 +597,23 @@ public class PoiService : IPoiService
         foreach (var owner in owners)
         {
             vm.OwnerOptions.Add(new SelectListItem(
-                $"{owner.FullName} ({owner.Username})",
+                BuildOwnerOptionLabel(owner),
                 owner.Id.ToString(),
                 vm.OwnerAdminUserId == owner.Id));
         }
+    }
+
+    private static string BuildOwnerOptionLabel(AdminUser owner)
+    {
+        var label = $"{owner.FullName} ({owner.Username})";
+
+        if (!owner.IsActive)
+            return $"{label} - đang bị khóa";
+
+        if (owner.Role != AdminRoleNames.RestaurantOwner)
+            return $"{label} - không còn quyền chủ quán";
+
+        return label;
     }
 
     private static void SyncContentCollections(Poi poi, PoiFormViewModel vm)

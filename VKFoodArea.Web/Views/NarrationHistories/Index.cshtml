@@ -54,31 +54,31 @@
         </div>
         <div>
             <label class="form-label" for="language">Ngôn ngữ</label>
-            <select id="language" name="language" class="form-select">
+            <select asp-for="Language" id="language" name="language" class="form-select">
                 <option value="">Tất cả</option>
-                <option value="vi" selected="@(Model.Language == "vi")">VI</option>
-                <option value="en" selected="@(Model.Language == "en")">EN</option>
-                <option value="zh" selected="@(Model.Language == "zh")">ZH</option>
-                <option value="ja" selected="@(Model.Language == "ja")">JA</option>
-                <option value="de" selected="@(Model.Language == "de")">DE</option>
+                <option value="vi">VI</option>
+                <option value="en">EN</option>
+                <option value="zh">ZH</option>
+                <option value="ja">JA</option>
+                <option value="de">DE</option>
             </select>
         </div>
         <div>
             <label class="form-label" for="mode">Kiểu phát</label>
-            <select id="mode" name="mode" class="form-select">
+            <select asp-for="Mode" id="mode" name="mode" class="form-select">
                 <option value="">Tất cả</option>
-                <option value="tts" selected="@(Model.Mode == "tts")">TTS</option>
-                <option value="audio" selected="@(Model.Mode == "audio")">Audio</option>
+                <option value="tts">TTS</option>
+                <option value="audio">Audio</option>
             </select>
         </div>
         <div>
             <label class="form-label" for="source">Nguồn</label>
-            <select id="source" name="source" class="form-select">
+            <select asp-for="Source" id="source" name="source" class="form-select">
                 <option value="">Tất cả</option>
-                <option value="gps" selected="@(Model.Source == "gps")">GPS</option>
-                <option value="tour" selected="@(Model.Source == "tour")">Tour</option>
-                <option value="qr" selected="@(Model.Source == "qr")">QR</option>
-                <option value="manual" selected="@(Model.Source == "manual")">Thủ công</option>
+                <option value="gps">GPS</option>
+                <option value="tour">Tour</option>
+                <option value="qr">QR</option>
+                <option value="manual">Thủ công</option>
             </select>
         </div>
         <div class="search-actions">
