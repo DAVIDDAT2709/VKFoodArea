@@ -41,6 +41,36 @@ VKFoodArea không chỉ là một ứng dụng hiển thị danh sách quán ăn
 
 ```mermaid
 flowchart LR
+## 👥 4. Thành viên nhóm
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Nguyễn Đỗ Đạt</h3>
+      <p><b>MSSV:</b> 3123411067</p>
+      <p>
+        Phụ trách <b>phát triển frontend</b> cho ứng dụng mobile và website,
+        đồng thời thiết kế <b>trải nghiệm người dùng (UX)</b>.
+      </p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Nguyễn Mạnh Hùng</h3>
+      <p><b>MSSV:</b> 3123411111</p>
+      <p>
+        Phụ trách <b>phát triển backend</b> cho ứng dụng mobile và website,
+        thiết kế <b>giao diện người dùng (UI)</b>, xây dựng <b>tài liệu PRD</b>
+        và hoàn thiện <b>báo cáo dự án</b>.
+      </p>
+    </td>
+  </tr>
+</table>
+
+### Cách phối hợp trong dự án
+
+- **Frontend + UX** giúp hoàn thiện trải nghiệm sử dụng trực tiếp của người dùng.
+- **Backend + UI + tài liệu PRD** giúp hệ thống có tính hoàn chỉnh cả về kỹ thuật lẫn trình bày học thuật.
+
+Sự phân công này tạo nên một đồ án vừa có **tính triển khai thực tế**, vừa có **chất lượng báo cáo và trình bày**.
     U[Người dùng / Khách du lịch] --> A[Ứng dụng Android - .NET MAUI]
     A <--> W[Web quản trị + API - ASP.NET Core MVC]
     W <--> D[(SQLite Database)]
