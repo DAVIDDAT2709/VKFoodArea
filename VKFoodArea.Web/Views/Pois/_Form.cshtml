@@ -12,10 +12,17 @@
     <input asp-for="IsActive" type="hidden" />
 }
 
+<nav class="form-jump-nav card-surface card-surface--compact" aria-label="Điều hướng form POI">
+    <a href="#poi-info">Thông tin</a>
+    <a href="#poi-location">Vị trí</a>
+    <a href="#poi-tts">Nội dung TTS</a>
+    <a href="#poi-audio">Âm thanh</a>
+</nav>
+
 @if (Model.Id > 0 || Model.SubmittedAt.HasValue || Model.ReviewedAt.HasValue ||
 !string.IsNullOrWhiteSpace(Model.ReviewNote))
 {
-    <section class="card-surface page-section">
+    <section class="card-surface page-section form-section" id="poi-review-status">
         <div class="section-heading">
             <h2>Trạng thái duyệt</h2>
         </div>
@@ -61,7 +68,7 @@
         }
 
         <div class="editor-layout">
-            <section class="card-surface">
+            <section class="card-surface form-section" id="poi-info">
                 <div class="section-heading">
                     <h2>Thông tin địa điểm</h2>
                 </div>
@@ -105,7 +112,7 @@
                 </div>
             </section>
 
-            <section class="card-surface">
+            <section class="card-surface form-section" id="poi-location">
                 <div class="section-heading">
                     <h2>Vị trí</h2>
                 </div>
@@ -168,7 +175,7 @@
                 </div>
             </section>
 
-            <section class="card-surface">
+            <section class="card-surface form-section" id="poi-tts">
                 <div class="section-heading">
                     <h2>Nội dung TTS</h2>
                 </div>
@@ -212,7 +219,7 @@
                 </div>
             </section>
 
-            <section class="card-surface">
+            <section class="card-surface form-section" id="poi-audio">
                 <div class="section-heading">
                     <h2>Tệp âm thanh</h2>
                 </div>

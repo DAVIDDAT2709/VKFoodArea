@@ -11,6 +11,25 @@
             ? "app-nav__link active"
             : "app-nav__link";
 }
+@functions {
+    private static Microsoft.AspNetCore.Html.IHtmlContent NavIcon(string icon)
+    {
+        var body = icon switch
+        {
+            "dashboard" => "<rect x=\"3.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"13.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"3.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"13.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect>",
+            "poi" => "<path d=\"M12 21s6-5.2 6-11a6 6 0 0 0-12 0c0 5.8 6 11 6 11Z\"></path><circle cx=\"12\" cy=\"10\" r=\"2\"></circle>",
+            "tour" => "<path d=\"M5 19c3.5-4 10.5 0 14-4\"></path><circle cx=\"5\" cy=\"19\" r=\"2\"></circle><circle cx=\"12\" cy=\"12\" r=\"2\"></circle><circle cx=\"19\" cy=\"15\" r=\"2\"></circle><path d=\"M7 7h8l-2-2m2 2-2 2\"></path>",
+            "map" => "<path d=\"m3 6 5-2 8 2 5-2v14l-5 2-8-2-5 2V6Z\"></path><path d=\"M8 4v14\"></path><path d=\"M16 6v14\"></path>",
+            "qr" => "<path d=\"M4 4h6v6H4V4Z\"></path><path d=\"M14 4h6v6h-6V4Z\"></path><path d=\"M4 14h6v6H4v-6Z\"></path><path d=\"M15 15h2v2h-2z\"></path><path d=\"M19 15h1v5h-5v-1\"></path>",
+            "users" => "<path d=\"M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2\"></path><circle cx=\"9.5\" cy=\"7.5\" r=\"3.5\"></circle><path d=\"M20 8v6\"></path><path d=\"M17 11h6\"></path>",
+            "history" => "<path d=\"M12 8v5l3 2\"></path><path d=\"M21 12a9 9 0 1 1-3-6.7\"></path><path d=\"M21 4v5h-5\"></path>",
+            _ => "<circle cx=\"12\" cy=\"12\" r=\"8\"></circle>"
+        };
+
+        return new Microsoft.AspNetCore.Html.HtmlString(
+            $"<span class=\"app-nav__icon\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" focusable=\"false\">{body}</svg></span>");
+    }
+}
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -34,14 +53,14 @@
 
             <nav class="app-nav" aria-label="Menu quản trị">
                 <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">
-                    <span class="app-nav__icon">DB</span>
+                    @NavIcon("dashboard")
                     <span class="app-nav__content">
                         <span class="app-nav__title">Tổng quan</span>
                     </span>
                 </a>
 
                 <a class="@NavClass("Pois")" asp-controller="Pois" asp-action="Index">
-                    <span class="app-nav__icon">POI</span>
+                    @NavIcon("poi")
                     <span class="app-nav__content">
                         <span class="app-nav__title">Điểm POI</span>
                     </span>
@@ -50,28 +69,28 @@
                 @if (isAdmin)
                 {
                     <a class="@NavClass("Tours")" asp-controller="Tours" asp-action="Index">
-                        <span class="app-nav__icon">TR</span>
+                        @NavIcon("tour")
                         <span class="app-nav__content">
                             <span class="app-nav__title">Tour</span>
                         </span>
                     </a>
 
                     <a class="@NavClass("Map")" asp-controller="Map" asp-action="Index">
-                        <span class="app-nav__icon">MP</span>
+                        @NavIcon("map")
                         <span class="app-nav__content">
                             <span class="app-nav__title">Bản đồ Analytics</span>
                         </span>
                     </a>
 
                     <a class="@NavClass("QrCodeItems")" asp-controller="QrCodeItems" asp-action="Index">
-                        <span class="app-nav__icon">QR</span>
+                        @NavIcon("qr")
                         <span class="app-nav__content">
                             <span class="app-nav__title">Mã QR</span>
                         </span>
                     </a>
 
                     <a class="@NavClass("AdminUsers")" asp-controller="AdminUsers" asp-action="Index">
-                        <span class="app-nav__icon">AD</span>
+                        @NavIcon("users")
                         <span class="app-nav__content">
                             <span class="app-nav__title">Tài khoản hệ thống</span>
                         </span>
@@ -79,7 +98,7 @@
                 }
 
                 <a class="@NavClass("NarrationHistories")" asp-controller="NarrationHistories" asp-action="Index">
-                    <span class="app-nav__icon">LG</span>
+                    @NavIcon("history")
                     <span class="app-nav__content">
                         <span class="app-nav__title">Lịch sử nghe</span>
                     </span>

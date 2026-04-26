@@ -176,7 +176,7 @@ public class AppLinkService
                     }
                 });
 
-                await _narrationService.PlayPoiAsync(poi, triggerSource: "app-link", ct: ct);
+                await _narrationService.PlayPoiAsync(poi, triggerSource: "qr", ct: ct);
                 return;
         }
     }

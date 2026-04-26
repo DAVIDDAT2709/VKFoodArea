@@ -12,7 +12,12 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-builder.Services.AddControllersWithViews();
+builder.Services
+    .AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -57,7 +62,6 @@ builder.Services.AddScoped<ITourService, TourService>();
 builder.Services.AddScoped<IQrResolveService, QrResolveService>();
 builder.Services.AddScoped<IPoiImageStorageService, PoiImageStorageService>();
 builder.Services.AddScoped<IPoiAudioStorageService, PoiAudioStorageService>();
-builder.Services.AddScoped<IQrCodeImageStorageService, QrCodeImageStorageService>();
 builder.Services.AddScoped<IQrCodeItemService, QrCodeItemService>();
 builder.Services.AddScoped<INarrationHistoryService, NarrationHistoryService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();

@@ -2,7 +2,13 @@
 
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
-<section class="card-surface">
+<nav class="form-jump-nav card-surface card-surface--compact" aria-label="Điều hướng form tour">
+    <a href="#tour-info">Thông tin</a>
+    <a href="#tour-tts">TTS tour</a>
+    <a href="#tour-stops-section">Điểm dừng</a>
+</nav>
+
+<section class="card-surface form-section" id="tour-info">
     <div class="section-heading">
         <h2>Thông tin tour</h2>
     </div>
@@ -27,7 +33,7 @@
     </div>
 </section>
 
-<section class="card-surface">
+<section class="card-surface form-section" id="tour-tts">
     <div class="section-heading">
         <h2>TTS tour</h2>
     </div>
@@ -57,7 +63,7 @@
     </div>
 </section>
 
-<section class="card-surface">
+<section class="card-surface form-section" id="tour-stops-section">
     <div class="section-heading">
         <h2>Điểm dừng trong tour</h2>
         <button type="button" class="btn btn-outline-secondary btn-sm" id="add-stop-button">Thêm điểm dừng</button>

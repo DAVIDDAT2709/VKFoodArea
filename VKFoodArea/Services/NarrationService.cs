@@ -576,6 +576,8 @@ public class NarrationService
             tourName,
             playedAtUtc,
             durationSeconds,
+            poi.Latitude,
+            poi.Longitude,
             ct);
     }
 

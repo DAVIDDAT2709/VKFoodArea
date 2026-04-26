@@ -17,7 +17,7 @@
                     </LinearGradientBrush>
                 </Border.Background>
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="30" />
+                    <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label x:Name="HeaderTitleLabel"
@@ -31,7 +31,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 12">
                 <VerticalStackLayout Spacing="12">
                     <Label x:Name="LanguageSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
                     <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="8,2" StrokeShape="RoundRectangle 16">
@@ -40,7 +40,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+            <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 12">
                 <VerticalStackLayout Spacing="12">
                     <Label x:Name="ModeSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
                     <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="8,2" StrokeShape="RoundRectangle 16">
@@ -49,12 +49,51 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border BackgroundColor="#0B1011" StrokeThickness="0" Padding="16" StrokeShape="RoundRectangle 24">
+            <Border BackgroundColor="White" Stroke="#CFE1DB" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="4">
+                            <Label x:Name="ConnectionSectionLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
+                            <Label x:Name="ConnectionStatusLabel" FontSize="13" TextColor="#617A74" LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
+                        <Border Grid.Column="1" BackgroundColor="#E6FAF5" StrokeThickness="0" Padding="10,6" StrokeShape="RoundRectangle 14" VerticalOptions="Start">
+                            <Label x:Name="ConnectionBadgeLabel" FontSize="11" FontAttributes="Bold" TextColor="#129488" />
+                        </Border>
+                    </Grid>
+
+                    <Border BackgroundColor="#F7FBF9" Stroke="#D7E4DF" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Endpoint" FontSize="11" FontAttributes="Bold" TextColor="#86A29B" />
+                            <Label x:Name="ConnectionUrlLabel" FontSize="12.5" TextColor="#163632" LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="TestConnectionButton"
+                                Clicked="OnTestConnectionClicked"
+                                BackgroundColor="#129488"
+                                TextColor="White"
+                                CornerRadius="16"
+                                HeightRequest="48"
+                                FontAttributes="Bold" />
+                        <Button x:Name="EditEndpointButton"
+                                Grid.Column="1"
+                                Clicked="OnEditEndpointClicked"
+                                BackgroundColor="#101415"
+                                TextColor="White"
+                                CornerRadius="16"
+                                HeightRequest="48"
+                                FontAttributes="Bold" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="#0B1011" StrokeThickness="0" Padding="16" StrokeShape="RoundRectangle 12">
                 <Border.Shadow>
                     <Shadow Brush="#000000"
                             Offset="0,10"
                             Radius="18"
-                            Opacity="0.20" />
+                            Opacity="0.10" />
                 </Border.Shadow>
                 <VerticalStackLayout Spacing="12">
                     <Label x:Name="PreviewTitleLabel" FontSize="14" FontAttributes="Bold" TextColor="#F6D45C" />
@@ -109,7 +148,7 @@
                     Clicked="OnSaveClicked"
                     BackgroundColor="#129488"
                     TextColor="White"
-                    CornerRadius="18"
+                    CornerRadius="12"
                     HeightRequest="54"
                     FontAttributes="Bold" />
         </VerticalStackLayout>

@@ -51,11 +51,29 @@ public partial class FullMapPage : ContentPage
     private const double OcVuLatitude = 10.761403;
     private const double OcVuLongitude = 106.702705;
 
+    private const double OcThaoLatitude = 10.7616799;
+    private const double OcThaoLongitude = 106.7023636;
+
+    private const double OcOanhLatitude = 10.7607194;
+    private const double OcOanhLongitude = 106.7032972;
+
+    private const double OtXiemLatitude = 10.7611663;
+    private const double OtXiemLongitude = 106.7057009;
+
     private const double OcLoanLatitude = 10.761224;
     private const double OcLoanLongitude = 106.702629;
 
     private const double DemoMidLatitude = 10.7613135;
     private const double DemoMidLongitude = 106.702667;
+
+    private const string DemoChoiceCurrentTourStop = "Tour: điểm hiện tại";
+    private const string DemoChoiceRunRoute = "Chạy lộ trình mẫu";
+    private const string DemoChoiceOcVu = "Ốc Vũ";
+    private const string DemoChoiceOcThao = "Ốc Thảo";
+    private const string DemoChoiceOcOanh = "Ốc Oanh";
+    private const string DemoChoiceOtXiem = "Ớt Xiêm";
+    private const string DemoChoiceMiddle = "Điểm giữa";
+    private const string DemoChoiceOcLoan = "Ốc Loan";
 
     private const double DefaultMapLatitude = DemoMidLatitude;
     private const double DefaultMapLongitude = DemoMidLongitude;
@@ -103,6 +121,14 @@ public partial class FullMapPage : ContentPage
         .Range(0, 22)
         .Select(level => 156543.03392804097 / Math.Pow(2, level))
         .ToArray();
+
+    private static readonly IReadOnlyList<DemoMapPoint> DemoRoutePoints =
+    [
+        new(DemoChoiceOcVu, "poi:oc-vu", OcVuLatitude, OcVuLongitude),
+        new(DemoChoiceOcThao, "poi:oc-thao", OcThaoLatitude, OcThaoLongitude),
+        new(DemoChoiceOcOanh, "poi:oc-oanh", OcOanhLatitude, OcOanhLongitude),
+        new(DemoChoiceOtXiem, "poi:ot-xiem-quan", OtXiemLatitude, OtXiemLongitude)
+    ];
 
     public FullMapPage(
         HomeViewModel viewModel,
@@ -938,27 +964,141 @@ public partial class FullMapPage : ContentPage
             "Chọn vị trí mẫu",
             "Hủy",
             null,
-            "Ốc Vũ",
-            "Điểm giữa",
-            "Ốc Loan");
+            BuildDemoChoices());
 
         if (string.IsNullOrWhiteSpace(choice) || choice == "Hủy")
             return;
 
         switch (choice)
         {
-            case "Ốc Vũ":
-                await ActivateDemoPointAsync("Ốc Vũ", OcVuLatitude, OcVuLongitude);
+            case DemoChoiceCurrentTourStop:
+                await ActivateCurrentTourStopDemoAsync();
                 break;
 
-            case "Điểm giữa":
-                await ActivateDemoPointAsync("Điểm giữa", DemoMidLatitude, DemoMidLongitude);
+            case DemoChoiceRunRoute:
+                await RunDemoRouteAsync();
                 break;
 
-            case "Ốc Loan":
-                await ActivateDemoPointAsync("Ốc Loan", OcLoanLatitude, OcLoanLongitude);
+            case DemoChoiceOcVu:
+                await ActivateDemoPointAsync(DemoChoiceOcVu, OcVuLatitude, OcVuLongitude);
+                break;
+
+            case DemoChoiceOcThao:
+                await ActivateDemoPointAsync(DemoChoiceOcThao, OcThaoLatitude, OcThaoLongitude);
+                break;
+
+            case DemoChoiceOcOanh:
+                await ActivateDemoPointAsync(DemoChoiceOcOanh, OcOanhLatitude, OcOanhLongitude);
+                break;
+
+            case DemoChoiceOtXiem:
+                await ActivateDemoPointAsync(DemoChoiceOtXiem, OtXiemLatitude, OtXiemLongitude);
+                break;
+
+            case DemoChoiceMiddle:
+                await ActivateDemoPointAsync(DemoChoiceMiddle, DemoMidLatitude, DemoMidLongitude);
+                break;
+
+            case DemoChoiceOcLoan:
+                await ActivateDemoPointAsync(DemoChoiceOcLoan, OcLoanLatitude, OcLoanLongitude);
                 break;
         }
+    }
+
+    private string[] BuildDemoChoices()
+    {
+        var choices = new List<string>();
+        RefreshActiveTourContext();
+
+        if (HasActiveTour())
+            choices.Add(DemoChoiceCurrentTourStop);
+
+        choices.Add(DemoChoiceRunRoute);
+        choices.AddRange([
+            DemoChoiceOcVu,
+            DemoChoiceOcThao,
+            DemoChoiceOcOanh,
+            DemoChoiceOtXiem,
+            DemoChoiceMiddle,
+            DemoChoiceOcLoan
+        ]);
+
+        return choices.ToArray();
+    }
+
+    private async Task ActivateCurrentTourStopDemoAsync()
+    {
+        RefreshActiveTourContext();
+
+        var currentStopPoi = _activeTourSession?.CurrentStop?.Poi;
+        if (currentStopPoi is null)
+        {
+            InfoLabel.Text = "Tour chưa có điểm đang chờ.";
+            return;
+        }
+
+        await ActivateDemoPointAsync(
+            $"Tour - {currentStopPoi.Name}",
+            currentStopPoi.Latitude,
+            currentStopPoi.Longitude);
+    }
+
+    private async Task RunDemoRouteAsync()
+    {
+        var route = BuildDemoRoute();
+        if (route.Count == 0)
+        {
+            InfoLabel.Text = "Chưa có dữ liệu vị trí mẫu.";
+            return;
+        }
+
+        for (var index = 0; index < route.Count; index++)
+        {
+            var point = route[index];
+            InfoLabel.Text = $"Demo GPS {index + 1}/{route.Count}: {point.Label}";
+            await ActivateDemoPointAsync(point.Label, point.Latitude, point.Longitude);
+
+            if (index < route.Count - 1)
+                await Task.Delay(2600);
+        }
+
+        InfoLabel.Text = "Đã chạy xong lộ trình mẫu. Mở web để kiểm tra GPS, history và dashboard.";
+    }
+
+    private List<DemoMapPoint> BuildDemoRoute()
+    {
+        RefreshActiveTourContext();
+
+        if (_activeTourSession is { IsFinished: false, OrderedStops.Count: > 0 } session)
+        {
+            var tourRoute = session.OrderedStops
+                .Select(stop => ResolveDemoPoint(stop.Poi, stop.PoiId))
+                .Where(point => point is not null)
+                .Select(point => point!)
+                .ToList();
+
+            if (tourRoute.Count > 0)
+                return tourRoute;
+        }
+
+        return DemoRoutePoints.ToList();
+    }
+
+    private DemoMapPoint? ResolveDemoPoint(Poi? poi, int? poiId = null)
+    {
+        var matchedPoi = PoiReferenceMatcher.FindMatch(_allPois, poi, poiId) ?? poi;
+        if (matchedPoi is null)
+            return null;
+
+        var normalizedQrCode = PoiReferenceMatcher.NormalizeQrCode(matchedPoi.QrCode);
+        var predefinedPoint = DemoRoutePoints.FirstOrDefault(point =>
+            PoiReferenceMatcher.NormalizeQrCode(point.QrCode) == normalizedQrCode);
+
+        return predefinedPoint ?? new DemoMapPoint(
+            matchedPoi.Name,
+            matchedPoi.QrCode,
+            matchedPoi.Latitude,
+            matchedPoi.Longitude);
     }
 
     private async Task ActivateDemoPointAsync(string label, double latitude, double longitude)
@@ -973,6 +1113,10 @@ public partial class FullMapPage : ContentPage
         _locationTrackerService.SimulateLocation(latitude, longitude);
         await Task.Delay(1200);
         _locationTrackerService.SimulateLocation(latitude, longitude);
+        await Task.Delay(300);
+
+        RefreshMapLocationFromViewModel(true);
+        await RefreshFoodSuggestionAsync();
     }
 
     private async void OnRealGpsClicked(object sender, EventArgs e)
@@ -1076,4 +1220,6 @@ public partial class FullMapPage : ContentPage
             UpdateNearestPoiInfo();
         });
     }
+
+    private sealed record DemoMapPoint(string Label, string QrCode, double Latitude, double Longitude);
 }

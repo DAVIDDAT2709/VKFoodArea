@@ -104,14 +104,14 @@
                     @foreach (var item in users)
                     {
                         <tr>
-                            <td>
+                            <td data-label="Tài khoản">
                                 <div class="table-title">@item.Username</div>
                                 <div class="table-meta">@item.FullName</div>
                             </td>
-                            <td>
+                            <td data-label="Vai trò">
                                 <span class="soft-pill soft-pill--neutral">@AdminRoleNames.DisplayName(item.Role)</span>
                             </td>
-                            <td>
+                            <td data-label="Trạng thái">
                                 @if (item.IsActive)
                                 {
                                     <span class="status-pill status-pill--success">Đang hoạt động</span>
@@ -121,13 +121,13 @@
                                     <span class="status-pill status-pill--muted">Đang khóa</span>
                                 }
                             </td>
-                            <td>@item.OwnedPoiCount</td>
-                            <td>
+                            <td data-label="POI sở hữu">@item.OwnedPoiCount</td>
+                            <td data-label="Đăng nhập gần nhất">
                                 @(item.LastLoginAt.HasValue
                                     ? WebDisplayTime.Format(item.LastLoginAt.Value, "dd/MM/yyyy HH:mm")
                                     : "Chưa đăng nhập")
                             </td>
-                            <td class="text-end">
+                            <td class="text-end" data-label="Thao tác">
                                 <div class="table-actions justify-content-end">
                                     <form asp-action="ResetPassword" asp-route-id="@item.Id" method="post"
                                           onsubmit="return confirm('Reset mật khẩu tài khoản này về 123456?');">
@@ -178,12 +178,12 @@
                     @foreach (var log in logs)
                     {
                         <tr>
-                            <td>@WebDisplayTime.Format(log.CreatedAt, "dd/MM/yyyy HH:mm")</td>
-                            <td>@log.ActorUsername</td>
-                            <td>
+                            <td data-label="Thời gian">@WebDisplayTime.Format(log.CreatedAt, "dd/MM/yyyy HH:mm")</td>
+                            <td data-label="Người thao tác">@log.ActorUsername</td>
+                            <td data-label="Hành động">
                                 <span class="soft-pill soft-pill--neutral">@log.ActionLabel</span>
                             </td>
-                            <td>@log.Note</td>
+                            <td data-label="Nội dung">@log.Note</td>
                         </tr>
                     }
                 </tbody>

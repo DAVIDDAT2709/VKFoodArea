@@ -256,13 +256,16 @@ public class NarrationHistoryService : INarrationHistoryService
         var normalizedQrCode = QrCodeHelper.Normalize(vm.QrCode);
         if (!string.IsNullOrWhiteSpace(normalizedQrCode))
         {
-            var poiByQr = await _context.Pois
+            var qrCandidates = await _context.Pois
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
+                .Where(x =>
                     x.IsActive &&
                     x.ApprovalStatus == PoiApprovalStatus.Approved &&
-                    !string.IsNullOrWhiteSpace(x.QrCode) &&
-                    x.QrCode.ToLower() == normalizedQrCode);
+                    !string.IsNullOrWhiteSpace(x.QrCode))
+                .ToListAsync();
+
+            var poiByQr = qrCandidates.FirstOrDefault(x =>
+                QrCodeHelper.Normalize(x.QrCode) == normalizedQrCode);
 
             if (poiByQr is not null)
                 return poiByQr;

@@ -22,7 +22,7 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="30" />
+                <RoundRectangle CornerRadius="16" />
             </Border.StrokeShape>
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                 <Border WidthRequest="66" HeightRequest="66" BackgroundColor="#DFFFF8" StrokeThickness="0" StrokeShape="RoundRectangle 33">
@@ -33,21 +33,21 @@
                     <Label x:Name="FullNameLabel" FontSize="24" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="White" />
                     <Label x:Name="UsernameLabel" FontSize="13" TextColor="#E6FFFB" />
                 </VerticalStackLayout>
-                <Button Grid.Column="2" Text="⚙" Clicked="OnOpenSettingsClicked" WidthRequest="40" HeightRequest="40" CornerRadius="20" BackgroundColor="#33FFFFFF" TextColor="White" />
+                <Button Grid.Column="2" ImageSource="action_settings_light.svg" Clicked="OnOpenSettingsClicked" WidthRequest="40" HeightRequest="40" CornerRadius="20" BackgroundColor="#33FFFFFF" TextColor="White" />
             </Grid>
         </Border>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="16,0,16,16" Spacing="14">
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="14" StrokeShape="RoundRectangle 20">
+                    <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="14" StrokeShape="RoundRectangle 12">
                         <VerticalStackLayout Spacing="6">
                             <Label x:Name="CurrentLanguageTitleLabel" FontSize="13" TextColor="#6A8781" />
                             <Label x:Name="CurrentLanguageValueLabel" FontSize="18" FontAttributes="Bold" TextColor="#163632" />
                             <Label x:Name="CurrentLanguageHintLabel" FontSize="12" TextColor="#129488" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="1" BackgroundColor="#E6FAF5" StrokeThickness="0" Padding="14" StrokeShape="RoundRectangle 20">
+                    <Border Grid.Column="1" BackgroundColor="#E6FAF5" StrokeThickness="0" Padding="14" StrokeShape="RoundRectangle 12">
                         <VerticalStackLayout Spacing="6">
                             <Label x:Name="UserTypeTitleLabel" FontSize="13" TextColor="#6A8781" />
                             <Label x:Name="UserTypeValueLabel" FontSize="18" FontAttributes="Bold" TextColor="#163632" />
@@ -56,7 +56,7 @@
                     </Border>
                 </Grid>
 
-                <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+                <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 12">
                     <VerticalStackLayout Spacing="12">
                         <Label x:Name="AccountInfoTitleLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
@@ -74,7 +74,7 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 22">
+                <Border BackgroundColor="White" Stroke="#D7E4DF" StrokeThickness="1" Padding="16" StrokeShape="RoundRectangle 12">
                     <VerticalStackLayout Spacing="12">
                         <Label x:Name="QuickActionsTitleLabel" FontSize="17" FontAttributes="Bold" FontFamily="OpenSansSemibold" TextColor="#163632" />
                         <Button x:Name="OpenSettingsButton" Clicked="OnOpenSettingsClicked" BackgroundColor="#129488" TextColor="White" CornerRadius="16" HeightRequest="48" FontAttributes="Bold" />
@@ -85,7 +85,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Border Grid.Row="2" Margin="12,0,12,12" BackgroundColor="White" StrokeThickness="0" Padding="8" StrokeShape="RoundRectangle 24">
+        <Border Grid.Row="2" Margin="12,0,12,12" BackgroundColor="White" StrokeThickness="0" Padding="8" StrokeShape="RoundRectangle 12">
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
                 <Button x:Name="NavHomeButton"
                         Grid.Column="0"
@@ -114,7 +114,7 @@
                         Padding="4,8"
                         ImageSource="nav_history.svg"
                         ContentLayout="Top,4" />
-                <Border Grid.Column="3" BackgroundColor="#DDF7F1" StrokeThickness="0" StrokeShape="RoundRectangle 18">
+                <Border Grid.Column="3" BackgroundColor="#DDF7F1" StrokeThickness="0" StrokeShape="RoundRectangle 10">
                     <Button x:Name="NavAccountButton"
                             Clicked="OnUserClicked"
                             BackgroundColor="Transparent"

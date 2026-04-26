@@ -27,6 +27,8 @@ public class NarrationSyncService
         string? tourName = null,
         DateTime? playedAt = null,
         int? durationSeconds = null,
+        double? latitude = null,
+        double? longitude = null,
         CancellationToken ct = default)
     {
         try
@@ -44,7 +46,9 @@ public class NarrationSyncService
                 TriggerSource = NormalizeTriggerSource(triggerSource),
                 Mode = mode.ToLowerInvariant(),
                 PlayedAt = playedAt ?? DateTime.UtcNow,
-                DurationSeconds = durationSeconds
+                DurationSeconds = durationSeconds,
+                Latitude = latitude,
+                Longitude = longitude
             };
 
             if (!_apiBaseUrlService.TryBuildApiUrl("api/narration-histories", out var url))

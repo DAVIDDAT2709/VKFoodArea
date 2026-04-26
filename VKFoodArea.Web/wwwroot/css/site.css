@@ -216,6 +216,15 @@ a {
   background: rgba(255, 255, 255, 0.14);
 }
 
+.app-nav__icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .app-nav__content {
   display: flex;
   align-items: center;
@@ -352,6 +361,56 @@ a {
 .card-surface,
 .metric-card {
   padding: 1.15rem;
+}
+
+.card-surface--compact {
+  padding: 0.8rem;
+}
+
+.form-jump-nav {
+  position: sticky;
+  top: 1rem;
+  z-index: 8;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.form-jump-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.form-jump-nav a:hover,
+.form-jump-nav a:focus-visible {
+  border-color: rgba(15, 118, 110, 0.34);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.form-section {
+  scroll-margin-top: 6rem;
+}
+
+.form-sticky-actions {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 9;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
 }
 
 .page-header {
@@ -1732,68 +1791,89 @@ textarea:focus {
     justify-content: flex-start;
   }
 
+  .form-jump-nav {
+    position: static;
+  }
+
+  .form-sticky-actions {
+    bottom: 0.75rem;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-sticky-actions .btn {
+    width: 100%;
+  }
+
+  .table-responsive {
+    border: 0;
+    background: transparent;
+  }
+
   .data-table thead {
     display: none;
   }
 
-  .data-table tbody,
-  .data-table tr,
-  .data-table td {
-    display: block;
+  .data-table tbody {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .data-table tr {
+    display: grid;
+    gap: 0.65rem;
     width: 100%;
+    padding: 0.95rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: 0 10px 24px rgba(17, 42, 35, 0.06);
   }
 
   .data-table tbody td {
-    padding: 0.55rem 0.9rem;
+    display: grid;
+    grid-template-columns: minmax(6.8rem, 38%) minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0;
     border: 0;
+    text-align: left !important;
   }
 
-  .data-table tbody tr {
-    padding: 0.35rem 0;
-    border-bottom: 1px solid var(--line);
+  .data-table tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+    text-transform: uppercase;
   }
 
-  .table-actions {
+  .data-table tbody td:not([data-label]) {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table tbody td:not([data-label])::before {
+    display: none;
+  }
+
+  .data-table .table-actions {
     justify-content: flex-start;
+    gap: 0.5rem;
   }
 
-  @media (max-width: 960px) {
-    .data-table .table-actions {
-      justify-content: flex-start;
-      gap: 0.5rem;
-    }
-
-    .data-table .table-actions>* {
-      flex: 1 1 calc(50% - 0.5rem);
-      min-width: 140px;
-    }
-
-    .data-table .table-actions>form {
-      width: auto;
-    }
-
-    .data-table .table-actions .btn {
-      width: 100%;
-      justify-content: center;
-    }
+  .data-table .table-actions>*,
+  .data-table .table-actions>form {
+    flex: 1 1 100%;
+    min-width: 0;
+    width: 100%;
   }
 
-  @media (max-width: 680px) {
-    .data-table .table-actions {
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-    }
-
-    .data-table .table-actions>*,
-    .data-table .table-actions>form {
-      width: 100%;
-      flex: 1 1 100%;
-    }
-
-    .data-table .table-actions .btn {
-      width: 100%;
-    }
+  .data-table .table-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .reject-panel {
@@ -1857,16 +1937,14 @@ textarea:focus {
     justify-content: flex-end;
   }
 
-  @media (max-width: 680px) {
-    .reject-panel {
-      width: 100%;
-      min-width: 0;
-    }
+  .reject-panel {
+    width: 100%;
+    min-width: 0;
+  }
 
-    .reject-panel__toggle,
-    .reject-panel__actions .btn {
-      width: 100%;
-    }
+  .reject-panel__toggle,
+  .reject-panel__actions .btn {
+    width: 100%;
   }
 
 }

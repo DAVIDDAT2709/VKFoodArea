@@ -22,8 +22,8 @@
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="Auto,*,Auto"
                               ColumnSpacing="12">
-                                <Button Text="←"
-                                        Clicked="OnGoHomeClicked"
+                                <Button Clicked="OnGoHomeClicked"
+                                        ImageSource="action_back.svg"
                                         WidthRequest="40"
                                         HeightRequest="40"
                                         CornerRadius="8"
@@ -107,7 +107,7 @@
                                         <Shadow Brush="#122F2A"
                                                 Offset="0,10"
                                                 Radius="18"
-                                                Opacity="0.08"/>
+                                                Opacity="0.05"/>
                                 </Border.Shadow>
 
                                 <Grid>
@@ -119,7 +119,7 @@
                                                 BackgroundColor="#F8FCFA"
                                                 Stroke="#D6E1DD"
                                                 StrokeThickness="1"
-                                                Padding="10,7"
+                                                Padding="9,6"
                                                 StrokeShape="RoundRectangle 8"
                                                 HorizontalOptions="Start"
                                                 VerticalOptions="Start">
@@ -136,6 +136,7 @@
                                                                        TextColor="#244F49"/>
                                                         </HorizontalStackLayout>
                                                         <Label x:Name="MapModeDetailLabel"
+                                                               IsVisible="False"
                                                                FontSize="10"
                                                                TextColor="#617A74"
                                                                MaxLines="1"
@@ -144,6 +145,7 @@
                                         </Border>
 
                                         <Border Margin="12,58,12,0"
+                                                IsVisible="False"
                                                 BackgroundColor="#F8FCFA"
                                                 Stroke="#D6E1DD"
                                                 StrokeThickness="1"
@@ -232,8 +234,8 @@
                                                                        HorizontalOptions="End"
                                                                        VerticalOptions="End"
                                                                        Spacing="10">
-                                                        <Button Text="◎"
-                                                                Clicked="OnMyLocationClicked"
+                                                        <Button Clicked="OnMyLocationClicked"
+                                                                ImageSource="action_location.svg"
                                                                 WidthRequest="42"
                                                                 HeightRequest="42"
                                                                 CornerRadius="8"
@@ -242,8 +244,8 @@
                                                                 BorderColor="#D8E2DE"
                                                                 BorderWidth="1"
                                                                 FontSize="16"/>
-                                                        <Button Text="↺"
-                                                                Clicked="OnHistoryClicked"
+                                                        <Button Clicked="OnHistoryClicked"
+                                                                ImageSource="action_history.svg"
                                                                 WidthRequest="42"
                                                                 HeightRequest="42"
                                                                 CornerRadius="8"
@@ -289,6 +291,60 @@
                                                 FontSize="11"
                                                 FontAttributes="Bold"
                                                 VerticalOptions="Center"/>
+                                </Grid>
+                        </Border>
+
+                        <Border BackgroundColor="#F8FCFA"
+                                Stroke="#D8E2DE"
+                                StrokeThickness="1"
+                                Padding="10,8"
+                                StrokeShape="RoundRectangle 8">
+                                <Grid ColumnDefinitions="*,*,*,*"
+                                      ColumnSpacing="8">
+                                        <HorizontalStackLayout Spacing="6">
+                                                <Ellipse WidthRequest="8"
+                                                         HeightRequest="8"
+                                                         Fill="#2F80ED"
+                                                         VerticalOptions="Center"/>
+                                                <Label Text="POI"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#2F3D39"/>
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Grid.Column="1"
+                                                               Spacing="6">
+                                                <Ellipse WidthRequest="8"
+                                                         HeightRequest="8"
+                                                         Fill="#1F9D74"
+                                                         VerticalOptions="Center"/>
+                                                <Label Text="Gần nhất"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#2F3D39"
+                                                       LineBreakMode="TailTruncation"/>
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Grid.Column="2"
+                                                               Spacing="6">
+                                                <Ellipse WidthRequest="8"
+                                                         HeightRequest="8"
+                                                         Fill="#F59E0B"
+                                                         VerticalOptions="Center"/>
+                                                <Label Text="Tour"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#2F3D39"/>
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Grid.Column="3"
+                                                               Spacing="6">
+                                                <Ellipse WidthRequest="8"
+                                                         HeightRequest="8"
+                                                         Fill="#1D4ED8"
+                                                         VerticalOptions="Center"/>
+                                                <Label Text="Bạn"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#2F3D39"/>
+                                        </HorizontalStackLayout>
                                 </Grid>
                         </Border>
 
@@ -392,7 +448,7 @@
                                 <Shadow Brush="#12312B"
                                         Offset="0,8"
                                         Radius="16"
-                                        Opacity="0.08"/>
+                                        Opacity="0.05"/>
                         </Border.Shadow>
                         <Grid ColumnDefinitions="36,Auto,*,Auto"
                               RowDefinitions="Auto,Auto,Auto"
@@ -400,7 +456,7 @@
                               RowSpacing="4">
                                 <Button x:Name="MiniPlayerCloseButton"
                                         Grid.RowSpan="3"
-                                        Text="X"
+                                        ImageSource="action_close.svg"
                                         Command="{Binding CloseMiniPlayerCommand}"
                                         WidthRequest="34"
                                         HeightRequest="34"

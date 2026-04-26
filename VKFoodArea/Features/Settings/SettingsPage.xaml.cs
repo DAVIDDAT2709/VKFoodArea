@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http;
 using Microsoft.Maui.Controls;
 using VKFoodArea.Services;
 
@@ -9,14 +10,20 @@ public partial class SettingsPage : ContentPage
 {
     private readonly SoundSettingsViewModel _viewModel;
     private readonly AppTextService _text;
+    private readonly ApiBaseUrlService _apiBaseUrlService;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public SettingsPage(
         SoundSettingsViewModel viewModel,
-        AppTextService text)
+        AppTextService text,
+        ApiBaseUrlService apiBaseUrlService,
+        IHttpClientFactory httpClientFactory)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _text = text;
+        _apiBaseUrlService = apiBaseUrlService;
+        _httpClientFactory = httpClientFactory;
         BindingContext = _viewModel;
 
         LanguagePicker.ItemsSource = _viewModel.LanguageOptions;
@@ -33,6 +40,7 @@ public partial class SettingsPage : ContentPage
         var result = await _viewModel.LoadSoundSettingsAsync();
         SyncControlsFromViewModel();
         ApplyLocalizedText();
+        ApplyConnectionStatus();
 
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.Message))
             await DisplayAlertAsync(_text["Common.Error"], result.Message, _text["Common.Ok"]);
@@ -44,6 +52,7 @@ public partial class SettingsPage : ContentPage
         var result = await _viewModel.SaveSoundSettingsAsync();
         ApplyLocalizedText();
         SyncControlsFromViewModel();
+        ApplyConnectionStatus();
 
         var title = result.IsSuccess
             ? _text["Settings.SaveAlertTitle"]
@@ -70,6 +79,62 @@ public partial class SettingsPage : ContentPage
         }
     }
 
+    private async void OnTestConnectionClicked(object sender, EventArgs e)
+    {
+        if (!_apiBaseUrlService.TryBuildApiUrl("api/pois", out var url))
+        {
+            ApplyConnectionStatus("Chưa có endpoint web. Hãy quét QR từ website hoặc nhập URL demo.", false);
+            return;
+        }
+
+        TestConnectionButton.IsEnabled = false;
+        ApplyConnectionStatus("Đang kiểm tra kết nối tới web...", null);
+
+        try
+        {
+            using var response = await _httpClientFactory.CreateClient("DemoHttp").GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                ApplyConnectionStatus("Kết nối OK. App đọc được API POI từ web.", true);
+            }
+            else
+            {
+                ApplyConnectionStatus($"Web phản hồi {(int)response.StatusCode}. Kiểm tra lại URL hoặc server.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ApplyConnectionStatus(FriendlyErrorMessages.Get(ex, _text, FriendlyErrorContext.Startup), false);
+        }
+        finally
+        {
+            TestConnectionButton.IsEnabled = _apiBaseUrlService.HasConfiguredBaseUrl;
+        }
+    }
+
+    private async void OnEditEndpointClicked(object sender, EventArgs e)
+    {
+        if (!_apiBaseUrlService.CanUseDemoTools)
+            return;
+
+        var value = await DisplayPromptAsync(
+            "Web endpoint",
+            "Nhập URL web đang chạy. Để trống để app quay lại URL chính thức hoặc URL tự nhận từ QR.",
+            "Lưu",
+            _text["Common.Cancel"],
+            initialValue: _apiBaseUrlService.BaseUrl,
+            keyboard: Keyboard.Url);
+
+        if (value is null)
+            return;
+
+        var result = _apiBaseUrlService.SaveDemoBaseUrl(value);
+        ApplyConnectionStatus(result.Message, result.Success);
+
+        if (!result.Success)
+            await DisplayAlertAsync(_text["Common.Error"], result.Message, _text["Common.Ok"]);
+    }
+
     private void OnSelectionChanged(object? sender, EventArgs e)
     {
         SyncViewModelFromControls();
@@ -90,6 +155,66 @@ public partial class SettingsPage : ContentPage
         LanguagePicker.Title = _text["Settings.LanguagePickerTitle"];
         ModePicker.Title = _text["Settings.ModePickerTitle"];
         SummaryLabel.Text = _viewModel.SummaryText;
+        ConnectionSectionLabel.Text = "Kết nối web";
+        TestConnectionButton.Text = "Kiểm tra";
+        EditEndpointButton.Text = "Đổi URL";
+    }
+
+    private void ApplyConnectionStatus(string? overrideMessage = null, bool? isHealthy = null)
+    {
+        var hasEndpoint = _apiBaseUrlService.HasConfiguredBaseUrl;
+        var sourceLabel = GetConnectionSourceLabel();
+
+        ConnectionBadgeLabel.Text = isHealthy switch
+        {
+            true => "OK",
+            false => "Cần kiểm tra",
+            _ => hasEndpoint ? sourceLabel : "Chưa có URL"
+        };
+
+        ConnectionBadgeLabel.TextColor = isHealthy switch
+        {
+            true => Color.FromArgb("#129488"),
+            false => Color.FromArgb("#B8452E"),
+            _ => hasEndpoint ? Color.FromArgb("#129488") : Color.FromArgb("#8A5A00")
+        };
+
+        ConnectionStatusLabel.Text = overrideMessage ?? GetConnectionStatusText();
+        ConnectionUrlLabel.Text = hasEndpoint ? _apiBaseUrlService.BaseUrl : "Chưa có endpoint web.";
+        TestConnectionButton.IsEnabled = hasEndpoint;
+        EditEndpointButton.IsVisible = _apiBaseUrlService.CanUseDemoTools;
+        Grid.SetColumnSpan(TestConnectionButton, _apiBaseUrlService.CanUseDemoTools ? 1 : 2);
+    }
+
+    private string GetConnectionSourceLabel()
+    {
+        if (_apiBaseUrlService.IsUsingManualDemoBaseUrl)
+            return "Demo";
+
+        if (_apiBaseUrlService.IsUsingOfficialReleaseBaseUrl)
+            return "Release";
+
+        if (_apiBaseUrlService.IsUsingAutoDetectedBaseUrl)
+            return "Từ QR";
+
+        return "Tự động";
+    }
+
+    private string GetConnectionStatusText()
+    {
+        if (!_apiBaseUrlService.HasConfiguredBaseUrl)
+            return "App chưa biết web endpoint. Quét QR từ website để tự nhận URL, hoặc nhập URL trong chế độ demo.";
+
+        if (_apiBaseUrlService.IsUsingManualDemoBaseUrl)
+            return "App đang dùng URL nhập tay cho demo. Dùng nút kiểm tra trước khi quét QR hoặc tải dữ liệu.";
+
+        if (_apiBaseUrlService.IsUsingAutoDetectedBaseUrl)
+            return "App đang dùng URL tự nhận từ QR gần nhất. Nếu đổi tunnel, hãy quét QR mới hoặc nhập URL mới.";
+
+        if (_apiBaseUrlService.IsUsingOfficialReleaseBaseUrl)
+            return "App đang dùng endpoint release được nhúng khi build.";
+
+        return "App đã có endpoint web. Dùng nút kiểm tra để xác nhận API còn hoạt động.";
     }
 
     private void SyncControlsFromViewModel()

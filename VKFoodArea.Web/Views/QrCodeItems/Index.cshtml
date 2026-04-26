@@ -1,18 +1,7 @@
 @model VKFoodArea.Web.ViewModels.QrCodeItemIndexViewModel
-@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Mã QR";
     var items = Model.Items.Items;
-    var activeCount = Model.ActiveCount;
-    var coveredPoiCount = Model.CoveredPoiCount;
-    var coveredTourCount = Model.CoveredTourCount;
-    var configuredBaseUrl = (Configuration["PublicBaseUrl"] ?? string.Empty).Trim();
-    var forwardedScheme = Context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
-    var forwardedHost = Context.Request.Headers["X-Forwarded-Host"].FirstOrDefault();
-    var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Context.Request.Scheme : forwardedScheme;
-    var host = string.IsNullOrWhiteSpace(forwardedHost) ? Context.Request.Host.Value : forwardedHost;
-    var requestBaseUrl = $"{scheme}://{host}".TrimEnd('/');
-    var baseUrl = (string.IsNullOrWhiteSpace(configuredBaseUrl) ? requestBaseUrl : configuredBaseUrl).TrimEnd('/');
 }
 
 <section class="page-header page-section">
@@ -31,15 +20,15 @@
     </article>
     <article class="metric-card metric-card--green">
         <span class="metric-card__label">Đang hoạt động</span>
-        <strong class="metric-card__value">@activeCount</strong>
+        <strong class="metric-card__value">@Model.ActiveCount</strong>
     </article>
     <article class="metric-card metric-card--orange">
         <span class="metric-card__label">Liên kết POI</span>
-        <strong class="metric-card__value">@coveredPoiCount</strong>
+        <strong class="metric-card__value">@Model.CoveredPoiCount</strong>
     </article>
     <article class="metric-card metric-card--red">
         <span class="metric-card__label">Liên kết Tour</span>
-        <strong class="metric-card__value">@coveredTourCount</strong>
+        <strong class="metric-card__value">@Model.CoveredTourCount</strong>
     </article>
 </section>
 
@@ -59,9 +48,13 @@
         <div class="inventory-grid">
             @foreach (var item in items)
             {
+                var encodedCode = Uri.EscapeDataString(item.Code);
                 <article class="inventory-card qr-card">
                     <div class="inventory-card__media">
-                        <img src="@($"/qr-image/{Uri.EscapeDataString(item.Code)}")" alt="Mã QR @item.Title" loading="lazy" />
+                        <a class="qr-card__preview-link" href="@($"/qr/{encodedCode}")" target="_blank" rel="noopener"
+                           aria-label="Mở link QR @item.Title">
+                            <img src="@($"/qr-image/{encodedCode}")" alt="Mã QR @item.Title" loading="lazy" />
+                        </a>
                     </div>
 
                     <div class="inventory-card__body">
@@ -86,12 +79,6 @@
                                 <span class="mono">@item.Code</span>
                             </div>
                             <div class="inventory-stat">
-                                <strong>Liên kết mở app</strong>
-                                <a class="mono" href="@($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")" target="_blank" rel="noopener">
-                                    @($"{baseUrl}/qr/{Uri.EscapeDataString(item.Code)}")
-                                </a>
-                            </div>
-                            <div class="inventory-stat">
                                 <strong>Đích đến</strong>
                                 <span>@item.TargetType.ToUpperInvariant() #@item.TargetId</span>
                             </div>
@@ -102,6 +89,7 @@
                         </div>
 
                         <div class="inventory-card__actions">
+                            <a href="@($"/qr/{encodedCode}")" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">Mở thử</a>
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
                             <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>
                         </div>

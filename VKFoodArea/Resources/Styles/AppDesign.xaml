@@ -72,7 +72,7 @@
         <Setter Property="Padding" Value="14" />
         <Setter Property="StrokeShape">
             <Setter.Value>
-                <RoundRectangle CornerRadius="18" />
+                <RoundRectangle CornerRadius="12" />
             </Setter.Value>
         </Setter>
     </Style>
@@ -84,7 +84,7 @@
         <Setter Property="Padding" Value="12" />
         <Setter Property="StrokeShape">
             <Setter.Value>
-                <RoundRectangle CornerRadius="16" />
+                <RoundRectangle CornerRadius="12" />
             </Setter.Value>
         </Setter>
     </Style>

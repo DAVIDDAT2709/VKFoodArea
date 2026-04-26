@@ -57,8 +57,8 @@
                         FontAttributes="Bold" />
 
                 <Button Grid.Column="3"
-                        Text="⚙"
                         Clicked="OnSettingsClicked"
+                        ImageSource="action_settings.svg"
                         WidthRequest="40"
                         HeightRequest="40"
                         CornerRadius="12"
@@ -91,7 +91,7 @@
                     Stroke="#D8E2DE"
                     StrokeThickness="1"
                     Padding="8"
-                    StrokeShape="RoundRectangle 18">
+                    StrokeShape="RoundRectangle 12">
                 <CollectionView x:Name="SearchSuggestionCollectionView"
                                 ItemsSource="{Binding SearchSuggestions}"
                                 HeightRequest="{Binding SearchSuggestionHeight}"
@@ -141,12 +141,12 @@
             <Border BackgroundColor="White"
                     Stroke="#D8E2DE"
                     StrokeThickness="1"
-                    StrokeShape="RoundRectangle 22">
+                    StrokeShape="RoundRectangle 12">
                 <Border.Shadow>
                     <Shadow Brush="#122F2A"
                             Offset="0,10"
                             Radius="18"
-                            Opacity="0.08" />
+                            Opacity="0.05" />
                 </Border.Shadow>
 
                 <Grid>
@@ -200,8 +200,8 @@
 
                         <Button Grid.Row="0"
                                 Grid.Column="1"
-                                Text="⌖"
                                 Clicked="OnOpenFullMapClicked"
+                                ImageSource="action_expand.svg"
                                 WidthRequest="36"
                                 HeightRequest="36"
                                 CornerRadius="18"
@@ -260,7 +260,7 @@
                                             Stroke="#DDE6E2"
                                             StrokeThickness="1"
                                             Padding="0"
-                                            StrokeShape="RoundRectangle 20">
+                                            StrokeShape="RoundRectangle 12">
                                         <Border.Shadow>
                                             <Shadow Brush="#12312B"
                                                     Offset="0,4"
@@ -271,7 +271,7 @@
                                         <Grid RowDefinitions="72,Auto">
                                             <Border StrokeThickness="0">
                                                 <Border.StrokeShape>
-                                                    <RoundRectangle CornerRadius="20,20,0,0" />
+                                                    <RoundRectangle CornerRadius="12,12,0,0" />
                                                 </Border.StrokeShape>
                                                 <Grid>
                                                     <Image Source="{Binding ImageUrl}"
@@ -362,7 +362,7 @@
                     <Border BackgroundColor="White"
                             Stroke="#DDE6E2"
                             StrokeThickness="1"
-                            StrokeShape="RoundRectangle 18">
+                            StrokeShape="RoundRectangle 12">
                         <Border.Shadow>
                             <Shadow Brush="#12312B"
                                     Offset="0,8"
@@ -376,7 +376,7 @@
                                        Aspect="AspectFill"
                                        HeightRequest="112" />
 
-                                <Button Text="🔊"
+                                <Button ImageSource="action_sound.svg"
                                         WidthRequest="34"
                                         HeightRequest="34"
                                         CornerRadius="17"
@@ -429,7 +429,7 @@
                 <Shadow Brush="#12312B"
                         Offset="0,8"
                         Radius="16"
-                        Opacity="0.08" />
+                        Opacity="0.05" />
             </Border.Shadow>
             <Grid ColumnDefinitions="36,Auto,*,Auto"
                   RowDefinitions="Auto,Auto,Auto"
@@ -437,7 +437,7 @@
                   RowSpacing="4">
                 <Button x:Name="MiniPlayerCloseButton"
                         Grid.RowSpan="3"
-                        Text="X"
+                        ImageSource="action_close.svg"
                         Command="{Binding CloseMiniPlayerCommand}"
                         WidthRequest="34"
                         HeightRequest="34"
@@ -545,7 +545,7 @@
                 Stroke="#D8E2DE"
                 StrokeThickness="1"
                 Padding="8"
-                StrokeShape="RoundRectangle 22">
+                StrokeShape="RoundRectangle 12">
             <Grid ColumnDefinitions="*,*,*,*"
                   ColumnSpacing="6">
                 <Border Grid.Column="0"

@@ -22,7 +22,7 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="30" />
+                <RoundRectangle CornerRadius="16" />
             </Border.StrokeShape>
 
             <VerticalStackLayout Spacing="14">
@@ -71,7 +71,7 @@
                             Stroke="#D7E4DF"
                             StrokeThickness="1"
                             Padding="20"
-                            StrokeShape="RoundRectangle 24">
+                            StrokeShape="RoundRectangle 12">
                         <VerticalStackLayout Spacing="10">
                             <Label x:Name="EmptyTitleLabel"
                                    FontSize="20"
@@ -91,12 +91,12 @@
                                 StrokeThickness="1"
                                 Padding="14"
                                 Margin="0,0,0,10"
-                                StrokeShape="RoundRectangle 22">
+                                StrokeShape="RoundRectangle 12">
                             <Border.Shadow>
                                 <Shadow Brush="#8FAAA3"
                                         Offset="0,10"
                                         Radius="16"
-                                        Opacity="0.10" />
+                                        Opacity="0.05" />
                             </Border.Shadow>
                             <Grid ColumnDefinitions="Auto,*"
                                   ColumnSpacing="12">
@@ -143,7 +143,7 @@
                     Stroke="#D7E4DF"
                     StrokeThickness="1"
                     Padding="16"
-                    StrokeShape="RoundRectangle 22">
+                    StrokeShape="RoundRectangle 12">
                 <VerticalStackLayout Spacing="10">
                     <Label x:Name="DetailTitleLabel"
                            FontSize="16"
@@ -180,12 +180,12 @@
                 Stroke="#D8E2DE"
                 StrokeThickness="1"
                 Padding="8"
-                StrokeShape="RoundRectangle 22">
+                StrokeShape="RoundRectangle 12">
             <Grid ColumnDefinitions="*,*,*,*"
                   ColumnSpacing="6">
                 <Button x:Name="NavHomeButton" Grid.Column="0" Clicked="OnGoHomeClicked" BackgroundColor="Transparent" TextColor="#708682" FontSize="11" Padding="4,8" ImageSource="nav_home.svg" ContentLayout="Top,4" />
                 <Button x:Name="NavMapButton" Grid.Column="1" Clicked="OnOpenFullMapClicked" BackgroundColor="Transparent" TextColor="#708682" FontSize="11" Padding="4,8" ImageSource="nav_map.svg" ContentLayout="Top,4" />
-                <Border Grid.Column="2" BackgroundColor="#DDF7F1" StrokeThickness="0" StrokeShape="RoundRectangle 18"><Button x:Name="NavHistoryButton" Clicked="OnHistoryClickedCurrent" BackgroundColor="Transparent" TextColor="#159487" FontSize="11" FontAttributes="Bold" Padding="4,8" ImageSource="nav_history.svg" ContentLayout="Top,4" /></Border>
+                <Border Grid.Column="2" BackgroundColor="#DDF7F1" StrokeThickness="0" StrokeShape="RoundRectangle 10"><Button x:Name="NavHistoryButton" Clicked="OnHistoryClickedCurrent" BackgroundColor="Transparent" TextColor="#159487" FontSize="11" FontAttributes="Bold" Padding="4,8" ImageSource="nav_history.svg" ContentLayout="Top,4" /></Border>
                 <Button x:Name="NavAccountButton" Grid.Column="3" Clicked="OnUserClicked" BackgroundColor="Transparent" TextColor="#708682" FontSize="11" Padding="4,8" ImageSource="nav_account.svg" ContentLayout="Top,4" />
             </Grid>
         </Border>

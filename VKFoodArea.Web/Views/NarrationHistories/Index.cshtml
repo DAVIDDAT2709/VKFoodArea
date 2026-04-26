@@ -170,11 +170,11 @@
                 @foreach (var item in items)
                 {
                     <tr>
-                        <td>
+                        <td data-label="Quán">
                             <div class="table-title">@item.PoiName</div>
                             <div class="table-meta">#@item.PoiId</div>
                         </td>
-                        <td>
+                        <td data-label="Tour">
                             @if (item.TourId.HasValue || !string.IsNullOrWhiteSpace(item.TourName))
                             {
                                 <div class="table-title">@(!string.IsNullOrWhiteSpace(item.TourName) ? item.TourName : $"Tour #{item.TourId}")</div>
@@ -185,12 +185,12 @@
                                 <span class="text-muted">-</span>
                             }
                         </td>
-                        <td><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
-                        <td>@item.Mode.ToUpperInvariant()</td>
-                        <td><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
-                        <td>@(item.DurationSeconds.HasValue ? $"{item.DurationSeconds.Value}s" : "-")</td>
-                        <td><span class="soft-pill">@(string.IsNullOrWhiteSpace(item.UserKey) ? "Ẩn danh" : item.UserKey)</span></td>
-                        <td>@WebDisplayTime.Format(item.PlayedAt)</td>
+                        <td data-label="Ngôn ngữ"><span class="lang-pill">@item.Language.ToUpperInvariant()</span></td>
+                        <td data-label="Kiểu phát">@item.Mode.ToUpperInvariant()</td>
+                        <td data-label="Nguồn"><span class="status-pill status-pill--info">@MapSource(item.TriggerSource)</span></td>
+                        <td data-label="Thời lượng">@(item.DurationSeconds.HasValue ? $"{item.DurationSeconds.Value}s" : "-")</td>
+                        <td data-label="Người dùng"><span class="soft-pill">@(string.IsNullOrWhiteSpace(item.UserKey) ? "Ẩn danh" : item.UserKey)</span></td>
+                        <td data-label="Thời gian">@WebDisplayTime.Format(item.PlayedAt)</td>
                     </tr>
                 }
                 </tbody>

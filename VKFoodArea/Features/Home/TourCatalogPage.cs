@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Graphics;
 using VKFoodArea.Models;
 using VKFoodArea.Services;
 
@@ -41,24 +42,26 @@ public class TourCatalogPage : ContentPage
         _serviceProvider = serviceProvider;
         _text = text;
 
-        BackgroundColor = Color.FromArgb("#F5F7F6");
+        BackgroundColor = Color.FromArgb("#EEF4F1");
 
         _headerTitleLabel = new Label
         {
-            FontSize = 24,
+            FontSize = 27,
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#173330")
+            FontFamily = "OpenSansSemibold",
+            TextColor = Colors.White
         };
         _headerSubtitleLabel = new Label
         {
             FontSize = 13,
-            TextColor = Color.FromArgb("#617A74")
+            TextColor = Color.FromArgb("#E8FFFC"),
+            LineBreakMode = LineBreakMode.WordWrap
         };
         _activeSessionCardTitleLabel = new Label
         {
             FontSize = 13,
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#1F6F64")
+            TextColor = Color.FromArgb("#8A5A00")
         };
         _activeSessionTitleLabel = new Label
         {
@@ -76,18 +79,22 @@ public class TourCatalogPage : ContentPage
         {
             BackgroundColor = Color.FromArgb("#1F6F64"),
             TextColor = Colors.White,
-            CornerRadius = 14,
+            CornerRadius = 16,
+            HeightRequest = 46,
+            FontAttributes = FontAttributes.Bold,
             Padding = new Thickness(14, 10)
         };
         _openCurrentButton.Clicked += OnOpenCurrentTourClicked;
 
         _cancelCurrentButton = new Button
         {
-            BackgroundColor = Colors.Transparent,
+            BackgroundColor = Color.FromArgb("#FFF8E8"),
             TextColor = Color.FromArgb("#B8452E"),
             BorderColor = Color.FromArgb("#E7B8AE"),
             BorderWidth = 1,
-            CornerRadius = 14,
+            CornerRadius = 16,
+            HeightRequest = 46,
+            FontAttributes = FontAttributes.Bold,
             Padding = new Thickness(14, 10)
         };
         _cancelCurrentButton.Clicked += OnCancelCurrentTourClicked;
@@ -95,11 +102,18 @@ public class TourCatalogPage : ContentPage
         _activeSessionCard = new Border
         {
             IsVisible = false,
-            BackgroundColor = Colors.White,
-            Stroke = Color.FromArgb("#D8E2DE"),
+            BackgroundColor = Color.FromArgb("#FFF8E8"),
+            Stroke = Color.FromArgb("#F1D187"),
             StrokeThickness = 1,
             Padding = new Thickness(16),
-            StrokeShape = new RoundRectangle { CornerRadius = 18 },
+            StrokeShape = new RoundRectangle { CornerRadius = 12 },
+            Shadow = new Shadow
+            {
+                Brush = new SolidColorBrush(Color.FromArgb("#8A5A00")),
+                Offset = new Point(0, 8),
+                Radius = 16,
+                Opacity = 0.06f
+            },
             Content = new VerticalStackLayout
             {
                 Spacing = 10,
@@ -123,9 +137,11 @@ public class TourCatalogPage : ContentPage
 
         _refreshButton = new Button
         {
-            BackgroundColor = Color.FromArgb("#EAF4F1"),
-            TextColor = Color.FromArgb("#1F6F64"),
-            CornerRadius = 14,
+            BackgroundColor = Color.FromArgb("#EEFFFFFF"),
+            TextColor = Color.FromArgb("#0E625C"),
+            CornerRadius = 16,
+            HeightRequest = 46,
+            FontAttributes = FontAttributes.Bold,
             Padding = new Thickness(14, 10),
             HorizontalOptions = LayoutOptions.Start
         };
@@ -144,7 +160,8 @@ public class TourCatalogPage : ContentPage
         {
             FontSize = 13,
             TextColor = Color.FromArgb("#617A74"),
-            LineBreakMode = LineBreakMode.WordWrap
+            LineBreakMode = LineBreakMode.WordWrap,
+            Margin = new Thickness(2, 0, 2, 0)
         };
 
         _tourListLayout = new VerticalStackLayout
@@ -160,10 +177,31 @@ public class TourCatalogPage : ContentPage
                 Spacing = 14,
                 Children =
                 {
-                    _headerTitleLabel,
-                    _headerSubtitleLabel,
+                    new Border
+                    {
+                        BackgroundColor = Color.FromArgb("#0E9A91"),
+                        StrokeThickness = 0,
+                        Padding = new Thickness(18, 18, 18, 20),
+                        StrokeShape = new RoundRectangle { CornerRadius = 16 },
+                        Shadow = new Shadow
+                        {
+                            Brush = new SolidColorBrush(Color.FromArgb("#0E625C")),
+                            Offset = new Point(0, 10),
+                            Radius = 22,
+                            Opacity = 0.08f
+                        },
+                        Content = new VerticalStackLayout
+                        {
+                            Spacing = 12,
+                            Children =
+                            {
+                                _headerTitleLabel,
+                                _headerSubtitleLabel,
+                                _refreshButton
+                            }
+                        }
+                    },
                     _activeSessionCard,
-                    _refreshButton,
                     _loadingIndicator,
                     _statusLabel,
                     _tourListLayout
@@ -234,7 +272,7 @@ public class TourCatalogPage : ContentPage
                 Stroke = Color.FromArgb("#D8E2DE"),
                 StrokeThickness = 1,
                 Padding = new Thickness(16),
-                StrokeShape = new RoundRectangle { CornerRadius = 18 },
+                StrokeShape = new RoundRectangle { CornerRadius = 12 },
                 Content = new Label
                 {
                     Text = _text["Tour.EmptyList"],
@@ -275,7 +313,9 @@ public class TourCatalogPage : ContentPage
             Text = _text["Tour.StartThisTour"],
             BackgroundColor = Color.FromArgb("#173330"),
             TextColor = Colors.White,
-            CornerRadius = 14,
+            CornerRadius = 16,
+            HeightRequest = 48,
+            FontAttributes = FontAttributes.Bold,
             Padding = new Thickness(14, 10)
         };
         startButton.Clicked += async (_, _) => await StartTourAsync(tour);
@@ -286,37 +326,85 @@ public class TourCatalogPage : ContentPage
             Stroke = Color.FromArgb("#D8E2DE"),
             StrokeThickness = 1,
             Padding = new Thickness(16),
-            StrokeShape = new RoundRectangle { CornerRadius = 18 },
+            StrokeShape = new RoundRectangle { CornerRadius = 12 },
+            Shadow = new Shadow
+            {
+                Brush = new SolidColorBrush(Color.FromArgb("#8FAAA3")),
+                Offset = new Point(0, 10),
+                Radius = 18,
+                Opacity = 0.06f
+            },
             Content = new VerticalStackLayout
             {
-                Spacing = 8,
+                Spacing = 12,
                 Children =
                 {
-                    new Label
+                    new VerticalStackLayout
                     {
-                        Text = tour.Name,
-                        FontSize = 18,
-                        FontAttributes = FontAttributes.Bold,
-                        TextColor = Color.FromArgb("#173330")
+                        Spacing = 8,
+                        Children =
+                        {
+                            new Label
+                            {
+                                Text = tour.Name,
+                                FontSize = 20,
+                                FontAttributes = FontAttributes.Bold,
+                                FontFamily = "OpenSansSemibold",
+                                TextColor = Color.FromArgb("#173330"),
+                                LineBreakMode = LineBreakMode.WordWrap
+                            },
+                            new Border
+                            {
+                                BackgroundColor = Color.FromArgb("#EAF4F1"),
+                                StrokeThickness = 0,
+                                Padding = new Thickness(10, 6),
+                                StrokeShape = new RoundRectangle { CornerRadius = 14 },
+                                HorizontalOptions = LayoutOptions.Start,
+                                Content = new Label
+                                {
+                                    Text = _text.Format("Tour.StopCountSummary", orderedStops.Count, firstStopName),
+                                    FontSize = 11,
+                                    FontAttributes = FontAttributes.Bold,
+                                    TextColor = Color.FromArgb("#1F6F64")
+                                }
+                            }
+                        }
                     },
                     new Label
                     {
                         Text = ResolveTourSummary(tour),
                         FontSize = 13,
-                        TextColor = Color.FromArgb("#617A74")
+                        TextColor = Color.FromArgb("#617A74"),
+                        LineBreakMode = LineBreakMode.WordWrap
                     },
-                    new Label
+                    new Border
                     {
-                        Text = _text.Format("Tour.StopCountSummary", orderedStops.Count, firstStopName),
-                        FontSize = 12,
-                        FontAttributes = FontAttributes.Bold,
-                        TextColor = Color.FromArgb("#1F6F64")
-                    },
-                    new Label
-                    {
-                        Text = _text.Format("Tour.RouteSummary", routePreview),
-                        FontSize = 12,
-                        TextColor = Color.FromArgb("#48635F")
+                        BackgroundColor = Color.FromArgb("#F7FBF9"),
+                        Stroke = Color.FromArgb("#D8E2DE"),
+                        StrokeThickness = 1,
+                        Padding = new Thickness(12, 10),
+                        StrokeShape = new RoundRectangle { CornerRadius = 16 },
+                        Content = new VerticalStackLayout
+                        {
+                            Spacing = 4,
+                            Children =
+                            {
+                                new Label
+                                {
+                                    Text = "Lộ trình",
+                                    FontSize = 11,
+                                    FontAttributes = FontAttributes.Bold,
+                                    TextColor = Color.FromArgb("#1F6F64")
+                                },
+                                new Label
+                                {
+                                    Text = _text.Format("Tour.RouteSummary", routePreview),
+                                    FontSize = 12,
+                                    TextColor = Color.FromArgb("#48635F"),
+                                    LineBreakMode = LineBreakMode.WordWrap
+                                }
+                            }
+                        }
                     },
                     startButton
                 }

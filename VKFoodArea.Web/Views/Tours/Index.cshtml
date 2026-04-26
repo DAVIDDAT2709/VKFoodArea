@@ -37,12 +37,12 @@
                     @foreach (var item in tours)
                     {
                         <tr>
-                            <td>
+                            <td data-label="Tour">
                                 <div class="table-title">@item.Name</div>
                             </td>
-                            <td>@item.Description</td>
-                            <td>@item.Stops.OrderBy(x => x.DisplayOrder).Count()</td>
-                            <td>
+                            <td data-label="Mô tả">@item.Description</td>
+                            <td data-label="Số điểm dừng">@item.Stops.OrderBy(x => x.DisplayOrder).Count()</td>
+                            <td data-label="Trạng thái">
                                 @if (item.IsActive)
                                 {
                                     <span class="status-pill status-pill--success">Đang hoạt động</span>
@@ -52,7 +52,7 @@
                                     <span class="status-pill status-pill--muted">Đang ẩn</span>
                                 }
                             </td>
-                            <td>
+                            <td data-label="Thao tác">
                                 <div class="table-actions justify-content-end">
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm">Sửa</a>
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">Xóa</a>

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using VKFoodArea.Web.Data;
@@ -11,14 +10,10 @@ namespace VKFoodArea.Web.Services;
 public class QrCodeItemService : IQrCodeItemService
 {
     private readonly AppDbContext _context;
-    private readonly IQrCodeImageStorageService _qrCodeImageStorageService;
 
-    public QrCodeItemService(
-        AppDbContext context,
-        IQrCodeImageStorageService qrCodeImageStorageService)
+    public QrCodeItemService(AppDbContext context)
     {
         _context = context;
-        _qrCodeImageStorageService = qrCodeImageStorageService;
     }
 
     public async Task<List<QrCodeItemListItemViewModel>> GetAllAsync()
@@ -43,7 +38,6 @@ public class QrCodeItemService : IQrCodeItemService
                 Id = item.Id,
                 Code = item.Code,
                 Title = item.Title,
-                ImageUrl = item.ImageUrl,
                 TargetType = QrTargetTypes.Normalize(item.TargetType),
                 TargetId = item.TargetId,
                 TargetName = ResolveTargetName(item.TargetType, item.TargetId, poiLookup, tourLookup),
@@ -82,7 +76,6 @@ public class QrCodeItemService : IQrCodeItemService
             Id = entity.Id,
             Code = entity.Code,
             Title = entity.Title,
-            CurrentImageUrl = entity.ImageUrl,
             TargetType = targetType,
             PoiId = targetType == QrTargetTypes.Poi ? entity.TargetId : null,
             TourId = targetType == QrTargetTypes.Tour ? entity.TargetId : null,
@@ -119,9 +112,6 @@ public class QrCodeItemService : IQrCodeItemService
         };
     }
 
-    public string? ValidateImageFile(IFormFile? imageFile)
-        => _qrCodeImageStorageService.Validate(imageFile);
-
     public async Task<(bool Success, string? Error)> CreateAsync(QrCodeItemFormViewModel vm)
     {
         var target = await ResolveTargetAsync(vm);
@@ -137,7 +127,6 @@ public class QrCodeItemService : IQrCodeItemService
         {
             Code = normalizedCode,
             Title = (vm.Title ?? string.Empty).Trim(),
-            ImageUrl = await SaveImageOrKeepExistingAsync(vm.ImageFile, null, normalizedCode),
             TargetType = target.TargetType,
             TargetId = target.TargetId,
             IsActive = vm.IsActive
@@ -166,7 +155,6 @@ public class QrCodeItemService : IQrCodeItemService
         var normalizedCode = QrCodeHelper.Normalize(vm.Code);
         entity.Code = normalizedCode;
         entity.Title = (vm.Title ?? string.Empty).Trim();
-        entity.ImageUrl = await SaveImageOrKeepExistingAsync(vm.ImageFile, entity.ImageUrl, normalizedCode);
         entity.TargetType = target.TargetType;
         entity.TargetId = target.TargetId;
         entity.IsActive = vm.IsActive;
@@ -372,14 +360,4 @@ public class QrCodeItemService : IQrCodeItemService
         return lookup.TryGetValue(targetId, out var item) && item.IsActive;
     }
 
-    private async Task<string> SaveImageOrKeepExistingAsync(
-        IFormFile? imageFile,
-        string? currentImageUrl,
-        string normalizedCode)
-    {
-        if (imageFile is null)
-            return (currentImageUrl ?? string.Empty).Trim();
-
-        return await _qrCodeImageStorageService.SaveAsync(imageFile, normalizedCode);
-    }
 }

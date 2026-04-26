@@ -10,8 +10,8 @@ namespace VKFoodArea.Web.Data;
 
 public static class WebDataInitializer
 {
-    private const string DemoTourName = "Tour Vĩnh Khánh 30 phút";
-    private const string DemoTourQrCode = "tour:vinh-khanh-30-phut";
+    private const string DefaultTourName = "Tour Vĩnh Khánh 30 phút";
+    private const string DefaultTourQrCode = "tour:vinh-khanh-30-phut";
 
     public static async Task InitializeAsync(AppDbContext db, IWebHostEnvironment environment, bool seedDevelopmentAdmin)
     {
@@ -45,7 +45,7 @@ public static class WebDataInitializer
         await EnsurePoiUniquenessIndexesAsync(db);
         await EnsurePoiImageUrlsAsync(db, environment);
         await SyncPoiContentTablesAsync(db);
-        await SeedDemoPathAsync(db);
+        await SeedDefaultQrAndTourAsync(db);
     }
 
     private static async Task ImportMissingSeedPoisAsync(AppDbContext db)
@@ -552,7 +552,7 @@ public static class WebDataInitializer
         await db.SaveChangesAsync();
     }
 
-    private static async Task SeedDemoPathAsync(AppDbContext db)
+    private static async Task SeedDefaultQrAndTourAsync(AppDbContext db)
     {
         var seedQrCodes = SeedData.Pois
             .Select(x => NormalizeQrCode(x.QrCode))
@@ -582,10 +582,10 @@ public static class WebDataInitializer
 
         var stopDefinitions = new[]
         {
-            new DemoTourStopDefinition("poi:oc-vu", 1, "Bắt đầu bằng món dễ gọi, vị me chua ngọt rõ."),
-            new DemoTourStopDefinition("poi:oc-thao", 2, "Điểm dừng giữa tour, hợp gọi nghêu hấp sả hoặc món nhẹ."),
-            new DemoTourStopDefinition("poi:oc-oanh", 3, "Điểm nổi bật để kết tour, hợp đi nhóm và gọi nhiều món."),
-            new DemoTourStopDefinition("poi:ot-xiem-quan", 4, "Điểm đổi vị nếu muốn món nóng và no hơn.")
+            new DefaultTourStopDefinition("poi:oc-vu", 1, "Bắt đầu bằng món dễ gọi, vị me chua ngọt rõ."),
+            new DefaultTourStopDefinition("poi:oc-thao", 2, "Điểm dừng giữa tour, hợp gọi nghêu hấp sả hoặc món nhẹ."),
+            new DefaultTourStopDefinition("poi:oc-oanh", 3, "Điểm nổi bật để kết tour, hợp đi nhóm và gọi nhiều món."),
+            new DefaultTourStopDefinition("poi:ot-xiem-quan", 4, "Điểm đổi vị nếu muốn món nóng và no hơn.")
         };
 
         var seedPoiByQr = seedPois
@@ -605,7 +605,7 @@ public static class WebDataInitializer
         {
             var tour = await db.Tours
                 .Include(x => x.Stops)
-                .FirstOrDefaultAsync(x => x.Name == DemoTourName);
+                .FirstOrDefaultAsync(x => x.Name == DefaultTourName);
 
             if (tour is null)
             {
@@ -616,24 +616,24 @@ public static class WebDataInitializer
                 db.Tours.Add(tour);
             }
 
-            tour.Name = DemoTourName;
-            tour.Description = "Lộ trình mẫu cho buổi demo: bắt đầu bằng quán ốc dễ gọi, đi qua một điểm địa phương, kết ở điểm nổi bật và có lựa chọn đổi vị.";
+            tour.Name = DefaultTourName;
+            tour.Description = "Lộ trình 30 phút gợi ý: bắt đầu bằng quán ốc dễ gọi, đi qua một điểm địa phương, kết ở điểm nổi bật và có lựa chọn đổi vị.";
             tour.TtsScriptVi = "Tour Vĩnh Khánh bắt đầu. Bạn sẽ đi qua vài điểm ăn dễ gọi, có món gợi ý và khoảng cách rõ ràng trên bản đồ. Hãy bật GPS nếu muốn app tự nhận điểm gần nhất khi đến nơi.";
-            tour.TtsScriptEn = "The Vinh Khanh demo tour starts now. You will pass several easy-to-order food stops with practical suggestions and clear map guidance.";
+            tour.TtsScriptEn = "The Vinh Khanh food tour starts now. You will pass several easy-to-order food stops with practical suggestions and clear map guidance.";
             tour.TtsScriptZh = string.Empty;
             tour.TtsScriptJa = string.Empty;
             tour.TtsScriptDe = string.Empty;
             tour.IsActive = true;
 
-            SyncDemoTourStops(tour, tourStops.Select(x => (x.Definition, Poi: x.Poi!)).ToList());
+            SyncDefaultTourStops(tour, tourStops.Select(x => (x.Definition, Poi: x.Poi!)).ToList());
             await db.SaveChangesAsync();
 
             qrItems = await db.QrCodeItems.ToListAsync();
             UpsertQrCodeItem(
                 db,
                 qrItems,
-                DemoTourQrCode,
-                DemoTourName,
+                DefaultTourQrCode,
+                DefaultTourName,
                 QrTargetTypes.Tour,
                 tour.Id,
                 string.Empty);
@@ -642,7 +642,7 @@ public static class WebDataInitializer
         await db.SaveChangesAsync();
     }
 
-    private static void SyncDemoTourStops(Tour tour, IReadOnlyList<(DemoTourStopDefinition Definition, Poi Poi)> stops)
+    private static void SyncDefaultTourStops(Tour tour, IReadOnlyList<(DefaultTourStopDefinition Definition, Poi Poi)> stops)
     {
         var desiredOrders = stops
             .Select(x => x.Definition.DisplayOrder)
@@ -704,7 +704,7 @@ public static class WebDataInitializer
         existing.IsActive = true;
     }
 
-    private sealed record DemoTourStopDefinition(string QrCode, int DisplayOrder, string Note);
+    private sealed record DefaultTourStopDefinition(string QrCode, int DisplayOrder, string Note);
 
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
     {
