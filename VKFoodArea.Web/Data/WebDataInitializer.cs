@@ -46,6 +46,7 @@ public static class WebDataInitializer
         await EnsurePoiImageUrlsAsync(db, environment);
         await SyncPoiContentTablesAsync(db);
         await SeedDefaultQrAndTourAsync(db);
+        await EnsureQrCodeItemTargetUniquenessAsync(db);
     }
 
     private static async Task ImportMissingSeedPoisAsync(AppDbContext db)
@@ -314,6 +315,81 @@ public static class WebDataInitializer
 
         if (!await HasColumnAsync(connection, "QrCodeItems", "ImageUrl"))
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE QrCodeItems ADD COLUMN ImageUrl TEXT NOT NULL DEFAULT '';");
+    }
+
+    private static async Task EnsureQrCodeItemTargetUniquenessAsync(AppDbContext db)
+    {
+        var qrItems = await db.QrCodeItems.ToListAsync();
+        var changed = false;
+
+        foreach (var item in qrItems)
+        {
+            var normalizedTargetType = QrTargetTypes.Normalize(item.TargetType);
+            var normalizedCode = (item.Code ?? string.Empty).Trim();
+            var normalizedTitle = (item.Title ?? string.Empty).Trim();
+            var normalizedImageUrl = item.ImageUrl ?? string.Empty;
+
+            if (!string.Equals(item.TargetType, normalizedTargetType, StringComparison.Ordinal) ||
+                !string.Equals(item.Code, normalizedCode, StringComparison.Ordinal) ||
+                !string.Equals(item.Title, normalizedTitle, StringComparison.Ordinal) ||
+                !string.Equals(item.ImageUrl, normalizedImageUrl, StringComparison.Ordinal))
+            {
+                item.TargetType = normalizedTargetType;
+                item.Code = normalizedCode;
+                item.Title = normalizedTitle;
+                item.ImageUrl = normalizedImageUrl;
+                changed = true;
+            }
+        }
+
+        var duplicateGroups = qrItems
+            .GroupBy(x => new
+            {
+                TargetType = QrTargetTypes.Normalize(x.TargetType),
+                x.TargetId
+            })
+            .Where(x => x.Count() > 1)
+            .ToList();
+
+        foreach (var group in duplicateGroups)
+        {
+            var keep = group
+                .OrderByDescending(IsPreferredQrTargetCode)
+                .ThenByDescending(x => x.IsActive)
+                .ThenByDescending(x => x.CreatedAt)
+                .ThenByDescending(x => x.Id)
+                .First();
+
+            foreach (var duplicate in group.Where(x => x.Id != keep.Id))
+            {
+                db.QrCodeItems.Remove(duplicate);
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await db.SaveChangesAsync();
+
+        await db.Database.ExecuteSqlRawAsync("DROP INDEX IF EXISTS IX_QrCodeItems_TargetType_TargetId;");
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_QrCodeItems_TargetType_TargetId
+            ON QrCodeItems (TargetType, TargetId);
+            """);
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS UX_QrCodeItems_Target_Normalized
+            ON QrCodeItems (lower(trim(TargetType)), TargetId);
+            """);
+    }
+
+    private static bool IsPreferredQrTargetCode(QrCodeItem item)
+    {
+        var targetType = QrTargetTypes.Normalize(item.TargetType);
+        var code = NormalizeQrCode(item.Code);
+
+        return !string.IsNullOrWhiteSpace(targetType) &&
+               code.StartsWith($"{targetType}:", StringComparison.Ordinal);
     }
 
     private static async Task EnsureTourNarrationColumnsAsync(AppDbContext db)
@@ -683,8 +759,14 @@ public static class WebDataInitializer
         if (string.IsNullOrWhiteSpace(normalizedCode) || targetId <= 0)
             return;
 
+        var normalizedTargetType = QrTargetTypes.Normalize(targetType);
+        var normalizedCodeKey = NormalizeQrCode(normalizedCode);
         var existing = qrItems.FirstOrDefault(x =>
-            NormalizeQrCode(x.Code) == NormalizeQrCode(normalizedCode));
+            NormalizeQrCode(x.Code) == normalizedCodeKey);
+
+        existing ??= qrItems.FirstOrDefault(x =>
+            QrTargetTypes.Normalize(x.TargetType) == normalizedTargetType &&
+            x.TargetId == targetId);
 
         if (existing is null)
         {
@@ -698,7 +780,7 @@ public static class WebDataInitializer
         }
 
         existing.Title = title.Trim();
-        existing.TargetType = QrTargetTypes.Normalize(targetType);
+        existing.TargetType = normalizedTargetType;
         existing.TargetId = targetId;
         existing.ImageUrl = imageUrl ?? string.Empty;
         existing.IsActive = true;

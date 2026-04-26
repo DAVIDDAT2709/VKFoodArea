@@ -244,7 +244,7 @@
                                TextColor="#173330" />
 
                         <CollectionView x:Name="FeaturedFoodCollectionView"
-                                        HeightRequest="154"
+                                        HeightRequest="164"
                                         SelectionMode="None">
                             <CollectionView.ItemsLayout>
                                 <LinearItemsLayout Orientation="Horizontal"
@@ -281,13 +281,13 @@
                                                             Padding="7,3"
                                                             HorizontalOptions="Start"
                                                             VerticalOptions="End"
-                                                            BackgroundColor="#FFFBF2"
+                                                            BackgroundColor="#EEF7F3"
                                                             StrokeThickness="0"
                                                             StrokeShape="RoundRectangle 10">
-                                                        <Label Text="{Binding PriceText}"
-                                                               FontSize="9"
+                                                        <Label Text="{Binding RestaurantName}"
+                                                               FontSize="9.5"
                                                                FontAttributes="Bold"
-                                                               TextColor="#9C6A16"
+                                                               TextColor="#176B61"
                                                                LineBreakMode="TailTruncation"
                                                                MaxLines="1" />
                                                     </Border>
@@ -296,7 +296,7 @@
 
                                             <VerticalStackLayout Grid.Row="1"
                                                                  Padding="10,8,10,10"
-                                                                 Spacing="6">
+                                                                 Spacing="4">
                                                 <Label Text="{Binding Name}"
                                                        FontSize="12.5"
                                                        FontAttributes="Bold"
@@ -304,18 +304,12 @@
                                                        LineBreakMode="WordWrap"
                                                        MaxLines="2" />
 
-                                                <Border BackgroundColor="#EEF7F3"
-                                                        Padding="8,4"
-                                                        HorizontalOptions="Start"
-                                                        StrokeThickness="0"
-                                                        StrokeShape="RoundRectangle 10">
-                                                    <Label Text="{Binding RestaurantName}"
-                                                           FontSize="9.5"
-                                                           FontAttributes="Bold"
-                                                           TextColor="#176B61"
-                                                           LineBreakMode="TailTruncation"
-                                                           MaxLines="1" />
-                                                </Border>
+                                                <Label Text="{Binding PriceText}"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#9C6A16"
+                                                       LineBreakMode="TailTruncation"
+                                                       MaxLines="1" />
                                             </VerticalStackLayout>
                                         </Grid>
 

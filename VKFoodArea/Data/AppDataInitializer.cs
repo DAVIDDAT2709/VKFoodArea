@@ -21,6 +21,7 @@ public static class AppDataInitializer
         await EnsurePoiAudioColumnsAsync(db);
         await EnsurePoiMapUrlColumnAsync(db);
         await EnsureNarrationLogsUserColumnAsync(db);
+        await EnsureNarrationLogsTourContextColumnsAsync(db);
         await SeedMissingEmailsAsync(db);
         await SeedMissingSoundSettingsAsync(db);
         await SeedOrRefreshPoisAsync(db);
@@ -179,6 +180,30 @@ public static class AppDataInitializer
 
         await db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE NarrationLogs ADD COLUMN UserId INTEGER NULL;");
+    }
+
+    private static async Task EnsureNarrationLogsTourContextColumnsAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (!await HasColumnAsync(connection, "NarrationLogs", "TourId"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE NarrationLogs ADD COLUMN TourId INTEGER NULL;");
+        }
+
+        if (!await HasColumnAsync(connection, "NarrationLogs", "TourName"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE NarrationLogs ADD COLUMN TourName TEXT NOT NULL DEFAULT '';");
+        }
+
+        if (!await HasColumnAsync(connection, "NarrationLogs", "TriggerSource"))
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE NarrationLogs ADD COLUMN TriggerSource TEXT NOT NULL DEFAULT 'manual';");
+        }
     }
 
     private static async Task EnsurePoiAudioColumnsAsync(AppDbContext db)

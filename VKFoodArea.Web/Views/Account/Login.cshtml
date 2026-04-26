@@ -13,45 +13,40 @@
 </head>
 <body class="auth-page auth-page--admin">
     <main class="admin-login-shell" aria-label="Đăng nhập khu vực quản trị">
-        <section class="admin-login-hero" aria-label="Giới thiệu khu vực quản trị">
+        <section class="admin-login-hero" aria-label="VK Food Area Admin">
+            <img class="admin-login-hero__image"
+                 src="/uploads/site/admin-login-vinh-khanh-gate.jpg"
+                 alt="Cổng phố ẩm thực Vĩnh Khánh về đêm"
+                 loading="eager" />
+            <div class="admin-login-hero__shade" aria-hidden="true"></div>
+
             <div class="admin-login-brand">
                 <span class="admin-login-logo">VK</span>
                 <div>
-                    <p>VK Food Area</p>
-                    <strong>Khu vực quản trị</strong>
+                    <strong>VK Food Area</strong>
+                    <span>Admin Console</span>
                 </div>
             </div>
 
-            <div class="admin-login-copy">
-                <span class="soft-pill soft-pill--glass">Admin</span>
-                <h1>Quản lý POI, tour, mã QR và dữ liệu nghe trên một giao diện.</h1>
-                <p>Đăng nhập để tiếp tục vào trang điều hành.</p>
+            <div class="admin-login-copy" aria-label="Thông tin hệ thống">
+                <p class="admin-login-kicker">Quản trị nội dung</p>
+                <h1>Điều hành dữ liệu ẩm thực Vĩnh Khánh.</h1>
+                <p>Không gian làm việc dành cho đội quản trị VK Food Area.</p>
             </div>
 
-            <div class="admin-login-signal" aria-label="Chức năng chính">
-                <div>
-                    <span>01</span>
-                    <strong>POI</strong>
-                    <p>Quản lý ảnh, vị trí và nội dung TTS.</p>
-                </div>
-                <div>
-                    <span>02</span>
-                    <strong>QR</strong>
-                    <p>Tạo mã mới và gắn trực tiếp với POI hoặc tour.</p>
-                </div>
-                <div>
-                    <span>03</span>
-                    <strong>Báo cáo</strong>
-                    <p>Theo dõi lịch sử nghe và dữ liệu bản đồ.</p>
-                </div>
+            <div class="admin-login-signal" aria-label="Khu vực vận hành">
+                <span>POI</span>
+                <span>Tour</span>
+                <span>QR</span>
+                <span>Map</span>
             </div>
         </section>
 
         <section class="admin-login-panel" aria-label="Form đăng nhập admin">
             <div class="admin-login-panel__head">
-                <span class="soft-pill">Đăng nhập</span>
-                <h2>Quản trị viên</h2>
-                <p>Nhập tài khoản để tiếp tục.</p>
+                <span class="admin-login-eyebrow">Bảo mật quản trị</span>
+                <h2>Đăng nhập</h2>
+                <p>Sử dụng tài khoản được cấp để tiếp tục.</p>
             </div>
 
             <form asp-action="Login" method="post" class="admin-login-form" novalidate>
@@ -60,13 +55,29 @@
 
                 <div class="auth-field">
                     <label asp-for="Username" class="form-label"></label>
-                    <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
+                    <input asp-for="Username"
+                           class="form-control"
+                           autocomplete="username"
+                           autofocus
+                           placeholder="Nhập tài khoản" />
                     <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
 
                 <div class="auth-field">
-                    <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                    <div class="auth-field__label-row">
+                        <label asp-for="Password" class="form-label"></label>
+                        <button type="button"
+                                class="password-toggle"
+                                aria-controls="Password"
+                                aria-pressed="false"
+                                data-password-toggle>
+                            Hiện
+                        </button>
+                    </div>
+                    <input asp-for="Password"
+                           class="form-control"
+                           autocomplete="current-password"
+                           placeholder="Nhập mật khẩu" />
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
@@ -82,6 +93,23 @@
         </section>
     </main>
 
+    <script>
+        (() => {
+            const toggle = document.querySelector('[data-password-toggle]');
+            const password = document.getElementById('Password');
+
+            if (!toggle || !password) {
+                return;
+            }
+
+            toggle.addEventListener('click', () => {
+                const shouldShow = password.type === 'password';
+                password.type = shouldShow ? 'text' : 'password';
+                toggle.textContent = shouldShow ? 'Ẩn' : 'Hiện';
+                toggle.setAttribute('aria-pressed', String(shouldShow));
+            });
+        })();
+    </script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <partial name="_ValidationScriptsPartial" />

@@ -485,6 +485,40 @@ public class NarrationService
         PublishPlaybackState(false, null, null, null);
     }
 
+    public async Task RecordNarrationAsync(
+        Poi poi,
+        string language,
+        string mode,
+        string triggerSource = "manual",
+        int? tourId = null,
+        string? tourName = null,
+        DateTime? playedAtUtc = null,
+        int? durationSeconds = null,
+        CancellationToken ct = default)
+    {
+        if (poi is null || !poi.IsActive)
+            return;
+
+        var playablePoi = await EnsureLocalPoiAsync(poi, ct);
+        if (playablePoi is null || !playablePoi.IsActive)
+            return;
+
+        var normalizedLanguage = AppLanguageService.NormalizeLanguage(language);
+        var normalizedMode = NormalizePlaybackMode(mode);
+        var normalizedTriggerSource = NormalizeTriggerSource(triggerSource);
+
+        await LogNarrationAsync(
+            playablePoi,
+            normalizedLanguage,
+            normalizedMode,
+            normalizedTriggerSource,
+            tourId,
+            tourName,
+            playedAtUtc ?? DateTime.UtcNow,
+            durationSeconds,
+            ct);
+    }
+
     private static CancellationTokenSource ReplaceRequestToken(CancellationToken externalToken = default)
     {
         CancellationTokenSource? oldCts = null;
@@ -558,6 +592,9 @@ public class NarrationService
         {
             UserId = _authService.GetCurrentUserId(),
             PoiId = poi.Id,
+            TourId = tourId.HasValue && tourId.Value > 0 ? tourId.Value : null,
+            TourName = (tourName ?? string.Empty).Trim(),
+            TriggerSource = NormalizeTriggerSource(triggerSource),
             PlayedAt = new DateTimeOffset(DateTime.SpecifyKind(playedAtUtc, DateTimeKind.Utc)),
             Mode = $"{mode}-{language}"
         });
@@ -579,6 +616,21 @@ public class NarrationService
             poi.Latitude,
             poi.Longitude,
             ct);
+    }
+
+    private static string NormalizeTriggerSource(string? triggerSource)
+    {
+        var normalized = (triggerSource ?? "manual").Trim().ToLowerInvariant();
+
+        return normalized switch
+        {
+            "auto" => "gps",
+            "gps" => "gps",
+            "tour" => "tour",
+            "qr" => "qr",
+            "history" => "manual",
+            _ => "manual"
+        };
     }
 
     private async Task StopCurrentPlaybackOnlyAsync()

@@ -124,9 +124,12 @@ public class HistoryViewModel : INotifyPropertyChanged
                 Id = record.Id,
                 PoiId = record.PoiId,
                 PoiName = record.PoiName,
+                TourId = record.TourId,
+                TourName = record.TourName,
+                DisplayTitle = BuildDisplayTitle(record.PoiName, record.TourName, record.Mode),
                 PlayedAtUtc = record.PlayedAtUtc,
                 PlayedAtText = record.PlayedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                MetaText = $"{_text.GetModeDisplay(record.Mode)} | {_text.GetLanguageDisplay(record.Language)} | {GetOriginDisplay(record.Origin)}",
+                MetaText = BuildMetaText(record.TourName, record.Mode, record.Language, record.TriggerSource, record.Origin),
                 CanReplay = record.CanReplay
             });
         }
@@ -164,7 +167,7 @@ public class HistoryViewModel : INotifyPropertyChanged
         var detail = await _historyService.GetHistoryDetailAsync(item.Id, _authService.GetCurrentUserId());
         if (detail is null)
         {
-            SelectedDetailTitle = item.PoiName;
+            SelectedDetailTitle = item.DisplayTitle;
             SelectedDetailMeta = item.PlayedAtText;
             SelectedDetailStatus = GetDetailUnavailableText();
             CanReplaySelected = false;
@@ -172,10 +175,9 @@ public class HistoryViewModel : INotifyPropertyChanged
             return;
         }
 
-        SelectedDetailTitle = detail.PoiName;
-        SelectedDetailMeta =
-            $"{detail.PlayedAtUtc.ToLocalTime():dd/MM/yyyy HH:mm} | " +
-            $"{_text.GetModeDisplay(detail.Mode)} | {_text.GetLanguageDisplay(detail.Language)} | {GetOriginDisplay(detail.Origin)}";
+        SelectedDetailTitle = BuildDisplayTitle(detail.PoiName, detail.TourName, detail.Mode);
+        SelectedDetailMeta = $"{detail.PlayedAtUtc.ToLocalTime():dd/MM/yyyy HH:mm} | " +
+                             BuildMetaText(detail.TourName, detail.Mode, detail.Language, detail.TriggerSource, detail.Origin);
         SelectedDetailStatus = detail.CanReplay
             ? GetDetailReadyText()
             : GetDetailUnavailableText();
@@ -245,6 +247,32 @@ public class HistoryViewModel : INotifyPropertyChanged
             : _text["History.OriginApp"];
     }
 
+    private string BuildDisplayTitle(string poiName, string? tourName, string mode)
+    {
+        if (string.Equals(mode, "TourIntro", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(tourName))
+        {
+            return tourName.Trim();
+        }
+
+        return poiName;
+    }
+
+    private string BuildMetaText(string? tourName, string mode, string language, string triggerSource, string origin)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(tourName))
+            parts.Add(tourName.Trim());
+
+        parts.Add(_text.GetModeDisplay(mode));
+        parts.Add(_text.GetLanguageDisplay(language));
+        parts.Add(_text.GetTriggerSourceDisplay(triggerSource));
+        parts.Add(GetOriginDisplay(origin));
+
+        return string.Join(" | ", parts);
+    }
+
     private string GetDetailReadyText() => _text["History.DetailReady"];
 
     private string GetDetailUnavailableText() => _text["History.DetailUnavailable"];
@@ -268,6 +296,9 @@ public sealed class HistoryItemViewModel
     public int Id { get; set; }
     public int? PoiId { get; set; }
     public string PoiName { get; set; } = string.Empty;
+    public int? TourId { get; set; }
+    public string TourName { get; set; } = string.Empty;
+    public string DisplayTitle { get; set; } = string.Empty;
     public DateTime PlayedAtUtc { get; set; }
     public string PlayedAtText { get; set; } = string.Empty;
     public string MetaText { get; set; } = string.Empty;

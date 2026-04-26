@@ -1,4 +1,5 @@
 using VKFoodArea.Models;
+using System.Diagnostics;
 
 namespace VKFoodArea.Services;
 
@@ -22,12 +23,38 @@ public sealed class TourNarrationService
     {
         var language = CurrentLanguage;
         var script = ResolveScript(session, language);
+        var introPoi = ResolveHistoryPoi(session);
 
         if (string.IsNullOrWhiteSpace(script))
             return;
 
+        var playedAtUtc = DateTime.UtcNow;
+        var playbackTimer = Stopwatch.StartNew();
+
         await _narrationService.StopAsync();
         await _narrationService.PreviewAsync(script, language, "TTS", ct);
+
+        playbackTimer.Stop();
+
+        if (introPoi is null)
+            return;
+
+        try
+        {
+            await _narrationService.RecordNarrationAsync(
+                introPoi,
+                language,
+                "TourIntro",
+                "tour",
+                session.TourId,
+                session.TourName,
+                playedAtUtc,
+                Math.Max(1, (int)Math.Round(playbackTimer.Elapsed.TotalSeconds)),
+                ct);
+        }
+        catch
+        {
+        }
     }
 
     public string ResolveDisplaySummary(Tour tour)
@@ -103,5 +130,15 @@ public sealed class TourNarrationService
             return vi.Trim();
 
         return string.Empty;
+    }
+
+    private static Poi? ResolveHistoryPoi(TourSession session)
+    {
+        if (session.CurrentStop?.Poi is not null)
+            return session.CurrentStop.Poi;
+
+        return session.OrderedStops
+            .Select(x => x.Poi)
+            .FirstOrDefault(x => x is not null);
     }
 }

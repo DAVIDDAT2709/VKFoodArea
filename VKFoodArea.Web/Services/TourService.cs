@@ -277,16 +277,103 @@ public class TourService : ITourService
 
     private async Task<List<SelectListItem>> GetPoiOptionsAsync()
     {
-        return await _context.Pois
+        var pois = await _context.Pois
             .AsNoTracking()
             .Where(x => x.ApprovalStatus == PoiApprovalStatus.Approved)
-            .OrderByDescending(x => x.IsActive)
-            .ThenBy(x => x.Name)
+            .Select(x => new PoiOptionSource(
+                x.Id,
+                x.Name,
+                x.Address,
+                x.IsActive))
+            .ToListAsync();
+
+        return pois
+            .OrderBy(x => NormalizeStreetForSort(x.Address), StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => ExtractAddressNumber(x.Address))
+            .ThenByDescending(x => x.IsActive)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
             .Select(x => new SelectListItem
             {
                 Value = x.Id.ToString(),
-                Text = x.IsActive ? x.Name : $"{x.Name} (ẩn)"
+                Text = BuildPoiOptionText(x)
             })
-            .ToListAsync();
+            .ToList();
     }
+
+    private static string BuildPoiOptionText(PoiOptionSource poi)
+    {
+        var name = poi.IsActive ? poi.Name : $"{poi.Name} (ẩn)";
+        var address = (poi.Address ?? string.Empty).Trim();
+        return string.IsNullOrWhiteSpace(address)
+            ? name
+            : $"{address} - {name}";
+    }
+
+    private static int ExtractAddressNumber(string? address)
+    {
+        var normalized = (address ?? string.Empty).Trim();
+
+        for (var index = 0; index < normalized.Length; index++)
+        {
+            if (!char.IsDigit(normalized[index]))
+                continue;
+
+            var number = 0L;
+            while (index < normalized.Length && char.IsDigit(normalized[index]))
+            {
+                number = number * 10 + (normalized[index] - '0');
+                if (number >= int.MaxValue)
+                    return int.MaxValue - 1;
+
+                index++;
+            }
+
+            return (int)number;
+        }
+
+        return int.MaxValue;
+    }
+
+    private static string NormalizeStreetForSort(string? address)
+    {
+        var normalized = NormalizeSpaces(address);
+        if (string.IsNullOrWhiteSpace(normalized))
+            return string.Empty;
+
+        var commaIndex = normalized.IndexOf(',');
+        if (commaIndex >= 0)
+            normalized = normalized[..commaIndex];
+
+        var digitIndex = IndexOfFirstDigit(normalized);
+        if (digitIndex < 0)
+            return normalized;
+
+        var endIndex = digitIndex;
+        while (endIndex < normalized.Length && char.IsDigit(normalized[endIndex]))
+            endIndex++;
+
+        return normalized[endIndex..].Trim(' ', '.', ',', '-', '/', '\\');
+    }
+
+    private static int IndexOfFirstDigit(string value)
+    {
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (char.IsDigit(value[index]))
+                return index;
+        }
+
+        return -1;
+    }
+
+    private static string NormalizeSpaces(string? value)
+    {
+        var normalized = (value ?? string.Empty).Trim();
+        if (normalized.Length == 0)
+            return string.Empty;
+
+        return string.Join(' ', normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private sealed record PoiOptionSource(int Id, string Name, string Address, bool IsActive);
 }

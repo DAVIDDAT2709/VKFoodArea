@@ -82,7 +82,47 @@ public sealed partial class AppTextService
                 _ => "Tự động"
             },
             "Audio" => "Audio",
+            "TourIntro" => CurrentLanguage switch
+            {
+                "en" => "Tour intro",
+                "zh" => "Tour guide intro",
+                "ja" => "Tour intro",
+                "de" => "Tour intro",
+                _ => "Mở đầu tour"
+            },
             _ => "TTS"
+        });
+    }
+
+    public string GetTriggerSourceDisplay(string? triggerSource)
+    {
+        return NormalizeStoredValue((triggerSource ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "tour" => CurrentLanguage switch
+            {
+                "en" => "Tour",
+                "zh" => "Tour",
+                "ja" => "Tour",
+                "de" => "Tour",
+                _ => "Tour"
+            },
+            "gps" => CurrentLanguage switch
+            {
+                "en" => "GPS",
+                "zh" => "GPS",
+                "ja" => "GPS",
+                "de" => "GPS",
+                _ => "GPS"
+            },
+            "qr" => "QR",
+            _ => CurrentLanguage switch
+            {
+                "en" => "Manual",
+                "zh" => "Manual",
+                "ja" => "Manual",
+                "de" => "Manual",
+                _ => "Thủ công"
+            }
         });
     }
 

@@ -113,7 +113,7 @@
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1"
                                                      Spacing="4">
-                                    <Label Text="{Binding PoiName}"
+                                    <Label Text="{Binding DisplayTitle}"
                                            FontSize="16"
                                            FontAttributes="Bold"
                                            TextColor="#163632" />

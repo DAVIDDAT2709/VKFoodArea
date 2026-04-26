@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
+using VKFoodArea.Web.Helpers;
 
 namespace VKFoodArea.Web.Controllers;
 
@@ -7,17 +9,20 @@ namespace VKFoodArea.Web.Controllers;
 public class DownloadController : Controller
 {
     private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _configuration;
     private const string ApkFileName = "com.companyname.vkfoodarea-Signed.apk";
 
-    public DownloadController(IWebHostEnvironment env)
+    public DownloadController(IWebHostEnvironment env, IConfiguration configuration)
     {
         _env = env;
+        _configuration = configuration;
     }
 
     [HttpGet("/download-app")]
     public IActionResult Index()
     {
         var apkUrl = Url.Action(nameof(Apk), "Download", new { v = GetApkVersionToken() }) ?? "/download-apk";
+        var qrUrl = Url.Action(nameof(Qr), "Download", new { v = GetApkVersionToken() }) ?? "/download-app-qr";
 
         var html = $$"""
 <!DOCTYPE html>
@@ -85,6 +90,43 @@ public class DownloadController : Controller
             color: #6b7280;
         }
 
+        .qr-panel {
+            display: grid;
+            grid-template-columns: 112px 1fr;
+            gap: 14px;
+            align-items: center;
+            margin-top: 20px;
+            padding: 14px;
+            border: 1px solid #d7e6df;
+            border-radius: 14px;
+            background: #f8fbf9;
+        }
+
+        .qr-panel img {
+            width: 112px;
+            height: 112px;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .qr-panel strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #12352f;
+        }
+
+        .qr-panel span {
+            color: #64746f;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            .qr-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
         code {
             background: #f3f4f6;
             padding: 2px 6px;
@@ -99,6 +141,14 @@ public class DownloadController : Controller
         <a class="btn btn-primary" href="{{apkUrl}}">Tải APK</a>
         <a class="btn btn-secondary" href="/">Về trang chủ</a>
 
+        <div class="qr-panel">
+            <img src="{{qrUrl}}" alt="QR tải ứng dụng VKFoodArea" />
+            <div>
+                <strong>QR tải app</strong>
+                <span>QR này trỏ về trang tải app. Khi thay file APK mới cùng tên, nút tải tự đổi sang bản mới nhờ mã phiên bản theo thời gian và dung lượng file.</span>
+            </div>
+        </div>
+
         <div class="note">
             Tên file: <code>{{ApkFileName}}</code><br />
             Sau khi tải xong, mở file APK để cài đặt ứng dụng.
@@ -109,6 +159,19 @@ public class DownloadController : Controller
 """;
 
         return Content(html, "text/html; charset=utf-8");
+    }
+
+    [HttpGet("/download-app-qr")]
+    public IActionResult Qr()
+    {
+        var targetUrl = $"{BuildPublicBaseUrl()}/download-app";
+        var svg = QrSvgBuilder.BuildSvg(targetUrl);
+
+        Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+        Response.Headers.Pragma = "no-cache";
+        Response.Headers.Expires = "0";
+
+        return Content(svg, "image/svg+xml; charset=utf-8");
     }
 
     [HttpGet("/download-apk")]
@@ -137,5 +200,33 @@ public class DownloadController : Controller
 
         var file = new FileInfo(apkPath);
         return $"{file.LastWriteTimeUtc:yyyyMMddHHmmss}-{file.Length}";
+    }
+
+    private string BuildPublicBaseUrl()
+    {
+        var configuredBaseUrl = (_configuration["PublicBaseUrl"] ?? string.Empty).Trim();
+        return string.IsNullOrWhiteSpace(configuredBaseUrl)
+            ? BuildRequestBaseUrl()
+            : configuredBaseUrl.TrimEnd('/');
+    }
+
+    private string BuildRequestBaseUrl()
+    {
+        var forwardedScheme = GetFirstForwardedValue("X-Forwarded-Proto");
+        var forwardedHost = GetFirstForwardedValue("X-Forwarded-Host");
+        var scheme = string.IsNullOrWhiteSpace(forwardedScheme) ? Request.Scheme : forwardedScheme;
+        var host = string.IsNullOrWhiteSpace(forwardedHost) ? Request.Host.Value : forwardedHost;
+        return $"{scheme}://{host}".TrimEnd('/');
+    }
+
+    private string GetFirstForwardedValue(string headerName)
+    {
+        if (!Request.Headers.TryGetValue(headerName, out StringValues values))
+            return string.Empty;
+
+        return values
+            .ToString()
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault() ?? string.Empty;
     }
 }

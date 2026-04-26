@@ -195,6 +195,17 @@ public class QrCodeItemService : IQrCodeItemService
         if (vm.IsActive && !isTargetActive)
             return "QR đang hoạt động phải liên kết với nội dung đang hoạt động.";
 
+        var targetAlreadyHasQr = await _context.QrCodeItems
+            .AnyAsync(x =>
+                x.Id != currentId &&
+                x.TargetId == targetId &&
+                (x.TargetType ?? string.Empty).Trim().ToLower() == targetType);
+
+        if (targetAlreadyHasQr)
+            return targetType == QrTargetTypes.Tour
+                ? "Tour này đã có mã QR. Vui lòng sửa mã hiện có thay vì tạo thêm."
+                : "POI này đã có mã QR. Vui lòng sửa mã hiện có thay vì tạo thêm.";
+
         var existsInQrItems = await _context.QrCodeItems
             .AnyAsync(x =>
                 x.Id != currentId &&
@@ -204,10 +215,18 @@ public class QrCodeItemService : IQrCodeItemService
         if (existsInQrItems)
             return "Mã QR đã tồn tại trong danh sách QR code.";
 
-        var existsInPois = await _context.Pois
-            .AnyAsync(x =>
+        var existsInPoisQuery = _context.Pois
+            .AsNoTracking()
+            .Where(x =>
                 !string.IsNullOrWhiteSpace(x.QrCode) &&
                 x.QrCode.ToLower() == code);
+
+        if (targetType == QrTargetTypes.Poi)
+        {
+            existsInPoisQuery = existsInPoisQuery.Where(x => x.Id != targetId);
+        }
+
+        var existsInPois = await existsInPoisQuery.AnyAsync();
 
         if (existsInPois)
             return "Mã QR đang trùng với mã QR mặc định của một POI cũ.";

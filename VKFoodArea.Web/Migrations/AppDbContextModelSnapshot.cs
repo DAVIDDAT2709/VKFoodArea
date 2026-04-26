@@ -506,7 +506,8 @@ namespace VKFoodArea.Web.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.HasIndex("TargetType", "TargetId");
+                    b.HasIndex("TargetType", "TargetId")
+                        .IsUnique();
 
                     b.ToTable("QrCodeItems");
                 });

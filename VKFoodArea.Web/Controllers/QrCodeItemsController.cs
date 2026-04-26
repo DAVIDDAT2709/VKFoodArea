@@ -31,8 +31,16 @@ public class QrCodeItemsController : Controller
             Items = PagedListViewModel<QrCodeItemListItemViewModel>.Create(data, page),
             TotalCount = data.Count,
             ActiveCount = data.Count(x => x.IsActive),
-            CoveredPoiCount = data.Count(x => string.Equals(x.TargetType, "poi", StringComparison.OrdinalIgnoreCase)),
-            CoveredTourCount = data.Count(x => string.Equals(x.TargetType, "tour", StringComparison.OrdinalIgnoreCase))
+            CoveredPoiCount = data
+                .Where(x => string.Equals(x.TargetType, QrTargetTypes.Poi, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.TargetId)
+                .Distinct()
+                .Count(),
+            CoveredTourCount = data
+                .Where(x => string.Equals(x.TargetType, QrTargetTypes.Tour, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.TargetId)
+                .Distinct()
+                .Count()
         };
 
         return View(vm);

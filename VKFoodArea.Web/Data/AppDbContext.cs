@@ -35,7 +35,8 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<QrCodeItem>()
-            .HasIndex(x => new { x.TargetType, x.TargetId });
+            .HasIndex(x => new { x.TargetType, x.TargetId })
+            .IsUnique();
 
         modelBuilder.Entity<NarrationHistory>()
             .HasOne(x => x.Poi)

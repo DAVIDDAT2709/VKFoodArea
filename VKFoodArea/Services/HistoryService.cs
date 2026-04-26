@@ -85,11 +85,14 @@ public class HistoryService
             log.Id,
             log.PoiId,
             poiName,
+            log.TourId,
+            (log.TourName ?? string.Empty).Trim(),
             log.PlayedAt.UtcDateTime,
             mode,
             language,
+            NormalizeTriggerSource(log.TriggerSource),
             "app",
-            poi is not null);
+            poi is not null && !string.Equals(mode, "TourIntro", StringComparison.OrdinalIgnoreCase));
 
         return await BuildPlaybackDetailAsync(record, ct);
     }
@@ -146,8 +149,11 @@ public class HistoryService
                 log.Id,
                 log.PoiId,
                 PoiName = poi != null ? poi.Name : $"POI #{log.PoiId}",
+                log.TourId,
+                log.TourName,
                 log.PlayedAt,
                 log.Mode,
+                log.TriggerSource,
                 HasPoi = poi != null
             })
             .ToListAsync(ct);
@@ -162,11 +168,14 @@ public class HistoryService
                     x.Id,
                     x.PoiId,
                     x.PoiName,
+                    x.TourId,
+                    (x.TourName ?? string.Empty).Trim(),
                     x.PlayedAt.UtcDateTime,
                     mode,
                     language,
+                    NormalizeTriggerSource(x.TriggerSource),
                     "app",
-                    x.HasPoi);
+                    x.HasPoi && !string.Equals(mode, "TourIntro", StringComparison.OrdinalIgnoreCase));
             })
             .ToList();
     }
@@ -193,11 +202,14 @@ public class HistoryService
             -Math.Max(item.Id, 1),
             item.PoiId > 0 ? item.PoiId : null,
             item.PoiName,
+            item.TourId,
+            (item.TourName ?? string.Empty).Trim(),
             DateTime.SpecifyKind(item.PlayedAt, DateTimeKind.Utc),
             NormalizePlaybackMode(item.Mode),
             AppLanguageService.NormalizeLanguage(item.Language),
+            NormalizeTriggerSource(item.TriggerSource),
             "web",
-            item.PoiId > 0);
+            item.PoiId > 0 && !string.Equals(NormalizePlaybackMode(item.Mode), "TourIntro", StringComparison.OrdinalIgnoreCase));
     }
 
     private static List<HistoryRecord> MergeRows(List<HistoryRecord> localRows, List<HistoryRecord>? remoteRows)
@@ -209,14 +221,26 @@ public class HistoryService
 
         foreach (var remoteRow in remoteRows)
         {
-            var hasDuplicate = localRows.Exists(localRow =>
+            var duplicateIndex = merged.FindIndex(localRow =>
                 string.Equals(localRow.PoiName, remoteRow.PoiName, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(localRow.Mode, remoteRow.Mode, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(localRow.Language, remoteRow.Language, StringComparison.OrdinalIgnoreCase) &&
                 Math.Abs((localRow.PlayedAtUtc - remoteRow.PlayedAtUtc).TotalSeconds) <= 3);
 
-            if (!hasDuplicate)
+            if (duplicateIndex < 0)
+            {
                 merged.Add(remoteRow);
+                continue;
+            }
+
+            var localRow = merged[duplicateIndex];
+            merged[duplicateIndex] = localRow with
+            {
+                TourId = localRow.TourId ?? remoteRow.TourId,
+                TourName = string.IsNullOrWhiteSpace(localRow.TourName) ? remoteRow.TourName : localRow.TourName,
+                TriggerSource = string.IsNullOrWhiteSpace(localRow.TriggerSource) ? remoteRow.TriggerSource : localRow.TriggerSource,
+                CanReplay = localRow.CanReplay || remoteRow.CanReplay
+            };
         }
 
         return merged;
@@ -229,8 +253,9 @@ public class HistoryService
         var resolvedPoiId = record.PoiId;
         var resolvedPoiName = record.PoiName;
         var canReplay = record.CanReplay;
+        var isTourIntro = string.Equals(record.Mode, "TourIntro", StringComparison.OrdinalIgnoreCase);
 
-        if (!canReplay)
+        if (!canReplay && !isTourIntro)
         {
             var fallbackPoi = await ResolvePoiAsync(record, ct);
             if (fallbackPoi is not null)
@@ -245,9 +270,12 @@ public class HistoryService
             record.Id,
             resolvedPoiId,
             resolvedPoiName,
+            record.TourId,
+            record.TourName,
             record.PlayedAtUtc,
             record.Mode,
             record.Language,
+            record.TriggerSource,
             record.Origin,
             canReplay);
     }
@@ -282,7 +310,20 @@ public class HistoryService
         {
             "Auto" or "auto" => "Auto",
             "Audio" or "audio" => "Audio",
+            "TourIntro" or "tourintro" or "tour-intro" => "TourIntro",
             _ => "TTS"
+        };
+    }
+
+    private static string NormalizeTriggerSource(string? triggerSource)
+    {
+        return (triggerSource ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "auto" => "gps",
+            "gps" => "gps",
+            "tour" => "tour",
+            "qr" => "qr",
+            _ => "manual"
         };
     }
 }
@@ -297,9 +338,12 @@ public sealed record HistoryRecord(
     int Id,
     int? PoiId,
     string PoiName,
+    int? TourId,
+    string TourName,
     DateTime PlayedAtUtc,
     string Mode,
     string Language,
+    string TriggerSource,
     string Origin,
     bool CanReplay);
 
@@ -307,9 +351,12 @@ public sealed record HistoryPlaybackDetail(
     int HistoryId,
     int? PoiId,
     string PoiName,
+    int? TourId,
+    string TourName,
     DateTime PlayedAtUtc,
     string Mode,
     string Language,
+    string TriggerSource,
     string Origin,
     bool CanReplay);
 
