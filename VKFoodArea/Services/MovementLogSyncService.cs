@@ -6,13 +6,16 @@ namespace VKFoodArea.Services;
 
 public class MovementLogSyncService
 {
-    private readonly HttpClient _httpClient;
+    private readonly AppSyncOutboxService _outboxService;
     private readonly ApiBaseUrlService _apiBaseUrlService;
 
-    public MovementLogSyncService(HttpClient httpClient, ApiBaseUrlService apiBaseUrlService)
+    public MovementLogSyncService(
+        HttpClient httpClient,
+        ApiBaseUrlService apiBaseUrlService,
+        AppSyncOutboxService outboxService)
     {
-        _httpClient = httpClient;
         _apiBaseUrlService = apiBaseUrlService;
+        _outboxService = outboxService;
     }
 
     public async Task PushAsync(
@@ -35,11 +38,7 @@ public class MovementLogSyncService
                 RecordedAt = DateTime.UtcNow
             };
 
-            if (!_apiBaseUrlService.TryBuildApiUrl("api/movement-logs", out var url))
-                return;
-
-            using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
-            response.EnsureSuccessStatusCode();
+            await _outboxService.EnqueueAsync("movement-log", "api/movement-logs", payload, ct);
         }
         catch (Exception ex)
         {

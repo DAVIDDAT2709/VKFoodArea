@@ -3,12 +3,13 @@ using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;
 using VKFoodArea.Models;
+using VKFoodArea.Services;
 
 namespace VKFoodArea.Data;
 
 public static class AppDataInitializer
 {
-    public static async Task InitializeAsync(AppDbContext db)
+    public static async Task InitializeAsync(AppDbContext db, bool internalToolsEnabled = false)
     {
 #if DEBUG
         if (string.Equals(Environment.GetEnvironmentVariable("VKFOODAREA_RESET_DB"), "1", StringComparison.Ordinal))
@@ -18,12 +19,15 @@ public static class AppDataInitializer
         await db.Database.EnsureCreatedAsync();
         await EnsureAppUsersEmailColumnAsync(db);
         await EnsureAppUsersSoundSettingsColumnsAsync(db);
+        await EnsureAppUsersRoleColumnAsync(db);
         await EnsurePoiAudioColumnsAsync(db);
         await EnsurePoiMapUrlColumnAsync(db);
         await EnsureNarrationLogsUserColumnAsync(db);
         await EnsureNarrationLogsTourContextColumnsAsync(db);
+        await EnsureAppSyncOutboxTableAsync(db);
         await SeedMissingEmailsAsync(db);
         await SeedMissingSoundSettingsAsync(db);
+        await SeedMissingAppUserRolesAsync(db, internalToolsEnabled);
         await SeedOrRefreshPoisAsync(db);
 
         if (!await db.AppUsers.AnyAsync())
@@ -37,7 +41,7 @@ public static class AppDataInitializer
                     FullName = "Người dùng demo",
                     NarrationLanguage = "vi",
                     NarrationPlaybackMode = "TTS",
-                    Role = "User",
+                    Role = internalToolsEnabled ? AppUserRoleNames.Operator : AppUserRoleNames.User,
                     IsActive = true
                 });
         }
@@ -170,6 +174,18 @@ public static class AppDataInitializer
         }
     }
 
+    private static async Task EnsureAppUsersRoleColumnAsync(AppDbContext db)
+    {
+        await using var connection = db.Database.GetDbConnection();
+        await connection.OpenAsync();
+
+        if (await HasColumnAsync(connection, "AppUsers", "Role"))
+            return;
+
+        await db.Database.ExecuteSqlRawAsync(
+            $"ALTER TABLE AppUsers ADD COLUMN Role TEXT NOT NULL DEFAULT '{AppUserRoleNames.User}';");
+    }
+
     private static async Task EnsureNarrationLogsUserColumnAsync(AppDbContext db)
     {
         await using var connection = db.Database.GetDbConnection();
@@ -242,6 +258,30 @@ public static class AppDataInitializer
             "ALTER TABLE Pois ADD COLUMN MapUrl TEXT NOT NULL DEFAULT '';");
     }
 
+    private static async Task EnsureAppSyncOutboxTableAsync(AppDbContext db)
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS AppSyncOutboxItems (
+                Id INTEGER NOT NULL CONSTRAINT PK_AppSyncOutboxItems PRIMARY KEY AUTOINCREMENT,
+                SyncType TEXT NOT NULL DEFAULT '',
+                RelativePath TEXT NOT NULL DEFAULT '',
+                PayloadJson TEXT NOT NULL DEFAULT '',
+                CreatedAt TEXT NOT NULL,
+                NextRetryAt TEXT NOT NULL,
+                LastAttemptAt TEXT NULL,
+                AttemptCount INTEGER NOT NULL DEFAULT 0,
+                LastError TEXT NOT NULL DEFAULT '',
+                DiscardedAt TEXT NULL
+            );
+            """);
+
+        await db.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_AppSyncOutboxItems_NextRetryAt ON AppSyncOutboxItems(NextRetryAt);");
+        await db.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_AppSyncOutboxItems_DiscardedAt ON AppSyncOutboxItems(DiscardedAt);");
+    }
+
     private static async Task<bool> HasColumnAsync(DbConnection connection, string tableName, string columnName)
     {
         await using var command = connection.CreateCommand();
@@ -294,6 +334,33 @@ public static class AppDataInitializer
             if (string.IsNullOrWhiteSpace(user.NarrationPlaybackMode))
             {
                 user.NarrationPlaybackMode = "TTS";
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges)
+            await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedMissingAppUserRolesAsync(AppDbContext db, bool internalToolsEnabled)
+    {
+        var users = await db.AppUsers.ToListAsync();
+        var hasChanges = false;
+
+        foreach (var user in users)
+        {
+            var normalizedRole = AppUserRoleNames.Normalize(user.Role);
+            if (!string.Equals(user.Role, normalizedRole, StringComparison.Ordinal))
+            {
+                user.Role = normalizedRole;
+                hasChanges = true;
+            }
+
+            if (internalToolsEnabled &&
+                string.Equals(user.Email, "user@vkfoodarea.local", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(user.Role, AppUserRoleNames.User, StringComparison.Ordinal))
+            {
+                user.Role = AppUserRoleNames.Operator;
                 hasChanges = true;
             }
         }

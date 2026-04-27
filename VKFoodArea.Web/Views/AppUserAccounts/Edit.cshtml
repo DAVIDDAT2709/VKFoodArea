@@ -1,0 +1,78 @@
+@model VKFoodArea.Web.ViewModels.AppUserAccountAccessFormViewModel
+@using VKFoodArea.Web.Models
+@{
+    ViewData["Title"] = "Cap nhat quyen app";
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>Cap nhat quyen tai khoan app</h2>
+        <p class="text-muted mb-0">Thay doi role va trang thai tren web. App se nhan lai quyen o lan sync tiep theo.</p>
+    </div>
+    <div class="page-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lai</a>
+    </div>
+</section>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+    <section class="card-surface page-section">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="UserKey" type="hidden" />
+        <input asp-for="Username" type="hidden" />
+        <input asp-for="Email" type="hidden" />
+        <input asp-for="FullName" type="hidden" />
+        <input asp-for="ListenCount" type="hidden" />
+        <input asp-for="CreatedAt" type="hidden" />
+        <input asp-for="LastSeenAt" type="hidden" />
+        <input asp-for="LastSyncedAt" type="hidden" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Tai khoan</label>
+                <input class="form-control" value="@(!string.IsNullOrWhiteSpace(Model.Username) ? Model.Username : Model.Email)" disabled />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Ho ten</label>
+                <input class="form-control" value="@Model.FullName" disabled />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">User key</label>
+                <input class="form-control" value="@Model.UserKey" disabled />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Lan cuoi thay</label>
+                <input class="form-control" value="@WebDisplayTime.Format(Model.LastSeenAt, "dd/MM/yyyy HH:mm")" disabled />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Luot nghe</label>
+                <input class="form-control" value="@Model.ListenCount" disabled />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Role" class="form-label">Role</label>
+                <select asp-for="Role" class="form-select">
+                    <option value="@AppUserRoleNames.User">Nguoi dung</option>
+                    <option value="@AppUserRoleNames.Operator">Dieu phoi noi bo</option>
+                    <option value="@AppUserRoleNames.Admin">Quan tri vien</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Cho phep dang nhap va sync</label>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="page-actions page-section">
+        <button type="submit" class="btn btn-primary">Luu thay doi</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Huy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

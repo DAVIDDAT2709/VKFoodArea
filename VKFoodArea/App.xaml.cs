@@ -8,30 +8,19 @@ namespace VKFoodArea;
 public partial class App : Application
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly LocationTrackingPolicyService _locationTrackingPolicyService;
-    private readonly AppLinkService _appLinkService;
-    private readonly AppDevicePresenceService _appDevicePresenceService;
 
-    public App(
-    IServiceProvider serviceProvider,
-    LocationTrackingPolicyService locationTrackingPolicyService,
-    AppLinkService appLinkService,
-    AppDevicePresenceService appDevicePresenceService)
+    public App(IServiceProvider serviceProvider)
     {
         InitializeComponent();
         _serviceProvider = serviceProvider;
-        _locationTrackingPolicyService = locationTrackingPolicyService;
-        _appLinkService = appLinkService;
-        _appDevicePresenceService = appDevicePresenceService;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var rootPage = _serviceProvider.GetRequiredService<StartupPage>();
-
-        var window = new Window(new NavigationPage(rootPage));
-        _locationTrackingPolicyService.SetAppForeground(true);
-        _ = _appDevicePresenceService.SetAppForegroundAsync(true);
+        AppStartupTrace.Log("App.CreateWindow start");
+        var window = new Window(new NavigationPage(new BootstrapPage(_serviceProvider)));
+        Resolve<LocationTrackingPolicyService>().SetAppForeground(true);
+        ScheduleForegroundServices(window);
         window.Resumed += OnWindowResumed;
         window.Stopped += OnWindowStopped;
 
@@ -39,25 +28,47 @@ public partial class App : Application
         if (pendingUri is not null)
             ReceiveAppLink(pendingUri);
 
+        AppStartupTrace.Log("App.CreateWindow complete");
         return window;
     }
 
     private void OnWindowResumed(object? sender, EventArgs e)
     {
-        _locationTrackingPolicyService.SetAppForeground(true);
-        _ = _appDevicePresenceService.SetAppForegroundAsync(true);
+        Resolve<LocationTrackingPolicyService>().SetAppForeground(true);
+
+        if (sender is Window window)
+        {
+            ScheduleForegroundServices(window);
+            return;
+        }
+
+        StartForegroundServices();
     }
 
     private void OnWindowStopped(object? sender, EventArgs e)
     {
-        _locationTrackingPolicyService.SetAppForeground(false);
-        _ = _appDevicePresenceService.SetAppForegroundAsync(false);
+        Resolve<LocationTrackingPolicyService>().SetAppForeground(false);
+        _ = Resolve<AppDevicePresenceService>().SetAppForegroundAsync(false);
     }
 
     public void ReceiveAppLink(Uri uri)
     {
-        _appLinkService.Enqueue(uri);
-        _ = _appLinkService.TryHandlePendingAsync();
+        Resolve<AppLinkService>().Enqueue(uri);
+
+        var window = Windows.FirstOrDefault();
+        if (window?.Dispatcher is { } dispatcher)
+        {
+            dispatcher.DispatchDelayed(
+                TimeSpan.FromMilliseconds(700),
+                () => _ = Resolve<AppLinkService>().TryHandlePendingAsync());
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(700).ConfigureAwait(false);
+            await Resolve<AppLinkService>().TryHandlePendingAsync().ConfigureAwait(false);
+        });
     }
 
     protected override void OnAppLinkRequestReceived(Uri uri)
@@ -65,4 +76,27 @@ public partial class App : Application
         base.OnAppLinkRequestReceived(uri);
         ReceiveAppLink(uri);
     }
+
+    private void ScheduleForegroundServices(Window window)
+    {
+        if (window.Dispatcher is { } dispatcher)
+        {
+            dispatcher.DispatchDelayed(
+                TimeSpan.FromMilliseconds(500),
+                StartForegroundServices);
+            return;
+        }
+
+        StartForegroundServices();
+    }
+
+    private void StartForegroundServices()
+    {
+        _ = Resolve<AppDevicePresenceService>().SetAppForegroundAsync(true);
+        _ = Resolve<AuthService>().RefreshCurrentUserAccessAsync();
+        Resolve<AppSyncOutboxService>().FlushPendingInBackground();
+    }
+
+    private T Resolve<T>() where T : notnull
+        => _serviceProvider.GetRequiredService<T>();
 }

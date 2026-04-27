@@ -19,6 +19,31 @@ if ($null -eq $resolve.poi) {
     throw "QR '$QrCode' did not resolve to a POI."
 }
 
+$appUserPayload = @{
+    userKey = $UserKey
+    username = $UserKey
+    email = "$UserKey@vkfoodarea.local"
+    fullName = "Smoke Test User"
+    narrationLanguage = "vi"
+    narrationPlaybackMode = "TTS"
+    role = "User"
+    isActive = $true
+} | ConvertTo-Json
+
+$appUser = Invoke-RestMethod `
+    -Method Post `
+    -Uri (Join-Url $BaseUrl "api/app-users/sync") `
+    -ContentType "application/json; charset=utf-8" `
+    -Body $appUserPayload
+
+$appUserStatus = Invoke-RestMethod `
+    -Method Get `
+    -Uri (Join-Url $BaseUrl "api/app-users/status?userKey=$([System.Uri]::EscapeDataString($UserKey))")
+
+if (-not $appUserStatus.isKnown) {
+    throw "App user status did not return a known user after sync."
+}
+
 $latitude = [double]$resolve.poi.latitude
 $longitude = [double]$resolve.poi.longitude
 $now = [DateTime]::UtcNow.ToString("o")
@@ -70,6 +95,7 @@ if (-not ($recentHistory | Where-Object { $_.triggerSource -eq "qr" -and $_.id -
     status = "ok"
     resolvedQr = $QrCode
     poiName = $resolve.poi.name
+    appUserRole = $appUserStatus.role
     movementLogId = $movement.id
     narrationHistoryId = $history.id
     baseUrl = $BaseUrl

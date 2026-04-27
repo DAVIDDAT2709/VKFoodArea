@@ -18,11 +18,15 @@ using VKFoodArea.Features.User;
 using VKFoodArea.Models;
 using VKFoodArea.Repositories;
 using VKFoodArea.Services;
+using VKFoodArea.Helpers;
 
 namespace VKFoodArea.Features.Home;
 
 public partial class HomeDesignPage : ContentPage
 {
+    private const int InitialMapRenderDelayMilliseconds = 250;
+    private const int ViewModelMapRefreshDebounceMilliseconds = 100;
+
     private readonly HomeViewModel _viewModel;
     private readonly NarrationService _narrationService;
     private readonly IServiceProvider _serviceProvider;
@@ -37,6 +41,9 @@ public partial class HomeDesignPage : ContentPage
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
     private MemoryLayer? _currentLocationLayer;
+    private Task? _initialLoadTask;
+    private int _mapRefreshVersion;
+    private bool _suspendMapRefresh;
 
     private List<FeaturedFoodCardViewModel> _featuredFoodCards = new();
     private bool _isOnlineMapMode;
@@ -79,8 +86,7 @@ public partial class HomeDesignPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        PoiSyncService.SyncCompleted -= OnSyncCompletedEscaped;
-        PoiSyncService.SyncCompleted += OnSyncCompletedEscaped;
+        AppStartupTrace.Log("HomeDesignPage.OnAppearing");
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         _narrationUiState.StateChanged += OnNarrationUiStateChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
@@ -94,39 +100,35 @@ public partial class HomeDesignPage : ContentPage
         }
 
         ApplyLocalizedTextClean();
-        await _viewModel.InitializeAsync();
-        _viewModel.RefreshNarrationSettings();
-        await RefreshPoiDataAsync();
+        _initialLoadTask ??= RunInitialLoadAsync();
+        await _initialLoadTask;
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        PoiSyncService.SyncCompleted -= OnSyncCompletedEscaped;
         _narrationUiState.StateChanged -= OnNarrationUiStateChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
         if (Window is not null)
             Window.Resumed -= OnWindowResumed;
+
+        Interlocked.Increment(ref _mapRefreshVersion);
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (_suspendMapRefresh)
+            return;
+
         if (e.PropertyName is nameof(HomeViewModel.CurrentLocation)
             or nameof(HomeViewModel.NearestPoi)
             or nameof(HomeViewModel.AllPois))
         {
-            MainThread.BeginInvokeOnMainThread(RefreshMapPois);
+            ScheduleMapRefresh(
+                ViewModelMapRefreshDebounceMilliseconds,
+                $"viewmodel:{e.PropertyName}");
         }
-    }
-
-    private void OnSyncCompletedEscaped(object? sender, PoiSyncService.PoiSyncCompletedEventArgs e)
-    {
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            await _viewModel.RefreshVisiblePoisAsync(e.Result);
-            await RefreshPoiDataAsync();
-        });
     }
 
     private void OnWindowResumed(object? sender, EventArgs e)
@@ -134,7 +136,16 @@ public partial class HomeDesignPage : ContentPage
         MainThread.BeginInvokeOnMainThread(async () =>
         {
             ApplyLocalizedTextClean();
-            await _viewModel.InitializeAsync();
+            _suspendMapRefresh = true;
+            try
+            {
+                await _viewModel.InitializeAsync();
+            }
+            finally
+            {
+                _suspendMapRefresh = false;
+            }
+
             await RefreshPoiDataAsync();
         });
     }
@@ -142,7 +153,10 @@ public partial class HomeDesignPage : ContentPage
     private async Task RefreshPoiDataAsync()
     {
         await LoadFeaturedFoodsAsync();
-        InitializeMap();
+        ScheduleMapRefresh(_mapControl is null
+            ? InitialMapRenderDelayMilliseconds
+            : 0,
+            reason: "refresh-poi-data");
     }
 
     private async Task LoadFeaturedFoodsAsync()
@@ -161,6 +175,7 @@ public partial class HomeDesignPage : ContentPage
 
     private void InitializeMap()
     {
+        AppStartupTrace.Log("HomeDesignPage.InitializeMap");
         LoggingWidget.ShowLoggingInMap = ActiveMode.No;
 
         if (_mapControl is null)
@@ -177,6 +192,36 @@ public partial class HomeDesignPage : ContentPage
 
         _mapControl.Map = BuildMap(_viewModel.DisplayedPois);
         _mapControl.Refresh();
+    }
+
+    private void ScheduleMapRefresh(int delayMilliseconds = 0, string reason = "unspecified")
+    {
+        AppStartupTrace.Log($"HomeDesignPage.ScheduleMapRefresh reason={reason} delay={delayMilliseconds}");
+        var refreshVersion = Interlocked.Increment(ref _mapRefreshVersion);
+        _ = RefreshMapAsync(refreshVersion, delayMilliseconds);
+    }
+
+    private async Task RefreshMapAsync(int refreshVersion, int delayMilliseconds)
+    {
+        try
+        {
+            if (delayMilliseconds > 0)
+                await Task.Delay(delayMilliseconds).ConfigureAwait(false);
+
+            if (refreshVersion != Volatile.Read(ref _mapRefreshVersion))
+                return;
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                if (refreshVersion != Volatile.Read(ref _mapRefreshVersion))
+                    return;
+
+                InitializeMap();
+            });
+        }
+        catch
+        {
+        }
     }
 
     private Mapsui.Map BuildMap(IEnumerable<Poi> pois)
@@ -412,13 +457,13 @@ public partial class HomeDesignPage : ContentPage
             return;
 
         await _viewModel.SearchPoisAsync(e.NewTextValue, closeSuggestions: false);
-        RefreshMapPois();
+        ScheduleMapRefresh(reason: "search-text");
     }
 
     private async void OnSearchButtonPressed(object sender, EventArgs e)
     {
         await _viewModel.SearchPoisAsync(PoiSearchBar.Text, closeSuggestions: true);
-        RefreshMapPois();
+        ScheduleMapRefresh(reason: "search-submit");
     }
 
     private async void OnSuggestionSelected(object? sender, SelectionChangedEventArgs e)
@@ -434,7 +479,7 @@ public partial class HomeDesignPage : ContentPage
         _isApplyingSuggestion = false;
 
         await _viewModel.SearchPoisAsync(suggestion.Name, closeSuggestions: true);
-        RefreshMapPois();
+        ScheduleMapRefresh(reason: "search-suggestion");
         await OpenPoiDetailAsync(suggestion.Poi);
     }
 
@@ -530,10 +575,13 @@ public partial class HomeDesignPage : ContentPage
         MainThread.BeginInvokeOnMainThread(() =>
         {
             var shouldUseOnlineMap = ShouldUseOnlineMap();
+            AppStartupTrace.Log(
+                $"HomeDesignPage.OnConnectivityChanged shouldUseOnlineMap={shouldUseOnlineMap} current={_isOnlineMapMode}");
             if (shouldUseOnlineMap == _isOnlineMapMode)
                 return;
 
-            InitializeMap();
+            _isOnlineMapMode = shouldUseOnlineMap;
+            ScheduleMapRefresh(reason: "connectivity-changed");
         });
     }
 
@@ -555,13 +603,25 @@ public partial class HomeDesignPage : ContentPage
         _viewModel.RefreshLocalizedText();
     }
 
-    private void RefreshMapPois()
+    private async Task RunInitialLoadAsync()
     {
-        if (_mapControl is null)
-            return;
+        AppStartupTrace.Log("HomeDesignPage.RunInitialLoadAsync start");
+        _suspendMapRefresh = true;
 
-        _mapControl.Map = BuildMap(_viewModel.DisplayedPois);
-        _mapControl.Refresh();
+        try
+        {
+            await Task.Yield();
+            await _viewModel.InitializeAsync();
+            AppStartupTrace.Log("HomeDesignPage.RunInitialLoadAsync after view model init");
+            _viewModel.RefreshNarrationSettings();
+        }
+        finally
+        {
+            _suspendMapRefresh = false;
+        }
+
+        await RefreshPoiDataAsync();
+        AppStartupTrace.Log("HomeDesignPage.RunInitialLoadAsync complete");
     }
 
     private void ApplyLocalizedTextClean()

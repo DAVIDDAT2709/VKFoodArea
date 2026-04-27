@@ -7,12 +7,18 @@ public class LocationTrackerService
     public event EventHandler<Location>? LocationChanged;
 
     private readonly object _demoSync = new();
+    private readonly AppAuthorizationService _appAuthorizationService;
 
     private bool _isListening;
     private LocationTrackingProfile? _activeProfile;
 
     private bool _isDemoModeEnabled;
     private Location? _demoLocation;
+
+    public LocationTrackerService(AppAuthorizationService appAuthorizationService)
+    {
+        _appAuthorizationService = appAuthorizationService;
+    }
 
     public bool IsDemoModeEnabled
     {
@@ -123,6 +129,9 @@ public class LocationTrackerService
 
     public void EnableDemoMode(double latitude, double longitude)
     {
+        if (!_appAuthorizationService.CanUseInternalTools)
+            return;
+
         Location demoLocation;
 
         lock (_demoSync)

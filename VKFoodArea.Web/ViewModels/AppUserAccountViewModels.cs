@@ -24,7 +24,7 @@ public class AppUserAccountSyncViewModel
     public string NarrationPlaybackMode { get; set; } = "TTS";
 
     [StringLength(40)]
-    public string Role { get; set; } = "User";
+    public string Role { get; set; } = AppUserRoleNames.User;
 
     public bool IsActive { get; set; } = true;
 }
@@ -33,6 +33,7 @@ public class AppUserAccountStatusViewModel
 {
     public string UserKey { get; set; } = string.Empty;
     public bool IsKnown { get; set; }
+    public string Role { get; set; } = AppUserRoleNames.Guest;
     public bool IsActive { get; set; } = true;
 }
 
@@ -45,7 +46,7 @@ public class AppUserAccountListItemViewModel
     public string FullName { get; set; } = string.Empty;
     public string NarrationLanguage { get; set; } = "vi";
     public string NarrationPlaybackMode { get; set; } = "TTS";
-    public string Role { get; set; } = "User";
+    public string Role { get; set; } = AppUserRoleNames.User;
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime LastSeenAt { get; set; }
@@ -58,4 +59,22 @@ public class AppUserAccountDetailsViewModel
 {
     public AppUserAccountListItemViewModel User { get; set; } = new();
     public List<NarrationHistory> RecentNarrations { get; set; } = new();
+}
+
+public class AppUserAccountAccessFormViewModel
+{
+    public int Id { get; set; }
+    public string UserKey { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public int ListenCount { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastSeenAt { get; set; }
+    public DateTime LastSyncedAt { get; set; }
+
+    [Required, StringLength(40)]
+    public string Role { get; set; } = AppUserRoleNames.User;
+
+    public bool IsActive { get; set; } = true;
 }

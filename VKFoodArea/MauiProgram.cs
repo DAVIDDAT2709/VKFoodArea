@@ -34,6 +34,8 @@ public static class MauiProgram
 
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite($"Data Source={dbPath}"));
+        builder.Services.AddDbContextFactory<AppDbContext>(options =>
+            options.UseSqlite($"Data Source={dbPath}"));
 
         builder.Services.AddSingleton<HaversineDistanceCalculator>();
         builder.Services.AddSingleton<CooldownStore>();
@@ -49,21 +51,24 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppLanguageService>();
         builder.Services.AddSingleton<AppTextService>();
         builder.Services.AddSingleton<AppRootNavigationService>();
-        builder.Services.AddSingleton<AppLinkService>();
-        builder.Services.AddSingleton<AppDbInitializationService>();
         builder.Services.AddSingleton<LanguageSelectionFlowService>();
-        builder.Services.AddSingleton<ApiBaseUrlService>();
         builder.Services.AddSingleton<NarrationUiStateService>();
         builder.Services.AddSingleton<SessionStoreService>();
         builder.Services.AddSingleton<AnonymousIdentityService>();
+        builder.Services.AddSingleton<AuthService>();
+        builder.Services.AddSingleton<AppAuthorizationService>();
+        builder.Services.AddSingleton<ApiBaseUrlService>();
+        builder.Services.AddSingleton<AppSyncOutboxService>();
+        builder.Services.AddSingleton<AppLinkService>();
+        builder.Services.AddSingleton<AppDbInitializationService>();
 
-        builder.Services.AddHttpClient("DemoHttp", ConfigureDemoHttpClient);
-        builder.Services.AddHttpClient<QrLookupService>(ConfigureDemoHttpClient);
-        builder.Services.AddHttpClient<NarrationSyncService>(ConfigureDemoHttpClient);
-        builder.Services.AddHttpClient<AppUserSyncService>(ConfigureDemoHttpClient);
-        builder.Services.AddHttpClient<MovementLogSyncService>(ConfigureDemoHttpClient);
-        builder.Services.AddHttpClient<PoiSyncService>(ConfigureDemoHttpClient);
-        builder.Services.AddHttpClient<TourCatalogService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient(AppRemoteHttpClientNames.Primary, ConfigureRemoteHttpClient);
+        builder.Services.AddHttpClient<QrLookupService>(ConfigureRemoteHttpClient);
+        builder.Services.AddHttpClient<NarrationSyncService>(ConfigureRemoteHttpClient);
+        builder.Services.AddHttpClient<AppUserSyncService>(ConfigureRemoteHttpClient);
+        builder.Services.AddHttpClient<MovementLogSyncService>(ConfigureRemoteHttpClient);
+        builder.Services.AddHttpClient<PoiSyncService>(ConfigureRemoteHttpClient);
+        builder.Services.AddHttpClient<TourCatalogService>(ConfigureRemoteHttpClient);
 
         builder.Services.AddTransient<NarrationService>();
         builder.Services.AddTransient<TourNarrationService>();
@@ -74,7 +79,6 @@ public static class MauiProgram
         builder.Services.AddTransient<TtsAudioPreviewService>();
         builder.Services.AddTransient<PoiRepository>();
         builder.Services.AddTransient<FoodRepository>();
-        builder.Services.AddSingleton<AuthService>();
 
         builder.Services.AddSingleton<HomeViewModel>();
         builder.Services.AddTransient<HistoryViewModel>();
@@ -94,7 +98,7 @@ public static class MauiProgram
         builder.Services.AddTransient<HomeEntryPage>();
         builder.Services.AddTransient<StartupPage>();
         builder.Services.AddSingleton<DeviceIdentityService>();
-        builder.Services.AddHttpClient<AppDevicePresenceService>(ConfigureDemoHttpClient);
+        builder.Services.AddHttpClient<AppDevicePresenceService>(ConfigureRemoteHttpClient);
 
 #if DEBUG
         builder.Logging.AddDebug();
@@ -103,7 +107,7 @@ public static class MauiProgram
         return builder.Build();
     }
 
-    private static void ConfigureDemoHttpClient(HttpClient client)
+    private static void ConfigureRemoteHttpClient(HttpClient client)
     {
         client.Timeout = TimeSpan.FromSeconds(8);
         client.DefaultRequestHeaders.TryAddWithoutValidation("ngrok-skip-browser-warning", "true");

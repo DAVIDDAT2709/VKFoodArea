@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="VKFoodArea/VKFoodArea.csproj" />
+  <Project Path="VKFoodArea.Web/VKFoodArea.Web.csproj" />
+  <Project Path="VKFoodArea.Domain.Tests/VKFoodArea.Domain.Tests.csproj" />
 </Solution>

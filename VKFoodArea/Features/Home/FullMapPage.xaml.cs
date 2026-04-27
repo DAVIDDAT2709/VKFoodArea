@@ -31,7 +31,7 @@ public partial class FullMapPage : ContentPage
     private readonly TourSessionService _tourSessionService;
     private readonly TourNarrationService _tourNarrationService;
     private readonly FoodRepository _foodRepository;
-    private readonly AppBuildMetadataService _buildMetadataService;
+    private readonly AppAuthorizationService _appAuthorizationService;
 
     private MapControl? _mapControl;
     private MemoryLayer? _poiLayer;
@@ -140,7 +140,7 @@ public partial class FullMapPage : ContentPage
         TourSessionService tourSessionService,
         TourNarrationService tourNarrationService,
         FoodRepository foodRepository,
-        AppBuildMetadataService buildMetadataService)
+        AppAuthorizationService appAuthorizationService)
     {
         InitializeComponent();
 
@@ -153,7 +153,7 @@ public partial class FullMapPage : ContentPage
         _tourSessionService = tourSessionService;
         _tourNarrationService = tourNarrationService;
         _foodRepository = foodRepository;
-        _buildMetadataService = buildMetadataService;
+        _appAuthorizationService = appAuthorizationService;
 
         BindingContext = _viewModel;
     }
@@ -208,7 +208,7 @@ public partial class FullMapPage : ContentPage
         if (DemoMenuButtonView is not null)
         {
             DemoMenuButtonView.Text = "Mẫu";
-            DemoMenuButtonView.IsVisible = _buildMetadataService.DemoToolsEnabled && _showDeveloperOptions;
+            DemoMenuButtonView.IsVisible = _appAuthorizationService.CanUseInternalTools && _showDeveloperOptions;
         }
 
         if (RealGpsButtonView is not null)
@@ -223,7 +223,7 @@ public partial class FullMapPage : ContentPage
     }
     private void OnDeveloperHeaderTapped(object sender, TappedEventArgs e)
     {
-        if (!_buildMetadataService.DemoToolsEnabled)
+        if (!_appAuthorizationService.CanUseInternalTools)
             return;
 
         var now = DateTimeOffset.UtcNow;
@@ -957,7 +957,7 @@ public partial class FullMapPage : ContentPage
 
     private async void OnDemoMenuClicked(object sender, EventArgs e)
     {
-        if (!_buildMetadataService.DemoToolsEnabled || !_showDeveloperOptions)
+        if (!_appAuthorizationService.CanUseInternalTools || !_showDeveloperOptions)
             return;
 
         var choice = await DisplayActionSheetAsync(

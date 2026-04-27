@@ -20,8 +20,8 @@
 	<PropertyGroup>
 		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == '' and '$(Configuration)' == 'Release'">https://disprovable-helpingly-addisyn.ngrok-free.dev/</VKFoodAreaOfficialBaseUrl>
 		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == ''"></VKFoodAreaOfficialBaseUrl>
-		<VKFoodAreaEnableInternalDemo Condition="'$(VKFoodAreaEnableInternalDemo)' == '' and '$(Configuration)' == 'Debug'">true</VKFoodAreaEnableInternalDemo>
-		<VKFoodAreaEnableInternalDemo Condition="'$(VKFoodAreaEnableInternalDemo)' == ''">false</VKFoodAreaEnableInternalDemo>
+		<VKFoodAreaEnableInternalTools Condition="'$(VKFoodAreaEnableInternalTools)' == '' and '$(Configuration)' == 'Debug'">true</VKFoodAreaEnableInternalTools>
+		<VKFoodAreaEnableInternalTools Condition="'$(VKFoodAreaEnableInternalTools)' == ''">false</VKFoodAreaEnableInternalTools>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -50,7 +50,7 @@
 
 	<ItemGroup>
 		<AssemblyMetadata Include="VKFoodAreaOfficialBaseUrl" Value="$(VKFoodAreaOfficialBaseUrl)" />
-		<AssemblyMetadata Include="VKFoodAreaEnableInternalDemo" Value="$(VKFoodAreaEnableInternalDemo)" />
+		<AssemblyMetadata Include="VKFoodAreaEnableInternalTools" Value="$(VKFoodAreaEnableInternalTools)" />
 	</ItemGroup>
 
 	<ItemGroup>

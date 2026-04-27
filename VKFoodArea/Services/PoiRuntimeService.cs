@@ -102,7 +102,10 @@ public class PoiRuntimeService : IDisposable
         }
     }
 
-    public async Task InitializeAsync(CancellationToken ct = default)
+    public async Task InitializeAsync(
+        bool requestLocationPermission = false,
+        bool startListening = false,
+        CancellationToken ct = default)
     {
         await _stateLock.WaitAsync(ct);
         try
@@ -111,17 +114,24 @@ public class PoiRuntimeService : IDisposable
             var currentSnapshot = GetSnapshot();
             var location = currentSnapshot.CurrentLocation;
             var trackingProfile = _trackingPolicyService.GetCurrentProfile();
-            var hasPermission = await _permissionService.EnsureLocationPermissionAsync(trackingProfile);
+            var hasPermission = await _permissionService.EnsureLocationPermissionAsync(
+                trackingProfile,
+                requestIfNeeded: requestLocationPermission);
             var isGpsListening = currentSnapshot.IsGpsListening;
 
             if (hasPermission)
             {
-                location = await _locationTrackerService.GetCurrentAsync(trackingProfile, ct)
-                           ?? await _locationTrackerService.GetLastKnownAsync(ct)
-                           ?? location;
+                location = startListening
+                    ? await _locationTrackerService.GetCurrentAsync(trackingProfile, ct)
+                        ?? await _locationTrackerService.GetLastKnownAsync(ct)
+                        ?? location
+                    : await _locationTrackerService.GetLastKnownAsync(ct)
+                        ?? location;
 
-                if (!isGpsListening)
+                if (startListening && !isGpsListening)
                     isGpsListening = await _locationTrackerService.StartListeningAsync(trackingProfile, ct);
+                else if (!startListening)
+                    isGpsListening = false;
             }
             else
             {
@@ -174,10 +184,14 @@ public class PoiRuntimeService : IDisposable
         RaiseStateChanged();
     }
 
-    public async Task<bool> RefreshCurrentLocationAsync(CancellationToken ct = default)
+    public async Task<bool> RefreshCurrentLocationAsync(
+        bool requestLocationPermission = true,
+        CancellationToken ct = default)
     {
         var trackingProfile = _trackingPolicyService.GetCurrentProfile();
-        var hasPermission = await _permissionService.EnsureLocationPermissionAsync(trackingProfile);
+        var hasPermission = await _permissionService.EnsureLocationPermissionAsync(
+            trackingProfile,
+            requestIfNeeded: requestLocationPermission);
         if (!hasPermission)
         {
             await _stateLock.WaitAsync(ct);

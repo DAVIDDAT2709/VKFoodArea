@@ -76,6 +76,7 @@ public class AppUserAccountService : IAppUserAccountService
         if (string.IsNullOrWhiteSpace(userKey))
             throw new InvalidOperationException("Missing user key.");
 
+        var normalizedRole = AppUserRoleNames.Normalize(vm.Role);
         var user = await _context.AppUserAccounts.FirstOrDefaultAsync(x => x.UserKey == userKey);
         if (user is null)
         {
@@ -83,6 +84,7 @@ public class AppUserAccountService : IAppUserAccountService
             {
                 UserKey = userKey,
                 CreatedAt = now,
+                Role = normalizedRole == AppUserRoleNames.Guest ? AppUserRoleNames.User : normalizedRole,
                 IsActive = vm.IsActive
             };
             _context.AppUserAccounts.Add(user);
@@ -91,9 +93,8 @@ public class AppUserAccountService : IAppUserAccountService
         user.Username = NormalizeText(vm.Username);
         user.Email = NormalizeText(vm.Email).ToLowerInvariant();
         user.FullName = NormalizeText(vm.FullName);
-        user.NarrationLanguage = NormalizeText(vm.NarrationLanguage).ToLowerInvariant();
+        user.NarrationLanguage = NormalizeLanguage(vm.NarrationLanguage);
         user.NarrationPlaybackMode = NormalizePlaybackMode(vm.NarrationPlaybackMode);
-        user.Role = string.IsNullOrWhiteSpace(vm.Role) ? "User" : NormalizeText(vm.Role);
         user.LastSeenAt = now;
         user.LastSyncedAt = now;
 
@@ -105,12 +106,19 @@ public class AppUserAccountService : IAppUserAccountService
     {
         var normalizedUserKey = NormalizeUserKey(userKey);
         if (string.IsNullOrWhiteSpace(normalizedUserKey))
-            return new AppUserAccountStatusViewModel { IsKnown = false, IsActive = true };
+        {
+            return new AppUserAccountStatusViewModel
+            {
+                IsKnown = false,
+                Role = AppUserRoleNames.Guest,
+                IsActive = true
+            };
+        }
 
         var user = await _context.AppUserAccounts
             .AsNoTracking()
             .Where(x => x.UserKey == normalizedUserKey)
-            .Select(x => new { x.UserKey, x.IsActive })
+            .Select(x => new { x.UserKey, x.Role, x.IsActive })
             .FirstOrDefaultAsync();
 
         if (user is null)
@@ -119,6 +127,7 @@ public class AppUserAccountService : IAppUserAccountService
             {
                 UserKey = normalizedUserKey,
                 IsKnown = false,
+                Role = AppUserRoleNames.Guest,
                 IsActive = true
             };
         }
@@ -127,17 +136,44 @@ public class AppUserAccountService : IAppUserAccountService
         {
             UserKey = user.UserKey,
             IsKnown = true,
+            Role = AppUserRoleNames.Normalize(user.Role),
             IsActive = user.IsActive
         };
     }
 
-    public async Task<bool> SetActiveAsync(int id, bool isActive)
+    public async Task<bool> UpdateAccessAsync(int id, string role, bool isActive, string? actorUsername)
     {
         var user = await _context.AppUserAccounts.FirstOrDefaultAsync(x => x.Id == id);
         if (user is null)
             return false;
 
+        var normalizedRole = AppUserRoleNames.Normalize(role);
+        if (normalizedRole == AppUserRoleNames.Guest)
+            normalizedRole = AppUserRoleNames.User;
+
+        var changes = new List<string>();
+        if (!string.Equals(user.Role, normalizedRole, StringComparison.Ordinal))
+            changes.Add($"doi quyen thanh {AppUserRoleNames.DisplayName(normalizedRole)}");
+
+        if (user.IsActive != isActive)
+            changes.Add(isActive ? "mo khoa tai khoan app" : "khoa tai khoan app");
+
+        user.Role = normalizedRole;
         user.IsActive = isActive;
+        await _context.SaveChangesAsync();
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            ActorUsername = NormalizeActorUsername(actorUsername),
+            Action = "update_app_user_access",
+            EntityType = nameof(AppUserAccount),
+            EntityKey = user.Id.ToString(),
+            Note = changes.Count > 0
+                ? $"Cap nhat app user {BuildUserLabel(user)}: {string.Join(", ", changes)}."
+                : $"Luu lai quyen app user {BuildUserLabel(user)}.",
+            CreatedAt = DateTime.UtcNow
+        });
+
         await _context.SaveChangesAsync();
         return true;
     }
@@ -155,7 +191,7 @@ public class AppUserAccountService : IAppUserAccountService
             FullName = user.FullName,
             NarrationLanguage = user.NarrationLanguage,
             NarrationPlaybackMode = user.NarrationPlaybackMode,
-            Role = user.Role,
+            Role = AppUserRoleNames.Normalize(user.Role),
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
             LastSeenAt = user.LastSeenAt,
@@ -170,6 +206,18 @@ public class AppUserAccountService : IAppUserAccountService
     private static string NormalizeText(string? text)
         => (text ?? string.Empty).Trim();
 
+    private static string NormalizeLanguage(string? language)
+    {
+        return NormalizeText(language).ToLowerInvariant() switch
+        {
+            "en" => "en",
+            "zh" => "zh",
+            "ja" => "ja",
+            "de" => "de",
+            _ => "vi"
+        };
+    }
+
     private static string NormalizePlaybackMode(string? mode)
     {
         return NormalizeText(mode) switch
@@ -180,4 +228,20 @@ public class AppUserAccountService : IAppUserAccountService
         };
     }
 
+    private static string NormalizeActorUsername(string? username)
+    {
+        var normalized = NormalizeText(username).ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(normalized) ? "system" : normalized;
+    }
+
+    private static string BuildUserLabel(AppUserAccount user)
+    {
+        if (!string.IsNullOrWhiteSpace(user.Username))
+            return user.Username;
+
+        if (!string.IsNullOrWhiteSpace(user.Email))
+            return user.Email;
+
+        return user.UserKey;
+    }
 }

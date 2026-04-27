@@ -12,18 +12,21 @@ public partial class SettingsPage : ContentPage
     private readonly AppTextService _text;
     private readonly ApiBaseUrlService _apiBaseUrlService;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly AppSyncOutboxService _appSyncOutboxService;
 
     public SettingsPage(
         SoundSettingsViewModel viewModel,
         AppTextService text,
         ApiBaseUrlService apiBaseUrlService,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        AppSyncOutboxService appSyncOutboxService)
     {
         InitializeComponent();
         _viewModel = viewModel;
         _text = text;
         _apiBaseUrlService = apiBaseUrlService;
         _httpClientFactory = httpClientFactory;
+        _appSyncOutboxService = appSyncOutboxService;
         BindingContext = _viewModel;
 
         LanguagePicker.ItemsSource = _viewModel.LanguageOptions;
@@ -83,7 +86,7 @@ public partial class SettingsPage : ContentPage
     {
         if (!_apiBaseUrlService.TryBuildApiUrl("api/pois", out var url))
         {
-            ApplyConnectionStatus("Chưa có endpoint web. Hãy quét QR từ website hoặc nhập URL demo.", false);
+            ApplyConnectionStatus("Chưa có endpoint web. Hãy quét QR từ website hoặc dùng URL nội bộ nếu được cấp quyền.", false);
             return;
         }
 
@@ -92,7 +95,7 @@ public partial class SettingsPage : ContentPage
 
         try
         {
-            using var response = await _httpClientFactory.CreateClient("DemoHttp").GetAsync(url);
+            using var response = await _httpClientFactory.CreateClient(AppRemoteHttpClientNames.Primary).GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 ApplyConnectionStatus("Kết nối OK. App đọc được API POI từ web.", true);
@@ -114,7 +117,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnEditEndpointClicked(object sender, EventArgs e)
     {
-        if (!_apiBaseUrlService.CanUseDemoTools)
+        if (!_apiBaseUrlService.CanOverrideRemoteEndpoint)
             return;
 
         var value = await DisplayPromptAsync(
@@ -128,7 +131,10 @@ public partial class SettingsPage : ContentPage
         if (value is null)
             return;
 
-        var result = _apiBaseUrlService.SaveDemoBaseUrl(value);
+        var result = _apiBaseUrlService.SaveManualOverrideBaseUrl(value);
+        if (result.Success)
+            _appSyncOutboxService.FlushPendingInBackground();
+
         ApplyConnectionStatus(result.Message, result.Success);
 
         if (!result.Success)
@@ -182,14 +188,14 @@ public partial class SettingsPage : ContentPage
         ConnectionStatusLabel.Text = overrideMessage ?? GetConnectionStatusText();
         ConnectionUrlLabel.Text = hasEndpoint ? _apiBaseUrlService.BaseUrl : "Chưa có endpoint web.";
         TestConnectionButton.IsEnabled = hasEndpoint;
-        EditEndpointButton.IsVisible = _apiBaseUrlService.CanUseDemoTools;
-        Grid.SetColumnSpan(TestConnectionButton, _apiBaseUrlService.CanUseDemoTools ? 1 : 2);
+        EditEndpointButton.IsVisible = _apiBaseUrlService.CanOverrideRemoteEndpoint;
+        Grid.SetColumnSpan(TestConnectionButton, _apiBaseUrlService.CanOverrideRemoteEndpoint ? 1 : 2);
     }
 
     private string GetConnectionSourceLabel()
     {
-        if (_apiBaseUrlService.IsUsingManualDemoBaseUrl)
-            return "Demo";
+        if (_apiBaseUrlService.IsUsingManualOverrideBaseUrl)
+            return "Nội bộ";
 
         if (_apiBaseUrlService.IsUsingOfficialReleaseBaseUrl)
             return "Release";
@@ -203,10 +209,10 @@ public partial class SettingsPage : ContentPage
     private string GetConnectionStatusText()
     {
         if (!_apiBaseUrlService.HasConfiguredBaseUrl)
-            return "App chưa biết web endpoint. Quét QR từ website để tự nhận URL, hoặc nhập URL trong chế độ demo.";
+            return "App chưa biết web endpoint. Quét QR từ website để tự nhận URL, hoặc nhập URL nội bộ nếu tài khoản của bạn được phép.";
 
-        if (_apiBaseUrlService.IsUsingManualDemoBaseUrl)
-            return "App đang dùng URL nhập tay cho demo. Dùng nút kiểm tra trước khi quét QR hoặc tải dữ liệu.";
+        if (_apiBaseUrlService.IsUsingManualOverrideBaseUrl)
+            return "App đang dùng URL nội bộ nhập tay. Dùng nút kiểm tra trước khi quét QR hoặc tải dữ liệu.";
 
         if (_apiBaseUrlService.IsUsingAutoDetectedBaseUrl)
             return "App đang dùng URL tự nhận từ QR gần nhất. Nếu đổi tunnel, hãy quét QR mới hoặc nhập URL mới.";

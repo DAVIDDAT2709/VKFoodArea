@@ -95,6 +95,13 @@
                             <span class="app-nav__title">Tài khoản hệ thống</span>
                         </span>
                     </a>
+
+                    <a class="@NavClass("AppUserAccounts")" asp-controller="AppUserAccounts" asp-action="Index">
+                        @NavIcon("users")
+                        <span class="app-nav__content">
+                            <span class="app-nav__title">Tài khoản app</span>
+                        </span>
+                    </a>
                 }
 
                 <a class="@NavClass("NarrationHistories")" asp-controller="NarrationHistories" asp-action="Index">

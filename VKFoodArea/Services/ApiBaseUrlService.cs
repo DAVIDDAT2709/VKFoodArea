@@ -18,14 +18,14 @@ public class ApiBaseUrlService
     }
 
     public string BaseUrl
-        => !string.IsNullOrWhiteSpace(ManualDemoBaseUrl)
-            ? ManualDemoBaseUrl
+        => !string.IsNullOrWhiteSpace(ManualOverrideBaseUrl)
+            ? ManualOverrideBaseUrl
             : !string.IsNullOrWhiteSpace(OfficialReleaseBaseUrl)
                 ? OfficialReleaseBaseUrl
                 : AutoDetectedBaseUrl;
 
-    public string ManualDemoBaseUrl
-        => CanUseDemoTools
+    public string ManualOverrideBaseUrl
+        => CanOverrideRemoteEndpoint
             ? NormalizeBaseUrl(_settingsService.ApiBaseUrl, string.Empty)
             : string.Empty;
 
@@ -35,15 +35,17 @@ public class ApiBaseUrlService
     public string AutoDetectedBaseUrl
         => NormalizeBaseUrl(_settingsService.AutoDetectedApiBaseUrl, string.Empty);
 
-    public bool CanUseDemoTools => _buildMetadataService.DemoToolsEnabled;
+    public bool CanUseInternalTools => _buildMetadataService.InternalToolsEnabled;
+
+    public bool CanOverrideRemoteEndpoint => _buildMetadataService.InternalToolsEnabled;
 
     public bool HasConfiguredBaseUrl => !string.IsNullOrWhiteSpace(BaseUrl);
 
     public bool HasOfficialReleaseBaseUrl => _buildMetadataService.HasOfficialBaseUrl;
 
-    public bool IsUsingManualDemoBaseUrl
-        => !string.IsNullOrWhiteSpace(ManualDemoBaseUrl) &&
-           string.Equals(BaseUrl, ManualDemoBaseUrl, StringComparison.OrdinalIgnoreCase);
+    public bool IsUsingManualOverrideBaseUrl
+        => !string.IsNullOrWhiteSpace(ManualOverrideBaseUrl) &&
+           string.Equals(BaseUrl, ManualOverrideBaseUrl, StringComparison.OrdinalIgnoreCase);
 
     public bool IsUsingOfficialReleaseBaseUrl
         => !string.IsNullOrWhiteSpace(OfficialReleaseBaseUrl) &&
@@ -53,10 +55,10 @@ public class ApiBaseUrlService
         => !string.IsNullOrWhiteSpace(AutoDetectedBaseUrl) &&
            string.Equals(BaseUrl, AutoDetectedBaseUrl, StringComparison.OrdinalIgnoreCase);
 
-    public (bool Success, string Message) SaveDemoBaseUrl(string? value)
+    public (bool Success, string Message) SaveManualOverrideBaseUrl(string? value)
     {
-        if (!CanUseDemoTools)
-            return (false, "Bản này không mở mục này.");
+        if (!CanOverrideRemoteEndpoint)
+            return (false, "Tai khoan hien tai khong duoc phep doi URL web.");
 
         var normalized = (value ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(normalized))
@@ -64,21 +66,21 @@ public class ApiBaseUrlService
             _settingsService.ApiBaseUrl = string.Empty;
 
             if (!string.IsNullOrWhiteSpace(OfficialReleaseBaseUrl))
-                return (true, "Đã quay về địa chỉ mặc định.");
+                return (true, "Da quay ve endpoint release mac dinh.");
 
             return !string.IsNullOrWhiteSpace(AutoDetectedBaseUrl)
-                ? (true, "Đã quay về địa chỉ từ liên kết gần nhất.")
-                : (true, "Đã xóa địa chỉ tạm.");
+                ? (true, "Da quay ve URL tu nhan gan nhat tu QR.")
+                : (true, "Da xoa URL nhap tay.");
         }
 
         if (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            return (false, "Địa chỉ phải bắt đầu bằng http:// hoặc https://.");
+            return (false, "URL phai bat dau bang http:// hoac https://.");
         }
 
         _settingsService.ApiBaseUrl = NormalizeBaseUrl(normalized, string.Empty);
-        return (true, "Đã cập nhật địa chỉ web.");
+        return (true, "Da cap nhat URL web.");
     }
 
     public bool TryBuildApiUrl(string relativePath, out string url)

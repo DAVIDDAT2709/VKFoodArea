@@ -8,5 +8,5 @@ public interface IAppUserAccountService
     Task<AppUserAccountDetailsViewModel?> GetDetailsAsync(int id);
     Task<AppUserAccountListItemViewModel> SyncFromAppAsync(AppUserAccountSyncViewModel vm);
     Task<AppUserAccountStatusViewModel> GetStatusAsync(string? userKey);
-    Task<bool> SetActiveAsync(int id, bool isActive);
+    Task<bool> UpdateAccessAsync(int id, string role, bool isActive, string? actorUsername);
 }

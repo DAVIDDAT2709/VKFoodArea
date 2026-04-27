@@ -22,7 +22,7 @@ public sealed class AppBuildMetadataService
 
     public bool HasOfficialBaseUrl => !string.IsNullOrWhiteSpace(OfficialBaseUrl);
 
-    public bool DemoToolsEnabled => bool.TryParse(GetMetadata("VKFoodAreaEnableInternalDemo"), out var enabled) && enabled;
+    public bool InternalToolsEnabled => bool.TryParse(GetMetadata("VKFoodAreaEnableInternalTools"), out var enabled) && enabled;
 
     private string GetMetadata(string key)
         => _metadata.TryGetValue(key, out var value)

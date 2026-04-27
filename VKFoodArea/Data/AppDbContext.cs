@@ -14,4 +14,5 @@ public class AppDbContext : DbContext
     public DbSet<GeofenceEventLog> GeofenceEventLogs => Set<GeofenceEventLog>();
     public DbSet<NarrationLog> NarrationLogs => Set<NarrationLog>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
+    public DbSet<AppSyncOutboxItem> AppSyncOutboxItems => Set<AppSyncOutboxItem>();
 }

@@ -25,7 +25,7 @@ public class AppUserAccount
     public string NarrationPlaybackMode { get; set; } = "TTS";
 
     [StringLength(40)]
-    public string Role { get; set; } = "User";
+    public string Role { get; set; } = AppUserRoleNames.User;
 
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

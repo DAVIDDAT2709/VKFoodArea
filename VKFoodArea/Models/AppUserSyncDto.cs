@@ -1,3 +1,5 @@
+using VKFoodArea.Services;
+
 namespace VKFoodArea.Models;
 
 public class AppUserSyncDto
@@ -16,5 +18,6 @@ public class AppUserStatusDto
 {
     public string UserKey { get; set; } = string.Empty;
     public bool IsKnown { get; set; }
+    public string Role { get; set; } = AppUserRoleNames.Guest;
     public bool IsActive { get; set; } = true;
 }

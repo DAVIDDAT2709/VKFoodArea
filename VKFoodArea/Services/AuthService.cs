@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,7 +9,7 @@ namespace VKFoodArea.Services;
 
 public class AuthService
 {
-    private readonly AppDbContext _db;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
     private readonly SessionStoreService _sessionStore;
     private readonly AppSettingsService _settingsService;
     private readonly AppLanguageService _languageService;
@@ -19,14 +19,14 @@ public class AuthService
     public AppUser? CurrentUser { get; private set; }
 
     public AuthService(
-        AppDbContext db,
+        IDbContextFactory<AppDbContext> dbContextFactory,
         SessionStoreService sessionStore,
         AppSettingsService settingsService,
         AppLanguageService languageService,
         AppUserSyncService appUserSyncService,
         AnonymousIdentityService anonymousIdentityService)
     {
-        _db = db;
+        _dbContextFactory = dbContextFactory;
         _sessionStore = sessionStore;
         _settingsService = settingsService;
         _languageService = languageService;
@@ -53,11 +53,11 @@ public class AuthService
         if (remoteStatus is { IsKnown: true, IsActive: false })
             return AuthActionResult.Fail("Login.DisabledError");
 
-        CurrentUser = user;
-        ApplyUserSoundSettings(user);
-        _sessionStore.Save(user.Id);
-        await _appUserSyncService.SyncAsync(user, userKey);
-        return AuthActionResult.Success(user);
+        CurrentUser = await ApplyRemoteAccessAsync(user, remoteStatus);
+        ApplyUserSoundSettings(CurrentUser);
+        _sessionStore.Save(CurrentUser.Id);
+        await _appUserSyncService.SyncAsync(CurrentUser, userKey);
+        return AuthActionResult.Success(CurrentUser);
     }
 
     public async Task<AuthActionResult> RegisterAsync(string fullName, string email, string password)
@@ -78,14 +78,16 @@ public class AuthService
         if (password.Length < 6)
             return AuthActionResult.Fail("Register.PasswordTooShortError");
 
-        var emailExists = await _db.AppUsers
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+        var emailExists = await db.AppUsers
             .AsNoTracking()
             .AnyAsync(x => x.Email == normalizedEmail);
 
         if (emailExists)
             return AuthActionResult.Fail("Register.DuplicateEmailError");
 
-        var username = await GenerateUsernameAsync(normalizedEmail);
+        var username = await GenerateUsernameAsync(db, normalizedEmail);
 
         var user = new AppUser
         {
@@ -95,15 +97,15 @@ public class AuthService
             PasswordHash = HashPassword(password),
             NarrationLanguage = "vi",
             NarrationPlaybackMode = "TTS",
-            Role = "User",
+            Role = AppUserRoleNames.User,
             IsActive = true
         };
 
-        _db.AppUsers.Add(user);
-        await _db.SaveChangesAsync();
+        db.AppUsers.Add(user);
+        await db.SaveChangesAsync();
         await _appUserSyncService.SyncAsync(user, BuildUserSyncKey(user));
 
-        return AuthActionResult.Success(user);
+        return AuthActionResult.Success(CloneUser(user));
     }
 
     public async Task<bool> TryRestoreSessionAsync()
@@ -112,7 +114,8 @@ public class AuthService
         if (!userId.HasValue)
             return false;
 
-        var user = await _db.AppUsers
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        var user = await db.AppUsers
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == userId.Value && x.IsActive);
 
@@ -127,14 +130,37 @@ public class AuthService
         var remoteStatus = await _appUserSyncService.GetStatusAsync(userKey);
         if (remoteStatus is { IsKnown: true, IsActive: false })
         {
+            await MarkUserActiveStateAsync(user.Id, false);
             _sessionStore.Clear();
             CurrentUser = null;
             return false;
         }
 
-        CurrentUser = user;
-        ApplyUserSoundSettings(user);
-        await _appUserSyncService.SyncAsync(user, userKey);
+        CurrentUser = await ApplyRemoteAccessAsync(user, remoteStatus);
+        ApplyUserSoundSettings(CurrentUser);
+        await _appUserSyncService.SyncAsync(CurrentUser, userKey);
+        return true;
+    }
+
+    public async Task<bool> RefreshCurrentUserAccessAsync(CancellationToken ct = default)
+    {
+        if (CurrentUser is null)
+            return false;
+
+        var userKey = BuildUserSyncKey(CurrentUser);
+        var remoteStatus = await _appUserSyncService.GetStatusAsync(userKey, ct);
+        if (remoteStatus is null || !remoteStatus.IsKnown)
+            return false;
+
+        if (!remoteStatus.IsActive)
+        {
+            await MarkUserActiveStateAsync(CurrentUser.Id, false, ct);
+            Logout();
+            return true;
+        }
+
+        CurrentUser = await ApplyRemoteAccessAsync(CurrentUser, remoteStatus, ct);
+        ApplyUserSoundSettings(CurrentUser);
         return true;
     }
 
@@ -171,10 +197,10 @@ public class AuthService
 
     public void ReplaceCurrentUser(AppUser? user)
     {
-        CurrentUser = user;
+        CurrentUser = user is null ? null : CloneUser(user);
 
-        if (user is not null)
-            ApplyUserSoundSettings(user);
+        if (CurrentUser is not null)
+            ApplyUserSoundSettings(CurrentUser);
     }
 
     public async Task UpdateCurrentUserSoundSettingsAsync(
@@ -189,12 +215,13 @@ public class AuthService
         var currentUserId = GetCurrentUserId();
         if (currentUserId.HasValue)
         {
-            var user = await _db.AppUsers.FirstOrDefaultAsync(x => x.Id == currentUserId.Value, ct);
+            await using var db = await _dbContextFactory.CreateDbContextAsync(ct);
+            var user = await db.AppUsers.FirstOrDefaultAsync(x => x.Id == currentUserId.Value, ct);
             if (user is not null)
             {
                 user.NarrationLanguage = normalizedLanguage;
                 user.NarrationPlaybackMode = normalizedPlaybackMode;
-                await _db.SaveChangesAsync(ct);
+                await db.SaveChangesAsync(ct);
                 CurrentUser = CloneUser(user);
                 await _appUserSyncService.SyncAsync(CurrentUser, BuildUserSyncKey(CurrentUser), ct);
             }
@@ -220,20 +247,73 @@ public class AuthService
         if (string.IsNullOrWhiteSpace(normalizedIdentifier))
             return null;
 
-        return await _db.AppUsers
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        return await db.AppUsers
             .AsNoTracking()
             .FirstOrDefaultAsync(x =>
                 (x.Email == normalizedIdentifier || x.Username.ToLower() == normalizedIdentifier));
     }
 
-    private async Task<string> GenerateUsernameAsync(string email)
+    private async Task<AppUser> ApplyRemoteAccessAsync(
+        AppUser user,
+        AppUserStatusDto? remoteStatus,
+        CancellationToken ct = default)
+    {
+        await using var db = await _dbContextFactory.CreateDbContextAsync(ct);
+        var normalizedRole = remoteStatus is { IsKnown: true }
+            ? AppUserRoleNames.Normalize(remoteStatus.Role)
+            : AppUserRoleNames.Normalize(user.Role);
+        var isActive = remoteStatus is { IsKnown: true }
+            ? remoteStatus.IsActive
+            : user.IsActive;
+
+        var trackedUser = await db.AppUsers.FirstOrDefaultAsync(x => x.Id == user.Id, ct);
+        if (trackedUser is null)
+        {
+            var updatedUser = CloneUser(user);
+            updatedUser.Role = normalizedRole;
+            updatedUser.IsActive = isActive;
+            return updatedUser;
+        }
+
+        var hasChanges = false;
+        if (!string.Equals(trackedUser.Role, normalizedRole, StringComparison.Ordinal))
+        {
+            trackedUser.Role = normalizedRole;
+            hasChanges = true;
+        }
+
+        if (trackedUser.IsActive != isActive)
+        {
+            trackedUser.IsActive = isActive;
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+            await db.SaveChangesAsync(ct);
+
+        return CloneUser(trackedUser);
+    }
+
+    private async Task MarkUserActiveStateAsync(int userId, bool isActive, CancellationToken ct = default)
+    {
+        await using var db = await _dbContextFactory.CreateDbContextAsync(ct);
+        var trackedUser = await db.AppUsers.FirstOrDefaultAsync(x => x.Id == userId, ct);
+        if (trackedUser is null || trackedUser.IsActive == isActive)
+            return;
+
+        trackedUser.IsActive = isActive;
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task<string> GenerateUsernameAsync(AppDbContext db, string email)
     {
         var seed = email.Split('@', 2)[0];
         var baseUsername = SanitizeUsername(seed);
         var username = baseUsername;
         var suffix = 2;
 
-        while (await _db.AppUsers.AsNoTracking().AnyAsync(x => x.Username == username))
+        while (await db.AppUsers.AsNoTracking().AnyAsync(x => x.Username == username))
         {
             username = $"{baseUsername}{suffix.ToString(CultureInfo.InvariantCulture)}";
             suffix++;
@@ -294,7 +374,7 @@ public class AuthService
             FullName = user.FullName,
             NarrationLanguage = user.NarrationLanguage,
             NarrationPlaybackMode = user.NarrationPlaybackMode,
-            Role = user.Role,
+            Role = AppUserRoleNames.Normalize(user.Role),
             IsActive = user.IsActive
         };
     }

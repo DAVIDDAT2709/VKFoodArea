@@ -7,12 +7,17 @@ namespace VKFoodArea.Services;
 public class AppUserSyncService
 {
     private readonly HttpClient _httpClient;
+    private readonly AppSyncOutboxService _outboxService;
     private readonly ApiBaseUrlService _apiBaseUrlService;
 
-    public AppUserSyncService(HttpClient httpClient, ApiBaseUrlService apiBaseUrlService)
+    public AppUserSyncService(
+        HttpClient httpClient,
+        ApiBaseUrlService apiBaseUrlService,
+        AppSyncOutboxService outboxService)
     {
         _httpClient = httpClient;
         _apiBaseUrlService = apiBaseUrlService;
+        _outboxService = outboxService;
     }
 
     public async Task SyncAsync(AppUser user, string? userKey, CancellationToken ct = default)
@@ -31,15 +36,11 @@ public class AppUserSyncService
                 FullName = user.FullName,
                 NarrationLanguage = AppLanguageService.NormalizeLanguage(user.NarrationLanguage),
                 NarrationPlaybackMode = SoundSettingsService.NormalizePlaybackMode(user.NarrationPlaybackMode),
-                Role = string.IsNullOrWhiteSpace(user.Role) ? "User" : user.Role,
+                Role = AppUserRoleNames.Normalize(user.Role),
                 IsActive = user.IsActive
             };
 
-            if (!_apiBaseUrlService.TryBuildApiUrl("api/app-users/sync", out var url))
-                return;
-
-            using var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
-            response.EnsureSuccessStatusCode();
+            await _outboxService.EnqueueAsync("app-user-sync", "api/app-users/sync", payload, ct);
         }
         catch (Exception ex)
         {

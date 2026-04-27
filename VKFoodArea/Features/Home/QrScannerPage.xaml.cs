@@ -19,6 +19,7 @@ public partial class QrScannerPage : ContentPage
     private readonly NarrationUiStateService _narrationUiState;
     private readonly ApiBaseUrlService _apiBaseUrlService;
     private readonly TourSessionService _tourSessionService;
+    private readonly AppSyncOutboxService _appSyncOutboxService;
     private readonly IServiceProvider _serviceProvider;
 
     private bool _isHandlingResult;
@@ -34,6 +35,7 @@ public partial class QrScannerPage : ContentPage
         NarrationUiStateService narrationUiState,
         ApiBaseUrlService apiBaseUrlService,
         TourSessionService tourSessionService,
+        AppSyncOutboxService appSyncOutboxService,
         IServiceProvider serviceProvider)
     {
         InitializeComponent();
@@ -45,6 +47,7 @@ public partial class QrScannerPage : ContentPage
         _narrationUiState = narrationUiState;
         _apiBaseUrlService = apiBaseUrlService;
         _tourSessionService = tourSessionService;
+        _appSyncOutboxService = appSyncOutboxService;
         _serviceProvider = serviceProvider;
 
         QrReader.Options = new BarcodeReaderOptions
@@ -97,7 +100,10 @@ public partial class QrScannerPage : ContentPage
 
         var rawValue = e.Results?.FirstOrDefault()?.Value?.Trim();
         if (Uri.TryCreate(rawValue, UriKind.Absolute, out var rawUri))
-            _apiBaseUrlService.TryCaptureBaseUrlFromUri(rawUri);
+        {
+            if (_apiBaseUrlService.TryCaptureBaseUrlFromUri(rawUri))
+                _appSyncOutboxService.FlushPendingInBackground();
+        }
 
         var value = QrCodePayload.Normalize(rawValue);
 
@@ -250,7 +256,10 @@ public partial class QrScannerPage : ContentPage
         if (value is null)
             return;
 
-        var result = _apiBaseUrlService.SaveDemoBaseUrl(value);
+        var result = _apiBaseUrlService.SaveManualOverrideBaseUrl(value);
+        if (result.Success)
+            _appSyncOutboxService.FlushPendingInBackground();
+
         ApplyLocalizedText();
         await DisplayAlertAsync(
             result.Success ? "Web" : _text["Common.Error"],
@@ -265,7 +274,7 @@ public partial class QrScannerPage : ContentPage
 
     private void OnDemoUnlockPressed(object sender, EventArgs e)
     {
-        if (!_apiBaseUrlService.CanUseDemoTools)
+        if (!_apiBaseUrlService.CanUseInternalTools)
             return;
 
         CancelDemoUnlockHold();
@@ -420,7 +429,7 @@ public partial class QrScannerPage : ContentPage
         TorchButton.Text = _isTorchOn ? _text["Qr.TorchOn"] : _text["Qr.TorchOff"];
         CloseButton.Text = _text["Common.Close"];
         DemoEndpointButton.Text = "Web";
-        DemoEndpointButton.IsVisible = _apiBaseUrlService.CanUseDemoTools && _showDemoOptions;
+        DemoEndpointButton.IsVisible = _apiBaseUrlService.CanOverrideRemoteEndpoint && _showDemoOptions;
     }
 
     private string BuildScannerSupportText()
@@ -434,7 +443,7 @@ public partial class QrScannerPage : ContentPage
             _ => "Quét mã tại mỗi điểm dừng để mở quán và nghe thuyết minh ngay.\nNếu QR đang nằm trên chính điện thoại này, hãy mở nó ở màn hình khác hoặc in ra để camera quét được."
         };
 
-        if (!_apiBaseUrlService.CanUseDemoTools || !_showDemoOptions)
+        if (!_apiBaseUrlService.CanUseInternalTools || !_showDemoOptions)
             return supportText;
 
         var demoText = _text.CurrentLanguage switch

@@ -128,7 +128,7 @@ public partial class UserPage : ContentPage
         if (!string.IsNullOrWhiteSpace(user?.Username))
             return user.Username;
 
-        return "Kh\u00E1ch VKFood";
+        return "Khach VKFood";
     }
 
     private static string NormalizeNarrationMode(string? mode)
@@ -153,36 +153,43 @@ public partial class UserPage : ContentPage
 
     private string GetRoleDisplayLocalized(string? role)
     {
+        var normalizedRole = AppUserRoleNames.Normalize(role);
+
         return _text.CurrentLanguage switch
         {
-            "en" => role?.Trim().ToLowerInvariant() switch
+            "en" => normalizedRole switch
             {
-                "admin" => "Administrator",
-                "user" => "User",
+                AppUserRoleNames.Admin => "Administrator",
+                AppUserRoleNames.Operator => "Operator",
+                AppUserRoleNames.User => "User",
                 _ => _text["User.Guest"]
             },
-            "zh" => role?.Trim().ToLowerInvariant() switch
+            "zh" => normalizedRole switch
             {
-                "admin" => "管理员",
-                "user" => "用户",
+                AppUserRoleNames.Admin => "管理员",
+                AppUserRoleNames.Operator => "运营人员",
+                AppUserRoleNames.User => "用户",
                 _ => _text["User.Guest"]
             },
-            "ja" => role?.Trim().ToLowerInvariant() switch
+            "ja" => normalizedRole switch
             {
-                "admin" => "管理者",
-                "user" => "利用者",
+                AppUserRoleNames.Admin => "管理者",
+                AppUserRoleNames.Operator => "運用担当",
+                AppUserRoleNames.User => "利用者",
                 _ => _text["User.Guest"]
             },
-            "de" => role?.Trim().ToLowerInvariant() switch
+            "de" => normalizedRole switch
             {
-                "admin" => "Administrator",
-                "user" => "Benutzer",
+                AppUserRoleNames.Admin => "Administrator",
+                AppUserRoleNames.Operator => "Operator",
+                AppUserRoleNames.User => "Benutzer",
                 _ => _text["User.Guest"]
             },
-            _ => role?.Trim().ToLowerInvariant() switch
+            _ => normalizedRole switch
             {
-                "admin" => "Quản trị viên",
-                "user" => "Người dùng",
+                AppUserRoleNames.Admin => "Quản trị viên",
+                AppUserRoleNames.Operator => "Điều phối nội bộ",
+                AppUserRoleNames.User => "Người dùng",
                 _ => _text["User.Guest"]
             }
         };
@@ -203,7 +210,7 @@ public partial class UserPage : ContentPage
                 : "現在の設定はこの端末に保存されます。",
             "de" => isLoggedIn
                 ? "Dieses Konto merkt sich Ihre aktuellen Audioeinstellungen."
-                : "Die aktuellen Einstellungen werden auf diesem Gerät gespeichert.",
+                : "Die aktuellen Einstellungen werden auf diesem Geraet gespeichert.",
             _ => isLoggedIn
                 ? "Tài khoản này sẽ nhớ ngôn ngữ và cách phát hiện tại."
                 : "Thiết lập hiện tại đang được lưu trên thiết bị này."
@@ -224,8 +231,8 @@ public partial class UserPage : ContentPage
                 ? "あとからアプリ開始時の言語を変えても、ログアウトにはなりません。"
                 : "アプリ開始時の言語はあとからここで変更できます。",
             "de" => isLoggedIn
-                ? "Sie können die Einstiegssprache später ändern, ohne sich abzumelden."
-                : "Die Einstiegssprache kann später hier geändert werden.",
+                ? "Sie koennen die Einstiegssprache spaeter aendern, ohne sich abzumelden."
+                : "Die Einstiegssprache kann spaeter hier geaendert werden.",
             _ => isLoggedIn
                 ? "Bạn có thể đổi lại ngôn ngữ khi vào app mà không bị đăng xuất."
                 : "Bạn có thể đổi lại cách vào app ngay tại màn hình này."
@@ -249,7 +256,7 @@ public partial class UserPage : ContentPage
             "en" => "Change app language",
             "zh" => "调整进入应用的语言",
             "ja" => "開始時の言語を変更",
-            "de" => "App-Sprache beim Start ändern",
+            "de" => "App-Sprache beim Start aendern",
             _ => "Đổi ngôn ngữ khi vào app"
         };
         NavHomeButton.Text = _text["Nav.Home"];

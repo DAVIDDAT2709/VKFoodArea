@@ -1,0 +1,105 @@
+@model IReadOnlyList<VKFoodArea.Web.ViewModels.AppUserAccountListItemViewModel>
+@using System.Linq
+@using VKFoodArea.Web.Models
+@{
+    ViewData["Title"] = "Tai khoan app";
+    var totalCount = Model.Count;
+    var activeCount = Model.Count(x => x.IsActive);
+    var adminCount = Model.Count(x => AppUserRoleNames.Normalize(x.Role) == AppUserRoleNames.Admin);
+    var operatorCount = Model.Count(x => AppUserRoleNames.Normalize(x.Role) == AppUserRoleNames.Operator);
+}
+
+<section class="page-header page-section">
+    <div>
+        <h2>Tai khoan app</h2>
+        <p class="text-muted mb-0">Web la noi quan tri role/trang thai. App chi nhan quyen tu day khi sync.</p>
+    </div>
+</section>
+
+<section class="metrics-grid page-section">
+    <article class="metric-card metric-card--blue">
+        <span class="metric-card__label">Tong tai khoan</span>
+        <strong class="metric-card__value">@totalCount</strong>
+    </article>
+    <article class="metric-card metric-card--green">
+        <span class="metric-card__label">Dang hoat dong</span>
+        <strong class="metric-card__value">@activeCount</strong>
+    </article>
+    <article class="metric-card metric-card--orange">
+        <span class="metric-card__label">Operator</span>
+        <strong class="metric-card__value">@operatorCount</strong>
+    </article>
+    <article class="metric-card metric-card--red">
+        <span class="metric-card__label">Admin</span>
+        <strong class="metric-card__value">@adminCount</strong>
+    </article>
+</section>
+
+<section class="card-surface page-section">
+    <div class="section-heading">
+        <div>
+            <h2>Danh sach tai khoan app</h2>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <p class="mb-0">Chua co tai khoan app nao duoc sync len web.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table data-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Tai khoan</th>
+                        <th>Role</th>
+                        <th>Trang thai</th>
+                        <th>Nghe</th>
+                        <th>Lan cuoi thay</th>
+                        <th class="text-end">Thao tac</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td data-label="Tai khoan">
+                                <div class="table-title">@(!string.IsNullOrWhiteSpace(item.Username) ? item.Username : item.Email)</div>
+                                <div class="table-meta">@item.FullName</div>
+                                <div class="table-meta">@item.UserKey</div>
+                            </td>
+                            <td data-label="Role">
+                                <span class="soft-pill soft-pill--neutral">@AppUserRoleNames.DisplayName(item.Role)</span>
+                            </td>
+                            <td data-label="Trang thai">
+                                @if (item.IsActive)
+                                {
+                                    <span class="status-pill status-pill--success">Dang hoat dong</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill status-pill--muted">Da khoa</span>
+                                }
+                            </td>
+                            <td data-label="Nghe">
+                                <div class="table-title">@item.ListenCount</div>
+                                <div class="table-meta">
+                                    @(item.LatestPlayedAt.HasValue
+                                        ? WebDisplayTime.Format(item.LatestPlayedAt.Value, "dd/MM/yyyy HH:mm")
+                                        : "Chua co lich su")
+                                </div>
+                            </td>
+                            <td data-label="Lan cuoi thay">@WebDisplayTime.Format(item.LastSeenAt, "dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end" data-label="Thao tac">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Cap nhat quyen</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

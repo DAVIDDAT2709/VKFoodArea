@@ -1,0 +1,148 @@
+Using launch settings from C:\xampp\htdocs\VKFoodArea\VKFoodArea\Properties\launchSettings.json...
+--------- beginning of main
+04-28 00:11:25.877 11512 11512 I Zygote  : Process 11512 created for com.companyname.vkfoodarea
+04-28 00:11:25.879 11512 11512 I name.vkfoodarea: Late-enabling -Xcheck:jni
+04-28 00:11:25.932 11512 11512 I name.vkfoodarea: Using generational CollectorTypeCMC GC.
+04-28 00:11:25.936 11512 11512 W name.vkfoodarea: Unexpected CPU variant for x86: x86_64.
+04-28 00:11:25.936 11512 11512 W name.vkfoodarea: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, lunarlake, default
+04-28 00:11:25.957 11512 11512 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+04-28 00:11:26.117 11512 11512 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+04-28 00:11:26.117 11512 11512 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+04-28 00:11:26.507 11512 11512 D nativeloader: Configuring clns-9 for other apk /data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/lib/x86_64:/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.companyname.vkfoodarea
+04-28 00:11:26.541 11512 11512 V GraphicsEnvironment: Currently set values for:
+04-28 00:11:26.542 11512 11512 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+04-28 00:11:26.542 11512 11512 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+04-28 00:11:26.542 11512 11512 V GraphicsEnvironment: com.companyname.vkfoodarea is not listed in per-application setting
+04-28 00:11:26.542 11512 11512 V GraphicsEnvironment: No special selections for ANGLE, returning default driver choice
+04-28 00:11:26.546 11512 11512 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+04-28 00:11:26.595 11512 11512 D nativeloader: Load /data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/lib/x86_64/libmonosgen-2.0.so using class loader ns clns-9 (caller=/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk!classes2.dex): ok
+04-28 00:11:26.601 11512 11512 D nativeloader: Load /data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/lib/x86_64/libxamarin-app.so using class loader ns clns-9 (caller=/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk!classes2.dex): ok
+04-28 00:11:26.610 11512 11512 D nativeloader: Load /data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/lib/x86_64/libmonodroid.so using class loader ns clns-9 (caller=/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk!classes2.dex): ok
+04-28 00:11:26.615 11512 11512 W monodroid: Creating public update directory: `/data/user/0/com.companyname.vkfoodarea/files/.__override__/x86_64`
+04-28 00:11:26.616 11512 11512 W name.vkfoodarea: Attempt to remove non-JNI local reference
+04-28 00:11:26.616 11512 11512 W monodroid: runtime args empty
+04-28 00:11:26.722 11512 11512 D nativeloader: Load /data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/lib/x86_64/libSystem.Security.Cryptography.Native.Android.so using class loader ns clns-9 (caller=/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk!classes2.dex): ok
+04-28 00:11:26.722 11512 11512 D DOTNET  : AndroidCryptoNative_InitLibraryOnLoad: jint AndroidCryptoNative_InitLibraryOnLoad(JavaVM *, void *) in /__w/1/s/src/runtime/src/native/libs/System.Security.Cryptography.Native.Android/pal_jni.c
+04-28 00:11:26.724 11512 11512 D DOTNET  : GetOptionalClassGRef: optional class com/android/org/conscrypt/OpenSSLEngineImpl was not found
+04-28 00:11:26.734 11512 11512 D nativeloader: Load /data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/lib/x86_64/libxamarin-debug-app-helper.so using class loader ns clns-9 (caller=/data/app/~~i30h5dBF7FSNWNvuEXoaBg==/com.companyname.vkfoodarea-zmUpxqvg1zySMvn8hPcxFw==/base.apk!classes2.dex): ok
+04-28 00:11:26.895 11512 11512 W name.vkfoodarea: Attempt to remove non-JNI local reference
+04-28 00:11:28.405 11512 11512 I name.vkfoodarea: Explicit concurrent mark compact GC freed 1952KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 2089KB/4179KB, paused 43us,14.815ms total 22.377ms
+04-28 00:11:29.132 11512 11512 I Choreographer: Skipped 129 frames!  The application may be doing too much work on its main thread.
+--------- beginning of system
+04-28 00:11:29.136 11512 11531 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+04-28 00:11:29.210 11512 11512 D AppCompatDelegate: Checking for metadata for AppLocalesMetadataHolderService : Service not found
+04-28 00:11:29.242 11512 11531 I GFXSTREAM: [eglDisplay.cpp(297)] Opening libGLESv1_CM_emulation.so
+04-28 00:11:29.246 11512 11531 I GFXSTREAM: [eglDisplay.cpp(297)] Opening libGLESv2_emulation.so
+04-28 00:11:29.258 11512 11531 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+04-28 00:11:29.258 11512 11531 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+04-28 00:11:29.379 11512 11512 D app_process64: [00:11:29.345] App.CreateWindow start
+04-28 00:11:29.383 11512 11512 I VKFoodArea.Startup: [00:11:29.345] App.CreateWindow start
+04-28 00:11:29.490 11512 11512 D app_process64: [00:11:29.489] App.CreateWindow complete
+04-28 00:11:29.490 11512 11512 I VKFoodArea.Startup: [00:11:29.489] App.CreateWindow complete
+04-28 00:11:29.519 11512 11512 D app_process64: [00:11:29.518] BootstrapPage.OnAppearing
+04-28 00:11:29.519 11512 11512 I VKFoodArea.Startup: [00:11:29.518] BootstrapPage.OnAppearing
+04-28 00:11:29.547 11512 11512 D CompatChangeReporter: Compat change id reported: 377864165; UID 10231; state: ENABLED
+04-28 00:11:29.547 11512 11512 D DesktopExperienceFlags: Toggle override initialized to: false
+04-28 00:11:29.547 11512 11512 D DesktopModeFlags: Toggle override initialized to: OVERRIDE_UNSET
+04-28 00:11:29.657 11512 11512 I name.vkfoodarea: hiddenapi: Accessing hidden method Landroid/view/ViewGroup;->makeOptionalFitsSystemWindows()V (runtime_flags=0, domain=platform, api=unsupported) from Landroidx/appcompat/widget/ViewUtils; (domain=app, TargetSdkVersion=36) using reflection: allowed
+04-28 00:11:29.993 11512 11512 I HWUI    : Using FreeType backend (prop=Auto)
+04-28 00:11:30.036 11512 11512 V AutofillClientController: onActivityPostResumed()
+04-28 00:11:30.036 11512 11512 V AutofillClientController: onActivityPostResumed(): Relayout fix enabled
+04-28 00:11:30.036 11512 11512 V AutofillClientController: forResume(): Not attempting refill.
+04-28 00:11:30.074 11512 11512 W HWUI    : Unknown dataspace 0
+04-28 00:11:30.089 11512 11512 D app_process64: [00:11:30.089] BootstrapPage startup task running
+04-28 00:11:30.090 11512 11512 I VKFoodArea.Startup: [00:11:30.089] BootstrapPage startup task running
+04-28 00:11:30.106 11512 11512 D app_process64: [00:11:30.106] BootstrapPage resolved AppDbInitializationService
+04-28 00:11:30.106 11512 11512 I VKFoodArea.Startup: [00:11:30.106] BootstrapPage resolved AppDbInitializationService
+04-28 00:11:30.307 11512 11512 D app_process64: [00:11:30.307] BootstrapPage resolved AuthService
+04-28 00:11:30.307 11512 11512 I VKFoodArea.Startup: [00:11:30.307] BootstrapPage resolved AuthService
+04-28 00:11:30.308 11512 11512 D app_process64: [00:11:30.308] BootstrapPage resolved AppSettingsService
+04-28 00:11:30.308 11512 11512 I VKFoodArea.Startup: [00:11:30.308] BootstrapPage resolved AppSettingsService
+04-28 00:11:30.308 11512 11512 D app_process64: [00:11:30.308] BootstrapPage resolved AppRootNavigationService
+04-28 00:11:30.308 11512 11512 I VKFoodArea.Startup: [00:11:30.308] BootstrapPage resolved AppRootNavigationService
+04-28 00:11:30.308 11512 11512 D app_process64: [00:11:30.308] BootstrapPage database init start
+04-28 00:11:30.308 11512 11512 I VKFoodArea.Startup: [00:11:30.308] BootstrapPage database init start
+04-28 00:11:30.311 11512 11535 D app_process64: [00:11:30.311] AppDbInitializationService.InitializeInternalAsync start
+04-28 00:11:30.312 11512 11535 I VKFoodArea.Startup: [00:11:30.311] AppDbInitializationService.InitializeInternalAsync start
+04-28 00:11:30.351 11512 11512 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@e14aaf4
+04-28 00:11:30.352 11512 11512 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): crc6488302ad6e9e4df1a.MauiAppCompatActivity_PredictiveBackCallback@17bd469
+04-28 00:11:30.375 11512 11512 D VRI[MainActivity]: WindowInsets changed: 1080x2340 statusBars:[0,136,0,0] navigationBars:[0,0,0,66] mandatorySystemGestures:[0,169,0,88] 
+04-28 00:11:30.473 11512 11517 I name.vkfoodarea: Compiler allocated 5247KB to compile void android.view.ViewRootImpl.performTraversals(long)
+04-28 00:11:30.684 11512 11512 I Surface : Creating surface for consumer unnamed-11512-0 with slotExpansion=1 for 64 slots
+04-28 00:11:30.688 11512 11512 I Surface : Creating surface for consumer VRI[MainActivity]#0(BLAST Consumer)0 with slotExpansion=1 for 64 slots
+04-28 00:11:30.754 11512 11518 I name.vkfoodarea: Background concurrent mark compact GC freed 645KB AllocSpace bytes, 2(64KB) LOS objects, 49% free, 3455KB/6911KB, paused 1.076ms,7.648ms total 47.410ms
+04-28 00:11:31.102 11512 11512 I Choreographer: Skipped 43 frames!  The application may be doing too much work on its main thread.
+04-28 00:11:31.139 11512 11524 I HWUI    : Davey! duration=1031ms; Flags=1, FrameTimelineVsyncId=311135, IntendedVsync=3428737079507, Vsync=3428987079497, InputEventId=0, HandleInputStart=3428994693326, AnimationStart=3428994694485, PerformTraversalsStart=3428994694899, DrawStart=3429461329857, FrameDeadline=3428753746173, FrameStartTime=3428994313895, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3429518575373, SyncStart=3429519767260, IssueDrawCommandsStart=3429519897065, SwapBuffers=3429714818715, FrameCompleted=3429769603073, DequeueBufferDuration=9967, QueueBufferDuration=1064187, GpuCompleted=3429769603073, SwapBuffersCompleted=3429738588073, DisplayPresentTime=34359738544, CommandSubmissionCompleted=3429714818715, 
+04-28 00:11:31.341 11512 11512 D InsetsController: hide(ime())
+04-28 00:11:31.353 11512 11512 I ImeTracker: com.companyname.vkfoodarea:feb7ed1d: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+04-28 00:11:31.889 11512 11535 I name.vkfoodarea: Explicit concurrent mark compact GC freed 384KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 3887KB/7775KB, paused 629us,6.495ms total 30.079ms
+04-28 00:11:33.173 11512 11535 D app_process64: [00:11:33.173] AppDbInitializationService.InitializeInternalAsync complete
+04-28 00:11:33.174 11512 11535 I VKFoodArea.Startup: [00:11:33.173] AppDbInitializationService.InitializeInternalAsync complete
+04-28 00:11:33.184 11512 11512 D app_process64: [00:11:33.184] BootstrapPage database init complete
+04-28 00:11:33.184 11512 11512 I VKFoodArea.Startup: [00:11:33.184] BootstrapPage database init complete
+04-28 00:11:33.185 11512 11512 D app_process64: [00:11:33.184] BootstrapPage session restore start
+04-28 00:11:33.188 11512 11512 I VKFoodArea.Startup: [00:11:33.184] BootstrapPage session restore start
+04-28 00:11:33.195 11512 11512 D app_process64: [00:11:33.195] BootstrapPage session restore complete: False
+04-28 00:11:33.196 11512 11512 I VKFoodArea.Startup: [00:11:33.195] BootstrapPage session restore complete: False
+04-28 00:11:33.203 11512 11512 D app_process64: [00:11:33.202] BootstrapPage navigating to HomeDesignPage
+04-28 00:11:33.203 11512 11512 I VKFoodArea.Startup: [00:11:33.202] BootstrapPage navigating to HomeDesignPage
+04-28 00:11:33.942 11512 11512 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): androidx.activity.OnBackPressedDispatcher$Api34Impl$createOnBackAnimationCallback$1@be5824f
+04-28 00:11:34.010 11512 11512 D app_process64: [00:11:34.010] HomeDesignPage.OnAppearing
+04-28 00:11:34.010 11512 11512 I VKFoodArea.Startup: [00:11:34.010] HomeDesignPage.OnAppearing
+04-28 00:11:34.163 11512 11512 D app_process64: [00:11:34.162] HomeDesignPage.RunInitialLoadAsync start
+04-28 00:11:34.163 11512 11512 I VKFoodArea.Startup: [00:11:34.162] HomeDesignPage.RunInitialLoadAsync start
+04-28 00:11:34.398 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:34.434 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:34.457 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:34.573 11512 11512 V TextView: notifyAutoFillManagerAfterTextChanged
+04-28 00:11:34.574 11512 11512 V AutofillManager: notifyValueChanged(1073741825): ignoring on state UNKNOWN
+04-28 00:11:34.577 11512 11512 V TextView: notifyAutoFillManagerAfterTextChanged
+04-28 00:11:34.577 11512 11512 V AutofillManager: notifyValueChanged(1073741825): ignoring on state UNKNOWN
+04-28 00:11:34.590 11512 11512 V TextView: notifyAutoFillManagerAfterTextChanged
+04-28 00:11:34.590 11512 11512 V AutofillManager: notifyValueChanged(1073741825): ignoring on state UNKNOWN
+04-28 00:11:34.791 11512 11518 I name.vkfoodarea: NativeAlloc concurrent mark compact GC freed 496KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 4475KB/8951KB, paused 176us,12.696ms total 52.445ms
+04-28 00:11:34.888 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:34.913 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:34.932 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:34.994 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.091 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.142 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.195 11512 11512 I name.vkfoodarea: Explicit concurrent mark compact GC freed 304KB AllocSpace bytes, 1(112KB) LOS objects, 49% free, 4508KB/9016KB, paused 320us,10.389ms total 24.472ms
+04-28 00:11:35.224 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.241 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.257 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.275 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.275 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.300 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.301 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.305 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.306 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.310 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.315 11512 11512 D AutofillManager: view not autofillable - not passing ime action check
+04-28 00:11:35.330 11512 11512 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): crc6488302ad6e9e4df1a.MauiAppCompatActivity_PredictiveBackCallback@17bd469
+04-28 00:11:35.338 11512 11567 D ProfileInstaller: Installing profile for com.companyname.vkfoodarea
+04-28 00:11:35.442 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:35.741 11512 11512 D app_process64: [00:11:35.741] HomeDesignPage.RunInitialLoadAsync after view model init
+04-28 00:11:35.741 11512 11512 I VKFoodArea.Startup: [00:11:35.741] HomeDesignPage.RunInitialLoadAsync after view model init
+04-28 00:11:35.827 11512 11512 D app_process64: [00:11:35.826] HomeDesignPage.RunInitialLoadAsync complete
+04-28 00:11:35.827 11512 11512 I VKFoodArea.Startup: [00:11:35.826] HomeDesignPage.RunInitialLoadAsync complete
+04-28 00:11:36.030 11512 11512 I name.vkfoodarea: Explicit concurrent mark compact GC freed 496KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 4860KB/9720KB, paused 116us,8.068ms total 17.754ms
+04-28 00:11:36.182 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:36.242 11512 11512 W MaterialButton: MaterialButton manages its own background to control elevation, shape, color and states. Consider using backgroundTint, shapeAppearance and other attributes where available. A custom background will ignore these attributes and you should consider handling interaction states such as pressed, focused and disabled
+04-28 00:11:36.339 11512 11512 I name.vkfoodarea: Explicit concurrent mark compact GC freed 224KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 4956KB/9912KB, paused 136us,4.935ms total 13.326ms
+04-28 00:11:36.345 11512 11512 I Choreographer: Skipped 30 frames!  The application may be doing too much work on its main thread.
+04-28 00:11:36.395 11512 11512 D app_process64: [00:11:36.395] HomeDesignPage.InitializeMap
+04-28 00:11:36.395 11512 11512 I VKFoodArea.Startup: [00:11:36.395] HomeDesignPage.InitializeMap
+04-28 00:11:36.424 11512 11523 I HWUI    : Davey! duration=933ms; Flags=0, FrameTimelineVsyncId=313631, IntendedVsync=3434120412625, Vsync=3434470412611, InputEventId=0, HandleInputStart=3434477905986, AnimationStart=3434477907186, PerformTraversalsStart=3434478457329, DrawStart=3434938010841, FrameDeadline=3434537079275, FrameStartTime=3434477523766, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=3434988550331, SyncStart=3434988815987, IssueDrawCommandsStart=3434989107483, SwapBuffers=3435036605226, FrameCompleted=3435053736465, DequeueBufferDuration=2685, QueueBufferDuration=363470, GpuCompleted=3435053736465, SwapBuffersCompleted=3435038229185, DisplayPresentTime=0, CommandSubmissionCompleted=3435036605226, 
+04-28 00:11:36.675 11512 11512 D app_process64: Navigator: SetSize 358.90909090909093 x 194.1818181818182
+04-28 00:11:36.677 11512 11512 D app_process64: Navigator: Zooming to PanBounds at startup.
+04-28 00:11:36.679 11512 11512 D app_process64: Navigator: Executing postponed call 'CenterOnAndZoomTo'
+04-28 00:11:36.691 11512 11512 I Surface : Creating surface for consumer unnamed-11512-1 with slotExpansion=1 for 64 slots
+04-28 00:11:36.691 11512 11512 I Surface : Creating surface for consumer SurfaceTexture-0-11512-0 with slotExpansion=0 for 64 slots
+04-28 00:11:36.741 11512 11570 I Surface : Creating surface for consumer SurfaceTexture-0-11512-0 with slotExpansion=0 for 64 slots
+04-28 00:11:36.876 11512 11570 D app_process64: First Render cycle.
+04-28 00:11:36.891 11512 11570 D app_process64: LoggingWidget.ShowLoggingInMap is set to 'ActiveMode.No'.
+04-28 00:11:36.891 11512 11570 D app_process64: If you need to remove it in debug mode set: LoggingWidget.ShowLoggingInMap = ActiveMode.No.
+04-28 00:11:38.284 11512 11518 I name.vkfoodarea: Background young concurrent mark compact GC freed 1923KB AllocSpace bytes, 49(7056KB) LOS objects, 34% free, 6524KB/9912KB, paused 716us,8.255ms total 42.783ms
+04-28 00:11:38.317 11512 11518 I name.vkfoodarea: Background young concurrent mark compact GC freed 432KB AllocSpace bytes, 0(0B) LOS objects, 34% free, 6508KB/9912KB, paused 1.130ms,7.104ms total 32.534ms
+04-28 00:11:38.486 11512 11518 I name.vkfoodarea: Background concurrent mark compact GC freed 337KB AllocSpace bytes, 52(7488KB) LOS objects, 49% free, 9484KB/18MB, paused 1.074ms,13.783ms total 124.456ms

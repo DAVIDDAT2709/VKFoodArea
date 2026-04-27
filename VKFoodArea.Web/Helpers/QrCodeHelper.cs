@@ -16,6 +16,25 @@ public static class QrCodeHelper
         if (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri))
             return normalized;
 
+        var segments = uri.AbsolutePath
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .Select(Uri.UnescapeDataString)
+            .ToArray();
+
+        var qrIndex = Array.FindIndex(
+            segments,
+            x => x.Equals("qr", StringComparison.OrdinalIgnoreCase));
+
+        var isWebLink = uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+                        uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+
+        if (!isWebLink &&
+            string.IsNullOrWhiteSpace(uri.Query) &&
+            qrIndex < 0)
+        {
+            return normalized;
+        }
+
         var query = uri.Query.TrimStart('?');
         foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
@@ -27,17 +46,8 @@ public static class QrCodeHelper
             }
         }
 
-        var segments = uri.AbsolutePath
-            .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .Select(Uri.UnescapeDataString)
-            .ToArray();
-
         if (segments.Length == 0)
             return normalized;
-
-        var qrIndex = Array.FindIndex(
-            segments,
-            x => x.Equals("qr", StringComparison.OrdinalIgnoreCase));
 
         if (qrIndex >= 0 && qrIndex < segments.Length - 1)
             return segments[qrIndex + 1];

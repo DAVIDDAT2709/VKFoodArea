@@ -35,6 +35,7 @@ public class HomeViewModel : INotifyPropertyChanged
     private bool _showSearchEmptyState;
     private double _searchSuggestionHeight;
     private TourSession? _activeTourSession;
+    private bool _backgroundWarmupStarted;
     private readonly List<Poi> _allPois = [];
     private List<Poi> _defaultPois = [];
     private string _currentSearchKeyword = string.Empty;
@@ -286,12 +287,19 @@ public class HomeViewModel : INotifyPropertyChanged
             });
         }
 
-        await _poiRuntimeService.InitializeAsync();
+        await _poiRuntimeService.InitializeAsync(
+            requestLocationPermission: false,
+            startListening: false);
         await SyncFromRuntimeStateAsync(
             refreshSearch: !string.IsNullOrWhiteSpace(_currentSearchKeyword));
 
         _isInitialized = true;
-        _ = RefreshPoisFromWebAsync();
+
+        if (_backgroundWarmupStarted)
+            return;
+
+        _backgroundWarmupStarted = true;
+        _ = WarmupAfterFirstRenderAsync();
     }
 
     public async Task RefreshVisiblePoisAsync(
@@ -319,9 +327,10 @@ public class HomeViewModel : INotifyPropertyChanged
         return pois.Count == 0 ? NearbyPois.ToList() : pois;
     }
 
-    public async Task<bool> RefreshCurrentLocationAsync()
+    public async Task<bool> RefreshCurrentLocationAsync(bool requestLocationPermission = true)
     {
-        var refreshed = await _poiRuntimeService.RefreshCurrentLocationAsync();
+        var refreshed = await _poiRuntimeService.RefreshCurrentLocationAsync(
+            requestLocationPermission: requestLocationPermission);
         if (!refreshed)
             return false;
 
@@ -647,6 +656,27 @@ public class HomeViewModel : INotifyPropertyChanged
         finally
         {
             _syncLock.Release();
+        }
+    }
+
+    private async Task WarmupAfterFirstRenderAsync()
+    {
+        try
+        {
+            await Task.Delay(350);
+            await _poiRuntimeService.RefreshCurrentLocationAsync(
+                requestLocationPermission: false);
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            await RefreshPoisFromWebAsync();
+        }
+        catch
+        {
         }
     }
 
