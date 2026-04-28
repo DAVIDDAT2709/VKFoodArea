@@ -357,7 +357,44 @@ Có thể chạy trên:
 
 Khi demo trên điện thoại thật, cần bảo đảm **base URL** của app có thể truy cập được đến web/API đang chạy, ví dụ qua **LAN IP** hoặc **domain/tunnel công khai**.
 
-### 9.5. Gợi ý luồng demo vàng
+Với bản Android **Release**, có thể truyền endpoint chính thức tại thời điểm build để tránh phụ thuộc vào URL cũ:
+
+```bash
+dotnet build VKFoodArea/VKFoodArea.csproj -f net10.0-android -c Release -p:VKFoodAreaOfficialBaseUrl=https://your-domain-or-tunnel/
+```
+
+Trong Debug, app có công cụ nội bộ để nhập lại endpoint demo từ màn hình QR khi cần đổi LAN IP hoặc tunnel.
+
+### 9.5. Kiểm thử nhanh trước demo
+
+Các lệnh kiểm tra tối thiểu trước khi trình bày:
+
+```bash
+dotnet test VKFoodArea.Domain.Tests/VKFoodArea.Domain.Tests.csproj
+dotnet build VKFoodArea.Web/VKFoodArea.Web.csproj
+dotnet build VKFoodArea/VKFoodArea.csproj -f net10.0-android
+```
+
+Khi web/API đang chạy, có thể kiểm tra luồng end-to-end bằng smoke test:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo-smoke-test.ps1 -BaseUrl http://localhost:5000
+```
+
+Smoke test kiểm tra các bước chính: resolve QR, đồng bộ app user, gửi movement log và ghi narration history.
+
+### 9.6. Quy tắc vận hành quan trọng
+
+| Khu vực | Quy tắc |
+|---|---|
+| **GPS/geofence** | App chỉ xét POI active; nếu nhiều POI cùng trong vùng thì ưu tiên POI gần nhất, nếu lệch dưới 1m thì dùng `Priority`. Nếu đang chạy tour, current stop được ưu tiên trước geofence thường. |
+| **Movement log** | App chỉ đẩy log khi đã qua 30 giây hoặc di chuyển ít nhất 20m để tránh spam dữ liệu. |
+| **Active device** | App gửi heartbeat khoảng mỗi 5 giây; web xem thiết bị là active khi `IsOnline = true` và `LastHeartbeatAt` còn trong cửa sổ 15 giây. |
+| **Map analytics / heatmap** | Web gom movement log thành route ẩn danh và heat point. Màu nóng trên heatmap thể hiện khu vực có nhiều log di chuyển hơn, không thay thế marker POI. |
+| **QR / app link** | QR có thể trỏ đến POI hoặc tour; app ưu tiên resolve qua API, nếu web lỗi có thể fallback dữ liệu local với POI đã có sẵn. |
+| **Owner workflow** | Chủ cửa hàng chỉ thao tác trên POI thuộc `OwnerAdminUserId` của mình; POI do owner tạo sẽ ở trạng thái pending/inactive cho đến khi admin duyệt. |
+
+### 9.7. Gợi ý luồng demo vàng
 
 1. Mở app và chọn ngôn ngữ.
 2. Vào danh sách hoặc tour để chọn nội dung trải nghiệm.
@@ -375,7 +412,7 @@ Trong môi trường phát triển, hệ thống có thể seed tài khoản qu�
 - **Username:** `admin`
 - **Password:** `admin123`
 
-> Có thể thay đổi tùy theo dữ liệu seed và cấu hình môi trường thực tế của nhóm.
+> Chỉ nên dùng tài khoản mặc định trong môi trường local. Nếu mở web qua LAN/tunnel công khai để demo, nên đặt `VKFOODAREA_ADMIN_USERNAME` và `VKFOODAREA_ADMIN_PASSWORD` hoặc tạo tài khoản admin riêng trong CMS.
 
 ---
 
