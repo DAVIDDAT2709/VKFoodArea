@@ -575,7 +575,7 @@ public class NarrationService
     }
 
     private static bool ShouldQueuePlayback(string? triggerSource)
-        => (triggerSource ?? string.Empty).Trim().ToLowerInvariant() is "auto" or "gps" or "tour" or "qr";
+        => NarrationQueuePolicy.ShouldQueuePlayback(triggerSource);
 
     private async Task LogNarrationAsync(
         Poi poi,

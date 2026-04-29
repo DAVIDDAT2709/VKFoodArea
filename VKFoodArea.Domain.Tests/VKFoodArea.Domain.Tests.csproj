@@ -28,6 +28,7 @@
     <Compile Include="..\VKFoodArea\Services\HaversineDistanceCalculator.cs" Link="App\Services\HaversineDistanceCalculator.cs" />
     <Compile Include="..\VKFoodArea\Services\CooldownStore.cs" Link="App\Services\CooldownStore.cs" />
     <Compile Include="..\VKFoodArea\Services\GeofenceEngine.cs" Link="App\Services\GeofenceEngine.cs" />
+    <Compile Include="..\VKFoodArea\Services\NarrationQueuePolicy.cs" Link="App\Services\NarrationQueuePolicy.cs" />
     <Compile Include="..\VKFoodArea\Services\AppUserRoleNames.cs" Link="App\Services\AppUserRoleNames.cs" />
     <Compile Include="..\VKFoodArea\Services\AppFeatureAccessPolicy.cs" Link="App\Services\AppFeatureAccessPolicy.cs" />
     <Compile Include="..\VKFoodArea\Services\AppSyncRetryPolicy.cs" Link="App\Services\AppSyncRetryPolicy.cs" />
