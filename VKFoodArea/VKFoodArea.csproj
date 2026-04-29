@@ -18,7 +18,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == '' and '$(Configuration)' == 'Release'">https://disprovable-helpingly-addisyn.ngrok-free.dev/</VKFoodAreaOfficialBaseUrl>
+		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == '' and '$(Configuration)' == 'Release'">https://willow-unexposed-suing.ngrok-free.dev/</VKFoodAreaOfficialBaseUrl>
 		<VKFoodAreaOfficialBaseUrl Condition="'$(VKFoodAreaOfficialBaseUrl)' == ''"></VKFoodAreaOfficialBaseUrl>
 		<VKFoodAreaEnableInternalTools Condition="'$(VKFoodAreaEnableInternalTools)' == '' and '$(Configuration)' == 'Debug'">true</VKFoodAreaEnableInternalTools>
 		<VKFoodAreaEnableInternalTools Condition="'$(VKFoodAreaEnableInternalTools)' == ''">false</VKFoodAreaEnableInternalTools>
