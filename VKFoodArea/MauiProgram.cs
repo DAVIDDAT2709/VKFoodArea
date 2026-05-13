@@ -72,6 +72,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<NarrationService>();
         builder.Services.AddTransient<TourNarrationService>();
+        builder.Services.AddTransient<PoiAudioCacheService>();
         builder.Services.AddTransient<AccountService>();
         builder.Services.AddTransient<HistoryService>();
         builder.Services.AddTransient<PoiService>();

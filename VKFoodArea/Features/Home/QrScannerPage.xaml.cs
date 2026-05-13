@@ -20,6 +20,8 @@ public partial class QrScannerPage : ContentPage
     private readonly ApiBaseUrlService _apiBaseUrlService;
     private readonly TourSessionService _tourSessionService;
     private readonly AppSyncOutboxService _appSyncOutboxService;
+    private readonly PoiSyncService _poiSyncService;
+    private readonly PoiAudioCacheService _poiAudioCacheService;
     private readonly IServiceProvider _serviceProvider;
 
     private bool _isHandlingResult;
@@ -36,6 +38,8 @@ public partial class QrScannerPage : ContentPage
         ApiBaseUrlService apiBaseUrlService,
         TourSessionService tourSessionService,
         AppSyncOutboxService appSyncOutboxService,
+        PoiSyncService poiSyncService,
+        PoiAudioCacheService poiAudioCacheService,
         IServiceProvider serviceProvider)
     {
         InitializeComponent();
@@ -48,6 +52,8 @@ public partial class QrScannerPage : ContentPage
         _apiBaseUrlService = apiBaseUrlService;
         _tourSessionService = tourSessionService;
         _appSyncOutboxService = appSyncOutboxService;
+        _poiSyncService = poiSyncService;
+        _poiAudioCacheService = poiAudioCacheService;
         _serviceProvider = serviceProvider;
 
         QrReader.Options = new BarcodeReaderOptions
@@ -145,6 +151,9 @@ public partial class QrScannerPage : ContentPage
                 return;
             }
 
+            var audioProfile = QrDeviceAudioProfile.CreateRandom();
+            await ApplyQrAudioProfileAsync(resolved, audioProfile);
+
             var handled = await HandleResolvedTargetAsync(localPoi, resolved);
             if (!handled)
             {
@@ -174,6 +183,54 @@ public partial class QrScannerPage : ContentPage
             }
         }
     }
+
+    private async Task ApplyQrAudioProfileAsync(QrResolveResult resolved, QrDeviceAudioProfile audioProfile)
+    {
+        if (!HasPoiAudioTarget(resolved))
+            return;
+
+        if (!audioProfile.IsStrong)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                ScannerHintLabel.Text = "Máy yếu (1): dùng audio trực tiếp từ web.";
+            });
+
+            return;
+        }
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            ScannerHintLabel.Text = "Máy mạnh (0): đang tải toàn bộ audio...";
+        });
+
+        try
+        {
+            if (_apiBaseUrlService.HasConfiguredBaseUrl)
+                await _poiSyncService.SyncPoisAsync();
+
+            var cacheResult = await _poiAudioCacheService.DownloadAllAsync();
+            await _poiAudioCacheService.UseCachedAudioForAsync(resolved);
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                ScannerHintLabel.Text = cacheResult.FailedCount > 0
+                    ? $"Máy mạnh (0): đã cache {cacheResult.CachedCount} audio, {cacheResult.FailedCount} lỗi; phần lỗi dùng web."
+                    : $"Máy mạnh (0): đã cache {cacheResult.CachedCount} audio.";
+            });
+        }
+        catch
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                ScannerHintLabel.Text = "Máy mạnh (0): tải audio lỗi, chuyển sang audio web.";
+            });
+        }
+    }
+
+    private static bool HasPoiAudioTarget(QrResolveResult resolved)
+        => resolved.Poi is not null ||
+           resolved.Tour?.Stops.Any(stop => stop.Poi is not null) == true;
 
     private async Task<bool> HandleResolvedTargetAsync(Poi? localPoi, QrResolveResult resolved)
     {
@@ -480,5 +537,13 @@ public partial class QrScannerPage : ContentPage
             "de" => "Web-Optionen wurden wieder ausgeblendet.",
             _ => "Đã ẩn mục Web."
         };
+    }
+
+    private sealed record QrDeviceAudioProfile(int ConfigValue)
+    {
+        public bool IsStrong => ConfigValue == 0;
+
+        public static QrDeviceAudioProfile CreateRandom()
+            => new(Random.Shared.Next(0, 2));
     }
 }

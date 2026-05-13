@@ -531,3 +531,177 @@ $env:API_BASE_URL="https://willow-unexposed-suing.ngrok-free.dev"
 k6 run load-tests/k6/poi-api-load-test.js
 ```
 
+## 16. Test Android và iPhone ảo trong cùng 1 file JS
+
+Nên dùng file này khi muốn kiểm soát riêng số máy Android ảo và iPhone ảo:
+
+```text
+load-tests/k6/mobile-movement-log-load-test.js
+```
+
+Các chỗ quan trọng trong file:
+
+```text
+ANDROID_DEVICES / IPHONE_DEVICES:
+  Số lượng thiết bị ảo Android và iPhone.
+
+ANDROID_VUS / IPHONE_VUS:
+  Số luồng chạy đồng thời. VUS không phải số máy, chỉ là mức song song khi bắn request.
+
+androidMovementLogs():
+  Chức năng tạo log cho nhóm Android ảo.
+
+iphoneMovementLogs():
+  Chức năng tạo log cho nhóm iPhone ảo.
+
+postMovementLog():
+  Chức năng dùng chung, gửi POST vào /api/movement-logs.
+
+handleSummary():
+  Ghi JSON tổng hợp, log tổng hợp, log Android riêng và log iPhone riêng trong artifacts/load-tests.
+```
+
+Chạy bằng wrapper PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\load-tests\k6\run-mobile-movement-log-test.ps1 `
+  -ApiBaseUrl "http://localhost:5216" `
+  -AndroidDevices 100 `
+  -IphoneDevices 200 `
+  -AndroidVus 50 `
+  -IphoneVus 50 `
+  -MaxDuration "2m"
+```
+
+Hoặc chạy trực tiếp bằng k6:
+
+```powershell
+$env:ANDROID_DEVICES="100"
+$env:IPHONE_DEVICES="200"
+$env:ANDROID_VUS="50"
+$env:IPHONE_VUS="50"
+$env:API_BASE_URL="http://localhost:5216"
+$env:MAX_DURATION="2m"
+k6 run load-tests/k6/mobile-movement-log-load-test.js
+```
+
+Kết quả sau khi chạy mẫu:
+
+```text
+artifacts/load-tests/mobile-movement-log-android-100-iphone-200-summary.json
+artifacts/load-tests/mobile-movement-log-android-100-iphone-200.log
+artifacts/load-tests/mobile-movement-log-android-100-iphone-200-android.log
+artifacts/load-tests/mobile-movement-log-android-100-iphone-200-iphone.log
+```
+
+Ý nghĩa từng file:
+
+```text
+*-summary.json:
+  File JSON cho máy đọc hoặc nộp minh chứng kỹ thuật.
+
+*.log:
+  Log tổng hợp, có tổng Android + iPhone.
+
+*-android.log:
+  Log riêng nhóm Android ảo.
+
+*-iphone.log:
+  Log riêng nhóm iPhone ảo.
+```
+
+Điều kiện pass:
+
+```text
+androidMovementLogSuccess = ANDROID_DEVICES
+androidMovementLogFailed = 0
+iphoneMovementLogSuccess = IPHONE_DEVICES
+iphoneMovementLogFailed = 0
+failedRequestRate < 0.01
+```
+
+Nếu muốn tắt một nhóm thiết bị, đặt số lượng nhóm đó bằng `0`:
+
+```powershell
+$env:ANDROID_DEVICES="100"
+$env:IPHONE_DEVICES="0"
+k6 run load-tests/k6/mobile-movement-log-load-test.js
+```
+
+## 17. Test 100/200 iPhone ảo gửi movement log
+
+Test này dùng file:
+
+```text
+load-tests/k6/iphone-movement-log-load-test.js
+load-tests/k6/run-iphone-movement-log-batches.ps1
+```
+
+Ý nghĩa chính:
+
+```text
+Đây không phải là 100 hoặc 200 iPhone thật.
+Đây không phải là 100 hoặc 200 iOS Simulator thật.
+Đây là API load test mô phỏng iPhone bằng nhiều userKey riêng, iPhone User-Agent header và payload movement log.
+```
+
+Vì vậy test này phù hợp để chứng minh server nhận/lưu log từ nhiều thiết bị iPhone ảo. Nếu cần kiểm tra GPS thật, quyền location thật, camera QR thật hoặc Safari/WebView thật trên iPhone thì vẫn cần iPhone thật hoặc cloud device farm.
+
+Chạy web trước:
+
+```powershell
+dotnet run --project VKFoodArea.Web\VKFoodArea.Web.csproj --launch-profile http
+```
+
+Kiểm tra API:
+
+```powershell
+Invoke-WebRequest http://localhost:5216/api/pois -UseBasicParsing
+```
+
+Chạy lần lượt 100 và 200 iPhone ảo:
+
+```powershell
+.\load-tests\k6\run-iphone-movement-log-batches.ps1 `
+  -ApiBaseUrl "http://localhost:5216" `
+  -DeviceCounts "100,200" `
+  -Vus 50
+```
+
+Nếu PowerShell chặn chạy script vì `ExecutionPolicy`, dùng:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\load-tests\k6\run-iphone-movement-log-batches.ps1 `
+  -ApiBaseUrl "http://localhost:5216" `
+  -DeviceCounts "100,200" `
+  -Vus 50 `
+  -MaxDuration "2m"
+```
+
+Lưu ý: khi chạy qua `powershell -File`, nên đặt `"100,200"` trong dấu nháy. Nếu không, Windows PowerShell có thể truyền tham số mảng không đúng ý.
+
+Hoặc chạy một mốc riêng:
+
+```powershell
+$env:DEVICES="100"
+$env:VUS="50"
+$env:API_BASE_URL="http://localhost:5216"
+$env:SUMMARY_FILE="artifacts/load-tests/iphone-movement-log-100-summary.json"
+k6 run load-tests/k6/iphone-movement-log-load-test.js
+```
+
+Kết quả summary nằm tại:
+
+```text
+artifacts/load-tests/iphone-movement-log-100-summary.json
+artifacts/load-tests/iphone-movement-log-200-summary.json
+```
+
+Điều kiện pass:
+
+```text
+movementLogSuccess = số thiết bị ảo
+movementLogFailed = 0
+failedRequestRate < 0.01
+```
+
